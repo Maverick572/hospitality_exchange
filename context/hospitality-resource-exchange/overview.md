@@ -24,14 +24,20 @@ A B2B marketplace where hospitality businesses (hotels, restaurants, caterers, r
 
 [stated] Full Firestore schema defined: users, resources, requirements, requests, bookings, reviews, notifications, drivers, driverRoutes, deliveryRequests, escrow, conditionEvidence.
 
-[verified] Driver profile creation and Google login auth status endpoints implemented in FastAPI with Pydantic validation, Firebase custom claims (role="driver"), and automated test coverage. See D009.
+[verified] Driver profile creation and Google login auth status endpoints implemented in FastAPI with Pydantic validation, Firebase custom claims (role="driver"), and automated test coverage. See D010.
+
+[verified] Modular Transaction Layer (15 endpoints across requests, bookings, escrow, evidence, reviews, notifications) implemented under `backend/transactions/` with comprehensive automated tests. See D009.
+
+[verified] Seeker Natural Language Search Module implemented (`backend/seeker/`) using LLM parser (Groq/Gemini), `fromTimestamp` / `toTimestamp` calendar availability scoring, product/provider geo-location resolution, and 3-tier ranking (availability -> price -> distance). See D011.
+
+[verified] Shared-Route Logistics Engine implemented (`backend/logistics/`) using Google OR-Tools CP-SAT solver, multi-stop waypoint detour calculation, and Pareto route ranking. Tested with realistic Mumbai transport corridors and Firestore users. See D012.
 
 ## Key decisions
 
 See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full log. Summary:
 - D001 (superseded by D007): Original two-backend Supabase + FastAPI architecture.
 - D002: CP-SAT for bundle/multi-item matches only; weighted linear scorer for single-resource.
-- D003: Groq (Llama 3.3 70B) for LLM inference — extraction and explanation only.
+- D003: Groq (Llama 3.3 70B) & Gemini for LLM inference — extraction and explanation only.
 - D004: Escrow as ledger state machine on a payment aggregator, not a smart contract.
 - D005: FastAPI BackgroundTasks for async (Redis/Celery deferred).
 - D006: Truck-pooling cut as standalone; logistics-aware matching via driver-published routes retained.
@@ -39,6 +45,8 @@ See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full 
 - D008: Unified User model (Provider + Seeker as one account); Drivers separate.
 - D009: Modular transaction layer architecture (15 endpoints under `backend/transactions/`); negotiation revival; escrow damage penalty capping.
 - D010: Driver profile verification via DigiLocker readiness, Google Sign-In status endpoint, and Firebase custom claims (role="driver").
+- D011: LLM-based Natural Language Seeker Search with Date/Time Window & Multi-Factor Ranking (Availability > Price > Distance).
+- D012: OR-Tools CP-SAT Shared-Route Logistics Optimizer with Waypoint Detour Scoring.
 
 ## Open conflicts
 

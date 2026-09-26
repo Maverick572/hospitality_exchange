@@ -19,7 +19,9 @@ confidence: high
 
 [stated] Driver API: `POST /drivers/profile`, `GET /drivers/me`, `POST /driver-routes`, `GET /driver-routes/my`, `PATCH /driver-routes/{id}`, `DELETE /driver-routes/{id}`, `GET /driver-routes/{id}/matches` (find delivery opportunities), `POST /delivery-requests/{id}/accept`, `PATCH /delivery-requests/{id}/status`.
 
-[stated] Route matching returns: deliveryRequestId, pickupLocation, deliveryLocation, requiredCapacity, `routeOverlap` (0.0–1.0), estimatedEarnings, timeCompatible. OSRM provides route geometry for overlap calculation.
+[verified] Organization-to-Organization Shared-Route Matching (`POST /api/v1/logistics/match-routes`): Given provider (pickup) and seeker (delivery) coordinates and required capacity, uses Google OR-Tools CP-SAT constraint optimization solver to find the best driver routes. Evaluates waypoint detour distances via Haversine, enforces max detour constraints (<= 25 km), and optimizes detour minimization, price, capacity utilization, and waypoint directional ordering.
+
+[stated] Route matching returns: routeId, driver info, pickup_detour_km, delivery_detour_km, total_detour_km, routeOverlap, directionallyValid, matchScore.
 
 [stated] Delivery status progression: pickup_pending → picked_up → in_transit → delivered.
 
@@ -29,4 +31,4 @@ depends_on:: [[projects/hospitality-resource-exchange/architecture/optimization-
 
 ## Open questions
 
-- Whether logistics cost is folded into the CP-SAT bundle objective as a joint term, or handled as separate post-processing, is still undecided.
+- Dynamic driver rerouting if real-time traffic significantly impacts arrival times.

@@ -28,8 +28,10 @@ src/
 │   ├── client.js
 │   ├── users.js
 │   ├── resources.js
+│   ├── seeker.js
 │   ├── requirements.js
 │   ├── matching.js
+│   ├── logistics.js
 │   ├── requests.js
 │   ├── bookings.js
 │   ├── drivers.js
@@ -227,19 +229,69 @@ My Resources -> Deactivate
 Frontend should show a confirmation dialog before deactivation.
 
 
-6. REQUIREMENT CREATION
-=======================
+6. SEEKER NATURAL LANGUAGE SEARCH BAR & DISCOVERY
+===================================================
+
+The main seeker marketplace discovery is powered by a natural language search bar combined with from/to timestamps.
+
+POST /seeker/search
+POST /requirements/parse
+
+UI Component Architecture:
+- `SearchBar.jsx`:
+  * Natural language prompt input: "Need 50 banquet chairs and 5 round tables in Bandra tomorrow evening"
+  * From Date/Time Picker: `fromTimestamp` (e.g. `2026-09-28T18:00:00Z`)
+  * To Date/Time Picker: `toTimestamp` (e.g. `2026-09-28T23:00:00Z`)
+  * Seeker Location Selector / Geolocation: `location: { address, latitude, longitude }`
+  * "Search Resources" submit button
+- `ParsedQueryPreview.jsx`:
+  * Shows extracted structured tags:
+    `[🏷️ furniture: banquet chairs x50] [🏷️ furniture: round tables x5]`
+- `ProductResultsList.jsx`:
+  * Shows ranked product cards ordered by:
+    1. Availability Score (highest availability & period match first)
+    2. Lowest Price (ascending ₹ per item/day)
+    3. Nearest Location (ascending distance in km)
+- `ProductCard.jsx`:
+  * Product Name & Category badge
+  * Provider Business Name & Rating ⭐ (e.g., 4.8 / 5.0)
+  * Distance: "0.8 km away"
+  * Price: "₹25 / item / day"
+  * Availability badge: "✓ In Stock (80 available)"
+  * Actions: "Send Request", "View Details", "Find Delivery Route"
+
+Example Frontend Request:
+
+```javascript
+import api from './client';
+
+export const searchProducts = async ({ description, fromTimestamp, toTimestamp, location }) => {
+  const response = await api.post('/seeker/search', {
+    description,
+    fromTimestamp,
+    toTimestamp,
+    location
+  });
+  return response.data; // { parsedItems: [...], totalFound: 2, results: [...] }
+};
+
+export const parseRequirementText = async (description) => {
+  const response = await api.post('/requirements/parse', { description });
+  return response.data; // { description, items: [...] }
+};
+```
+
+
+7. REQUIREMENT CREATION & MANAGEMENT
+====================================
 
 POST /requirements
 
-UI:
+UI: Create Formal Requirement
 
 What do you need?
-
-Example natural-language input:
-
-"I need 300 chairs and 20 tables in Vashi tomorrow.
-Delivery required before 3 PM."
+Natural-language input:
+"I need 300 chairs and 20 tables in Vashi tomorrow. Delivery required before 3 PM."
 
 Additional fields:
 - Location
@@ -250,48 +302,28 @@ Additional fields:
 - Delivery Required
 
 Flow:
-
 POST /requirements
   -> Requirement Created
   -> POST /matching/search
 
 
-7. REQUIREMENT MANAGEMENT
-=========================
-
 GET /requirements/my
 
 Display:
-
 My Requirements
-
-Requirement #123
-300 chairs
-20 tables
-Vashi
-28 Sept
-₹25,000
-Active
-
-Actions:
-- View
-- Edit
-- Cancel
-- Find Matches
+- Requirement #123: 300 chairs, 20 tables | Vashi | 28 Sept | ₹25,000 | Active
+- Actions: View, Edit, Cancel, Find Matches
 
 
 GET /requirements/{requirementId}
-
 Used for requirement details.
 
 
 PATCH /requirements/{requirementId}
-
 Used for editing an active requirement.
 
 
 DELETE /requirements/{requirementId}
-
 Used for cancelling a requirement.
 
 
@@ -301,47 +333,50 @@ Used for cancelling a requirement.
 POST /matching/search
 
 REQUEST:
-
 {
   "requirementId": "req_123"
 }
 
 Frontend displays:
-
 MATCHING PROVIDERS
 
 Provider:
-Hotel ABC
-Rating:
-4.7
+Hotel ABC (⭐ 4.7)
 
 Resource:
-Banquet Chairs
-
-Available:
-300
-
-Price:
-₹20/item/day
-
-Distance:
-5.2 km
-
-Delivery:
-Compatible
+Banquet Chairs | Available: 300 | Price: ₹20/item/day | Distance: 5.2 km | Delivery: Compatible
 
 Actions:
-- View
-- Request
+- View Details
+- Request Resource
 
-Use the following returned fields:
-- rating
-- price
-- distance
-- availability
-- logisticsAvailable
+The frontend does NOT calculate matching scores; it uses the server-ranked order.
 
-The frontend does NOT calculate the matching score.
+
+8B. LOGISTICS ROUTE MATCHING UI
+===============================
+
+POST /logistics/match-routes
+
+Used when a seeker/provider pair needs shared-route delivery:
+
+```javascript
+export const findMatchingRoutes = async ({ pickupLocation, deliveryLocation, requiredCapacity, travelDate }) => {
+  const response = await api.post('/logistics/match-routes', {
+    pickupLocation,
+    deliveryLocation,
+    requiredCapacity,
+    travelDate
+  });
+  return response.data; // ranked list of compatible driver routes
+};
+```
+
+UI Displays:
+- Driver Name & Vehicle Type
+- Pickup Detour & Delivery Detour km
+- Route price & capacity fit
+- "Book Delivery" action
 
 
 9. OPTIMIZED BUNDLE

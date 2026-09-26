@@ -25,33 +25,39 @@ Description
 Photos
 Edit/remove resources
 Set resource availability
-3. Create & Manage Requirements
+3. Create & Manage Requirements & Natural Language Search
 
 Users can act as Seekers by:
 
-Describe requirements in natural language
-Specify quantity, date/time, location, budget and delivery requirements
-Edit/cancel requirements
-View active requirements
-4. Discover & Match
+- Search Bar Natural Language Query: Enter freeform natural language text describing required resources, quantities, and dates (e.g., "Need 100 banquet chairs and 10 round tables in Andheri tomorrow evening")
+- To / From Timestamps: Specify rental/usage time window using start and end timestamps (ISO 8601 or YYYY-MM-DD)
+- Seeker Location: Provide seeker delivery location (coordinates and address) for proximity calculations
+- LLM Parser Integration: Automatic extraction of structured hospitality items, categories, and quantities from text
+- Specify budget, delivery requirements, and custom notes
+- Save requirement to profile or directly query live marketplace inventory
+- Edit/cancel requirements
+- View active requirements
 
-The platform matches seekers with suitable providers based on:
+4. Discover & Intelligent Multi-Criteria Matching
 
-Resource type
-Quantity
-Availability
-Price
-Distance
-Provider rating
-Delivery requirements
+The platform matches seekers with suitable providers and products based on:
+
+1. Best Availability: Product stock matches or exceeds requested quantity, verified calendar date/time availability slots
+2. Lowest Price: Cost-effective resource pricing (per item / per day)
+3. Nearest Location: Proximity to seeker location using product coordinates (with fallback to provider business location)
+4. Provider Rating & Reviews: High-trust verified hospitality providers
+5. Logistics Compatibility: Driver routes passing near pickup and delivery points
 
 Users can:
 
-View matching resources/providers
-Filter/sort results
-View resource details
-View provider profile, ratings and reviews
-View available logistics options
+- Execute real-time LLM-based search across all active Firestore products/resources
+- View ranked product listings with availability score badges, distance in km, unit price, and provider details
+- Filter/sort results by availability, price, distance, and rating
+- View resource details and verified photos
+- View provider profile, ratings and reviews
+- View available logistics and driver route options
+- Select multiple products for bundled requirement fulfillment
+
 5. Requests & Negotiation
 
 Users can:

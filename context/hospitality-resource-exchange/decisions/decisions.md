@@ -109,3 +109,24 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D011 — Natural Language Seeker Search with Date/Time Availability & Multi-Factor Ranking
+- **Date:** 2026-09-27
+- **Decision:** The primary discovery interface for Seekers uses open-ended natural language queries combined with `fromTimestamp` / `toTimestamp` date filters and optional seeker geo-coordinates via `POST /api/v1/seeker/search`. LLM parser (Groq / Gemini) extracts structured resource names, categories, and quantities. Candidate products from Firestore are evaluated for date-specific slot availability (`[{ date, quantity }]`), geographic Haversine distance (using product location or provider business location fallback), and sorted using a deterministic 3-tier hierarchy:
+  1. Best Availability (descending `availabilityScore`: bonus for full quantity + verified calendar slot match)
+  2. Lowest Price (ascending unit price)
+  3. Nearest Location (ascending Haversine distance in km)
+- **Alternatives considered:** Traditional keyword/category dropdown filters only, or pure vector embedding similarity search without availability/distance ranking.
+- **Rejected because:** Dropdowns are rigid and fail to handle unstructured real-world hospitality requests; pure vector search ignores strict stock levels, calendar availability windows, and physical travel distance.
+- **Accepted because:** Combines the UX flexibility of LLM natural language understanding with deterministic, business-critical marketplace constraints (stock availability, pricing, geographic proximity).
+- **Status:** implemented
+- **Supersedes:** —
+
+## D012 — OR-Tools CP-SAT Shared-Route Logistics Matching
+- **Date:** 2026-09-27
+- **Decision:** Shared-route logistics matching (`POST /api/v1/logistics/match-routes`) uses Google OR-Tools CP-SAT constraint optimization solver. For two organization locations (pickup = provider, delivery = seeker) and required capacity, the system evaluates active driver routes. Computes Haversine detour distances to each route waypoint, filters routes exceeding maximum allowable detour (25 km) or lacking capacity, and uses CP-SAT integer-scaled multi-objective optimization (minimizing total detour distance, delivery price, excess capacity waste, and enforcing directional pickup-before-delivery order).
+- **Alternatives considered:** Naive bounding-box filtering, simple distance sorting without capacity optimization, or full dynamic vehicle routing (VRP) rescheduling.
+- **Rejected because:** Simple sorting fails multi-stop detour and capacity trade-offs; dynamic VRP rescheduling introduces real-time driver rerouting complexity unfeasible for the current scope.
+- **Accepted because:** CP-SAT provides mathematically rigorous Pareto-optimal route ranking while respecting driver-published schedules and vehicle capacities.
+- **Status:** implemented
+- **Supersedes:** —
+

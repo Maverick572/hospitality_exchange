@@ -28,8 +28,8 @@ resources/
     - availableQuantity
     - price
     - pricingUnit
-    - location
-    - availability
+    - location: { address, latitude, longitude }
+    - availability: [ { date, quantity } ]
     - images[]
     - condition
     - status
@@ -40,9 +40,8 @@ requirements/
   {requirementId}
     - seekerId
     - description
-    - category
-    - quantity
-    - location
+    - items: [ { category, name, quantity } ]
+    - location: { address, latitude, longitude }
     - requiredDate
     - startTime
     - endTime
@@ -227,27 +226,72 @@ User
                     +-- Delivery Request
 
 
+SEEKER SEARCH DYNAMIC DATA SCHEMAS
+===================================
+
+SeekerSearchRequest:
+  - description: string (Natural language requirement query)
+  - fromTimestamp: string | null (ISO format or YYYY-MM-DD)
+  - toTimestamp: string | null (ISO format or YYYY-MM-DD)
+  - location: { address, latitude, longitude } | null (Seeker delivery location)
+
+SeekerSearchResponse:
+  - parsedItems[]: [ { category, name, quantity } ]
+  - totalFound: integer
+  - results[]:
+      - resourceId: string
+      - providerId: string
+      - name: string
+      - category: string
+      - description: string
+      - quantity: number
+      - availableQuantity: number
+      - price: number
+      - pricingUnit: string
+      - location: { address, latitude, longitude }
+      - provider: { userId, businessName, rating, totalRatings, location }
+      - distanceKm: number | null
+      - availabilityScore: number
+      - status: string
+
 MATCHING FLOW
 =============
 
-Requirement
+1. Seeker Search Flow:
+Natural Language Query + Timestamps + Seeker Location
     |
     v
-FastAPI
+FastAPI Seeker Engine
     |
-    +-- Retrieve candidate Resources from Firestore
+    +-- LLM Parser (Groq / Gemini) extracts structured items & quantities
     |
-    +-- Retrieve candidate Driver Routes from Firestore
+    +-- Retrieve matching active Resources from Firestore
+    |
+    +-- Resolve provider & product geo-coordinates
+    |
+    +-- Calculate date availability score, pricing, and Haversine distance
     |
     v
-Matching / Optimization
+Ordered Results (Sorted by: 1. Best Availability, 2. Lowest Price, 3. Nearest Location)
+
+2. Logistics Route Matching Flow:
+Provider Location (Pickup) + Seeker Location (Delivery) + Required Capacity + Travel Date
     |
     v
-Results
+FastAPI Logistics Engine
+    |
+    +-- Retrieve active driverRoutes with compatible travelDate and availableCapacity
+    |
+    +-- Compute waypoint detour distances (Pickup & Delivery) via Haversine
+    |
+    +-- OR-Tools CP-SAT Solver (Optimizes detour distance, price, capacity fit, directional order)
+    |
+    v
+Ranked Driver Routes with Detours & Fit Metrics
 
 Firestore should store the actual business state:
 resources, requirements, requests, bookings, routes,
 payments, reviews, etc.
 
-The matching result does not need to be permanently stored unless
-required by the application. It can be calculated dynamically.
+The matching and search results are dynamically computed and returned in API responses.
+
