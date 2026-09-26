@@ -203,8 +203,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const envelope = json && !Array.isArray(json) ? json : null;
   if (!response.ok || envelope?.success === false) {
-    // If backend doesn't implement this endpoint yet (404/405/500), fall back gracefully
-    if (response.status === 404 || response.status === 405 || response.status >= 500) {
+    // If backend doesn't implement this endpoint yet (404/405/500), fall back gracefully.
+    // However, for profile endpoints (/users/me, /drivers/me), a 404 is an expected application state
+    // meaning the authenticated user has not created a profile yet and must be routed to onboarding.
+    const isProfileEndpoint = path === "/users/me" || path === "/drivers/me";
+    if (!isProfileEndpoint && (response.status === 404 || response.status === 405 || response.status >= 500)) {
       mockStore.isDemoMode = true;
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("hrex_backend_status", { detail: { live: false } }));
