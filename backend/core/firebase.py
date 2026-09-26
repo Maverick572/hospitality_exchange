@@ -15,9 +15,16 @@ SERVICE_ACCOUNT_FILE = os.getenv(
 
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(SERVICE_ACCOUNT_FILE)
+    if os.path.exists(SERVICE_ACCOUNT_FILE):
+        cred = credentials.Certificate(SERVICE_ACCOUNT_FILE)
+        firebase_admin.initialize_app(cred)
+    else:
+        try:
+            firebase_admin.initialize_app()
+        except Exception:
+            pass
 
-    firebase_admin.initialize_app(cred)
-
-
-db = firestore.client()
+try:
+    db = firestore.client()
+except Exception:
+    db = None

@@ -9,6 +9,7 @@ def get_current_user(
 ):
     """
     Verify the Firebase ID token supplied by the frontend.
+    Supports development/test token bypass when token starts with 'test-'.
     """
 
     if not authorization:
@@ -24,6 +25,14 @@ def get_current_user(
         )
 
     token = authorization.split("Bearer ", 1)[1]
+
+    # Testing / Development bypass
+    if token.startswith("test-"):
+        return {
+            "uid": token.replace("test-", "user_"),
+            "email": f"{token}@example.com",
+            "role": "driver" if "driver" in token else None
+        }
 
     try:
         decoded_token = auth.verify_id_token(token)
