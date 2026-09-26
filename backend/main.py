@@ -16,6 +16,7 @@ try:
     from seeker import router as seeker_router
     from logistics import routes_router as logistics_router
     from services.llm_parser import parse_requirement, ParserServiceError
+    from services.category_registry import CATEGORIES
 except ImportError:
     from backend.users import router as users_router
     from backend.drivers import router as drivers_router
@@ -23,6 +24,7 @@ except ImportError:
     from backend.seeker import router as seeker_router
     from backend.logistics import routes_router as logistics_router
     from backend.services.llm_parser import parse_requirement, ParserServiceError
+    from backend.services.category_registry import CATEGORIES
 
 
 app = FastAPI(
@@ -84,6 +86,16 @@ app.include_router(
     logistics_router,
     prefix="/api/v1"
 )
+
+
+# ============================================================
+# CATEGORY REGISTRY
+# ============================================================
+
+@app.get("/api/v1/categories", tags=["Categories"])
+def list_categories():
+    """Return all resource categories with evidence types, labels, and metrics."""
+    return {"success": True, "data": {"categories": CATEGORIES}}
 
 
 # ============================================================

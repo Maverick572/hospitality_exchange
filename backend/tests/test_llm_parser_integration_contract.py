@@ -6,7 +6,7 @@ def test_parser_output_is_firestore_compatible(monkeypatch):
         parser,
         "_request_completion",
         lambda description: (
-            '{"items": [{"category": "furniture", '
+            '{"items": [{"category": "banquet_seating", '
             '"name": "chair", "quantity": 300}]}'
         ),
     )
@@ -15,6 +15,6 @@ def test_parser_output_is_firestore_compatible(monkeypatch):
     serialized = [item.model_dump(mode="json") for item in items]
 
     assert serialized == [
-        {"category": "furniture", "name": "chair", "quantity": 300, "metric": "units"}
+        {"category": "banquet_seating", "name": "chair", "quantity": 300, "metric": "units"}
     ]
     assert set(serialized[0]) == {"category", "name", "quantity", "metric"}

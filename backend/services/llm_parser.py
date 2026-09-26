@@ -1,6 +1,5 @@
 """Parse natural-language hospitality requirements into validated items."""
 
-from enum import Enum
 import json
 import os
 from typing import Union
@@ -9,19 +8,13 @@ from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from services.category_registry import (
+    ResourceCategory,
+    build_category_prompt_block,
+    get_category_ids,
+)
+
 load_dotenv()
-
-
-class ResourceCategory(str, Enum):
-    """Categories supported by the matching pipeline."""
-
-    FURNITURE = "furniture"
-    AUDIO_VISUAL = "audio_visual"
-    ELECTRONICS = "electronics"
-    KITCHEN_EQUIPMENT = "kitchen_equipment"
-    EVENT_EQUIPMENT = "event_equipment"
-    SPACE = "space"
-    OTHER = "other"
 
 
 class ParsedItem(BaseModel):
@@ -77,7 +70,13 @@ class ParserServiceError(Exception):
 
 DEFAULT_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-SYSTEM_PROMPT = """You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
+# ---------------------------------------------------------------------------
+# System prompt — category list is auto-generated from categories.json
+# ---------------------------------------------------------------------------
+
+_CATEGORY_BLOCK = build_category_prompt_block()
+
+SYSTEM_PROMPT = f"""You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
 Extract only requested hospitality resources, supplies, equipment, and ingredients from the user's text.
 
 Rules:
@@ -92,11 +91,12 @@ Rules:
    - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, plates).
    Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units or "units". Default to "units" if no unit is specified.
 5. Exclude items with zero or negative intent.
-6. Use only these categories: "furniture", "electronics", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other". (Use "other" for raw ingredients, food, and supplies).
+6. Use only these categories:
+{_CATEGORY_BLOCK}
 7. Return an empty items list when no hospitality resource or supply is requested.
 
 Return only valid JSON with this root object shape:
-{"items": [{"category": "furniture", "name": "chair", "quantity": 1, "metric": "units"}]}
+{{"items": [{{"category": "banquet_seating", "name": "chair", "quantity": 1, "metric": "units"}}]}}
 """
 
 

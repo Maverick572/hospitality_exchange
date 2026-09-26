@@ -9,8 +9,8 @@ def test_parse_requirement_returns_validated_items(monkeypatch):
         "_request_completion",
         lambda description: (
             '{"items": ['
-            '{"category": "furniture", "name": "chair", "quantity": 300},'
-            '{"category": "furniture", "name": "table", "quantity": 20}'
+            '{"category": "banquet_seating", "name": "chair", "quantity": 300},'
+            '{"category": "tables", "name": "table", "quantity": 20}'
             ']}'
         ),
     )
@@ -20,8 +20,8 @@ def test_parse_requirement_returns_validated_items(monkeypatch):
     )
 
     assert [item.model_dump() for item in result] == [
-        {"category": "furniture", "name": "chair", "quantity": 300, "metric": "units"},
-        {"category": "furniture", "name": "table", "quantity": 20, "metric": "units"},
+        {"category": "banquet_seating", "name": "chair", "quantity": 300, "metric": "units"},
+        {"category": "tables", "name": "table", "quantity": 20, "metric": "units"},
     ]
 
 
@@ -39,10 +39,10 @@ def test_parse_requirement_returns_empty_list_for_no_resources(monkeypatch):
     "content",
     [
         "not json",
-        "[{\"category\": \"furniture\", \"name\": \"chair\", \"quantity\": 1}]",
-        "{\"result\": []}",
-        "{\"items\": [{\"category\": \"invalid\", \"name\": \"chair\", \"quantity\": 1}]}",
-        "{\"items\": [{\"category\": \"furniture\", \"name\": \"chair\", \"quantity\": 0}]}",
+        '[{"category": "banquet_seating", "name": "chair", "quantity": 1}]',
+        '{"result": []}',
+        '{"items": [{"category": "invalid", "name": "chair", "quantity": 1}]}',
+        '{"items": [{"category": "banquet_seating", "name": "chair", "quantity": 0}]}',
     ],
 )
 def test_parse_requirement_rejects_invalid_model_output(monkeypatch, content):

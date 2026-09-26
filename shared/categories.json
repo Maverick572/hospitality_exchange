@@ -1,0 +1,221 @@
+{
+  "categories": [
+    {
+      "id": "banquet_seating",
+      "label": "Banquet Seating",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["chair", "banquet chair", "chiavari chair", "folding chair", "stool", "bar stool", "lounge chair", "sofa", "ottoman"]
+    },
+    {
+      "id": "tables",
+      "label": "Tables",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["round table", "rectangular table", "cocktail table", "buffet table", "conference table", "dining table", "coffee table", "desk"]
+    },
+    {
+      "id": "linen_textiles",
+      "label": "Linen & Textiles",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["tablecloth", "napkin", "chair cover", "bed sheet", "towel", "curtain", "pillow", "cushion", "bathrobe", "duvet"]
+    },
+    {
+      "id": "crockery_glassware",
+      "label": "Crockery & Glassware",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["plate", "bowl", "platter", "cup", "saucer", "mug", "glass", "tumbler", "stemware", "wine glass", "goblet"]
+    },
+    {
+      "id": "cutlery_flatware",
+      "label": "Cutlery & Flatware",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["knife", "fork", "spoon", "serving spoon", "ladle", "tong", "chopstick", "steak knife"]
+    },
+    {
+      "id": "buffet_serving",
+      "label": "Buffet & Serving Equipment",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["chafing dish", "buffet warmer", "food warmer", "bain marie", "beverage dispenser", "punch bowl", "serving tray", "cake stand"]
+    },
+    {
+      "id": "cookware_utensils",
+      "label": "Cookware & Utensils",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["pot", "pan", "wok", "kadai", "tawa", "skillet", "baking tray", "mixing bowl", "colander", "cutting board", "peeler"]
+    },
+    {
+      "id": "decor_signage",
+      "label": "Décor & Signage",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["centerpiece", "flower vase", "candle holder", "menu holder", "sign board", "directional sign", "backdrop", "banner", "carpet", "red carpet"]
+    },
+    {
+      "id": "lighting_fixtures",
+      "label": "Lighting & Fixtures",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["chandelier", "lamp", "wall sconce", "fairy light", "string light", "uplighter", "spotlight", "lantern", "candelabra"]
+    },
+    {
+      "id": "cleaning_housekeeping",
+      "label": "Cleaning & Housekeeping",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["vacuum cleaner", "mop", "broom", "dustbin", "waste bin", "housekeeping cart", "laundry trolley", "dustpan", "squeegee"]
+    },
+    {
+      "id": "guest_amenities",
+      "label": "Guest Amenities & Supplies",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["toiletry kit", "shampoo", "soap", "slipper", "bathrobe", "hanger", "room stationery", "tissue box", "minibar item"]
+    },
+    {
+      "id": "uniforms_apparel",
+      "label": "Uniforms & Staff Apparel",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["chef coat", "apron", "waiter uniform", "housekeeping uniform", "name tag", "cap", "glove", "footwear"]
+    },
+    {
+      "id": "safety_fire",
+      "label": "Safety & Fire Equipment",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["fire extinguisher", "first aid kit", "smoke detector", "exit sign", "fire hose", "safety cone", "wet floor sign", "helmet"]
+    },
+    {
+      "id": "storage_shelving",
+      "label": "Storage & Shelving",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["steel rack", "storage shelf", "trolley", "dish rack", "glass rack", "utensil rack", "pallet", "container", "crate"]
+    },
+    {
+      "id": "raw_ingredients",
+      "label": "Raw Ingredients & Supplies",
+      "evidenceType": "photo",
+      "defaultMetric": "kg",
+      "keywords": ["rice", "flour", "oil", "sugar", "spice", "dal", "ghee", "butter", "vegetable", "fruit", "milk", "water", "ice"]
+    },
+    {
+      "id": "disposables_packaging",
+      "label": "Disposables & Packaging",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["paper plate", "paper cup", "tissue", "cling wrap", "aluminium foil", "garbage bag", "takeaway box", "food container", "straw"]
+    },
+    {
+      "id": "mattress_bedding",
+      "label": "Mattresses & Bedding",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": ["mattress", "bed frame", "headboard", "pillow", "blanket", "comforter", "bed base", "mattress protector"]
+    },
+    {
+      "id": "cooking_equipment",
+      "label": "Commercial Cooking Equipment",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["gas range", "oven", "tandoor", "grill", "fryer", "griddle", "induction cooktop", "salamander", "dosa bhatti", "tilting pan"]
+    },
+    {
+      "id": "refrigeration",
+      "label": "Refrigeration & Cold Storage",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["refrigerator", "freezer", "deep freezer", "cold room", "display cooler", "chest freezer", "under-counter fridge", "ice machine"]
+    },
+    {
+      "id": "dishwashing_equipment",
+      "label": "Dishwashing Equipment",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["commercial dishwasher", "pot washer", "glass washer", "sink unit", "exhaust hood"]
+    },
+    {
+      "id": "bar_beverage",
+      "label": "Bar & Beverage Equipment",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["espresso machine", "coffee grinder", "beer dispenser", "blender", "juicer", "cocktail station", "soda dispenser", "ice crusher"]
+    },
+    {
+      "id": "laundry_equipment",
+      "label": "Laundry Equipment",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["washing machine", "industrial dryer", "iron press", "bedsheet ironer", "linen trolley", "dry cleaning machine"]
+    },
+    {
+      "id": "sound_system",
+      "label": "Sound & PA Systems",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["speaker", "PA system", "mixer", "amplifier", "wireless microphone", "cordless mic", "audio console", "subwoofer"]
+    },
+    {
+      "id": "visual_display",
+      "label": "Visual & Display Technology",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["LED wall", "projector", "projection screen", "LED TV", "video wall", "monitor", "display panel", "webcasting system"]
+    },
+    {
+      "id": "pos_technology",
+      "label": "POS & Business Technology",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["POS machine", "billing terminal", "tablet", "laptop", "printer", "barcode scanner", "card swipe machine"]
+    },
+    {
+      "id": "security_surveillance",
+      "label": "Security & Surveillance",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["CCTV camera", "DVR", "NVR", "access control panel", "metal detector", "key card system", "intercom"]
+    },
+    {
+      "id": "fitness_wellness",
+      "label": "Fitness & Wellness Equipment",
+      "evidenceType": "video",
+      "defaultMetric": "units",
+      "keywords": ["treadmill", "elliptical", "exercise bike", "dumbbell", "weight bench", "yoga mat", "massage table", "sauna unit"]
+    },
+    {
+      "id": "venue_space",
+      "label": "Venue & Space",
+      "evidenceType": "photo_video",
+      "defaultMetric": "sqm",
+      "keywords": ["hall", "banquet hall", "conference room", "meeting room", "rooftop", "garden", "lawn", "parking", "kitchen space", "co-working"]
+    },
+    {
+      "id": "staging_structures",
+      "label": "Staging & Structures",
+      "evidenceType": "photo_video",
+      "defaultMetric": "units",
+      "keywords": ["stage", "modular stage", "truss", "podium", "lectern", "tent", "canopy", "shamiana", "German structure", "pagoda tent", "arch"]
+    },
+    {
+      "id": "vehicle_transport",
+      "label": "Vehicles & Transport",
+      "evidenceType": "photo_video",
+      "defaultMetric": "units",
+      "keywords": ["van", "truck", "tempo", "refrigerated truck", "food truck", "golf cart", "luggage trolley"]
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "evidenceType": "photo",
+      "defaultMetric": "units",
+      "keywords": []
+    }
+  ]
+}
