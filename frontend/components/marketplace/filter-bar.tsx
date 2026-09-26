@@ -1,7 +1,7 @@
 "use client";
 
 import { SearchIcon, XIcon } from "lucide-react";
-import categoriesData from "../../../shared/categories.json";
+import categoriesData from "@/lib/categories.json";
 
 export const MUMBAI_HUBS = [
   "Bandra West",

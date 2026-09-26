@@ -3,20 +3,26 @@
 
 export type GeoLocation = {
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
 };
 
 export type UserProfile = {
   userId: string;
   name: string | null;
+  contactName?: string | null;
   email: string | null;
   phone: string | null;
   businessName: string | null;
+  businessType?: string | null;
   location: GeoLocation | null;
+  address?: string;
   profileImage?: string | null;
   rating: number;
   totalRatings: number;
+  reviewCount?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -37,13 +43,14 @@ export type DriverProfile = {
   vehicleType: string;
   vehicleNumber: string;
   capacity: number;
+  totalTrips?: number;
   licenseNumber?: string | null;
   verificationStatus: "unverified" | "pending" | "verified" | "rejected";
   rating: number;
-  totalRatings: number;
-  status: "active" | "inactive";
+  totalRatings?: number;
+  status?: "active" | "inactive" | string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 };
 
 export type DriverProfileInput = {
@@ -57,10 +64,12 @@ export type DriverProfileInput = {
 
 export type Category = {
   id: string;
-  label: string;
+  label?: string;
+  name?: string;
   evidenceType: "photo" | "video" | string;
-  defaultMetric: string;
-  keywords: string[];
+  defaultMetric?: string;
+  metric?: string;
+  keywords?: string[];
 };
 
 export type AvailabilitySlot = { date: string; quantity: number };
@@ -68,6 +77,7 @@ export type AvailabilitySlot = { date: string; quantity: number };
 export type Resource = {
   resourceId: string;
   providerId?: string;
+  userId?: string;
   name: string;
   category: string;
   description?: string;
@@ -138,11 +148,12 @@ export type ProviderSummary = {
   phone?: string | null;
   rating: number;
   totalRatings?: number;
+  reviewCount?: number;
   location?: Partial<GeoLocation>;
 };
 
 export type SearchProduct = {
-  productId: string;
+  productId?: string;
   resourceId: string;
   name: string;
   category: string;
@@ -151,20 +162,23 @@ export type SearchProduct = {
   availableQuantity: number;
   price: number;
   pricingUnit: string;
-  location: Partial<GeoLocation> | null;
-  condition: string;
-  images: string[];
+  location?: Partial<GeoLocation> | GeoLocation | null;
+  condition?: string;
+  images?: string[];
   status: string;
-  availability: AvailabilitySlot[];
+  availability?: AvailabilitySlot[];
   provider: ProviderSummary;
   distanceKm: number | null;
   availabilityScore: number;
   availableForRequestedPeriod: boolean;
-  matchedItem: {
-    name: string;
-    category: string;
-    requestedQuantity: number;
-    metric: string;
+  matchScore?: number;
+  matchReasons?: string[];
+  matchedItem?: {
+    name?: string;
+    category?: string;
+    requestedQuantity?: number;
+    metric?: string;
+    matchedQuantity?: number;
   };
 };
 
@@ -194,11 +208,13 @@ export type ResourceRequest = {
   resourceId: string;
   requestedQuantity: number;
   offeredPrice: number;
-  counterPrice: number | null;
+  counterPrice?: number | null;
+  counterNotes?: string | null;
+  rejectionReason?: string | null;
   message: string;
   status: RequestStatus;
   bookingId?: string;
-  seeker?: { userId: string; businessName: string };
+  seeker?: { userId: string; businessName: string; contactName?: string; phone?: string; rating?: number };
   resource?: { resourceId: string; name: string };
   createdAt: string;
   updatedAt: string;
@@ -213,7 +229,13 @@ export type CreateRequestInput = {
   message: string;
 };
 
-export type CounterInput = { price: number; quantity: number; message: string };
+export type CounterInput = {
+  price?: number;
+  counterPrice?: number;
+  quantity?: number;
+  message?: string;
+  notes?: string;
+};
 
 export type BookingStatus =
   | "confirmed"
@@ -239,16 +261,18 @@ export type ConditionEvidence = {
 
 export type Booking = {
   bookingId: string;
+  requestId?: string;
   seekerId: string;
   providerId: string;
   resourceId: string;
-  driverId: string | null;
+  driverId?: string | null;
   requirementId?: string | null;
   quantity: number;
-  resourceAmount: number;
-  deliveryAmount: number;
-  depositAmount: number;
-  totalAmount: number;
+  resourceAmount?: number;
+  deliveryAmount?: number;
+  depositAmount?: number;
+  totalAmount?: number;
+  totalPrice?: number;
   pickupLocation?: Partial<GeoLocation> | null;
   deliveryLocation?: Partial<GeoLocation> | null;
   pickupDate?: string | null;
@@ -258,7 +282,7 @@ export type Booking = {
   escrowId?: string;
   evidence?: ConditionEvidence[];
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 };
 
 export type Escrow = {
@@ -267,11 +291,16 @@ export type Escrow = {
   seekerId?: string;
   providerId?: string;
   driverId?: string | null;
-  amount: number;
-  depositAmount: number;
+  amount?: number;
+  totalAmount?: number;
+  depositAmount?: number;
+  damageDeposit?: number;
   penaltyAmount?: number;
   providerAmount?: number;
+  providerPayout?: number;
   driverAmount?: number;
+  driverPayout?: number;
+  platformFee?: number;
   paymentReference?: string | null;
   status: "pending" | "funded" | "delivered" | "released" | "refunded" | string;
   createdAt?: string;
@@ -313,17 +342,18 @@ export type AppNotification = {
   message: string;
   referenceId?: string | null;
   read: boolean;
+  link?: string;
   createdAt: string;
 };
 
 export type UserDashboard = {
   activeResources: number;
-  activeRequirements: number;
+  activeRequirements?: number;
   pendingRequests: number;
   activeBookings: number;
   completedBookings: number;
   totalEarnings: number;
-  pendingPayments: number;
+  pendingPayments?: number;
 };
 
 export type DriverDashboard = {
@@ -339,13 +369,18 @@ export type DriverRoute = {
   routeId: string;
   driverId: string;
   startLocation: GeoLocation;
-  destination: GeoLocation;
+  destination?: GeoLocation;
+  endLocation?: GeoLocation;
   stops: GeoLocation[];
   travelDate: string;
   departureTime: string;
-  arrivalTime: string;
+  arrivalTime?: string;
+  estimatedArrival?: string;
+  totalCapacity?: number;
+  capacity?: number;
   availableCapacity: number;
-  price: number;
+  price?: number;
+  pricePerKm?: number;
   status: "active" | "inactive" | string;
   createdAt?: string;
   updatedAt?: string;
@@ -359,6 +394,8 @@ export type DriverRouteInput = {
   departureTime: string;
   arrivalTime: string;
   availableCapacity: number;
+  capacity?: number;
+  totalCapacity?: number;
   price: number;
 };
 
@@ -370,6 +407,7 @@ export type DeliveryOpportunity = {
   requiredCapacity: number;
   compatibility?: string;
   estimatedEarnings?: number;
+  estimatedPayout?: number;
   pickupDetourKm?: number;
   deliveryDetourKm?: number;
   status?: string;
@@ -381,6 +419,7 @@ export type RouteMatch = {
   driver: {
     driverId: string;
     name?: string;
+    phone?: string;
     vehicleType?: string;
     vehicleNumber?: string;
     capacity?: number;
@@ -391,15 +430,18 @@ export type RouteMatch = {
   destination: GeoLocation;
   stops: GeoLocation[];
   travelDate: string;
-  departureTime: string;
-  arrivalTime: string;
-  availableCapacity: number;
-  price: number;
-  pickup_detour_km: number;
-  delivery_detour_km: number;
-  total_detour_km: number;
-  excess_capacity: number;
-  directionallyValid: boolean;
+  departureTime?: string;
+  arrivalTime?: string;
+  availableCapacity?: number;
+  price?: number;
+  pickup_detour_km?: number;
+  delivery_detour_km?: number;
+  total_detour_km?: number;
+  excess_capacity?: number;
+  directionallyValid?: boolean;
+  detourDistanceKm?: number;
+  estimatedCost?: number;
+  matchScore?: number;
 };
 
 export type DeliveryStatus = "pickup_pending" | "picked_up" | "in_transit" | "delivered";
