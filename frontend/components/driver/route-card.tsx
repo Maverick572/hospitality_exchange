@@ -6,7 +6,9 @@ import type { DriverRoute } from "@/lib/types";
 
 /** "Thane → Vashi → Nerul" summary used on the dashboard and routes list. */
 export function RoutePath({ route }: { route: DriverRoute }) {
-  const points = [route.startLocation, ...(route.stops ?? []), route.destination];
+  const points = [route.startLocation, ...(route.stops ?? []), route.destination].filter(
+    (p): p is NonNullable<typeof p> => Boolean(p),
+  );
   return (
     <p className="flex flex-wrap items-center gap-1 font-semibold">
       {points.map((point, index) => (

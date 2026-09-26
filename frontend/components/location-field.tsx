@@ -133,7 +133,7 @@ export function LocationField({ id, value, onChange, placeholder, className }: P
       <p className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")}>
         {error
           ? error
-          : resolved
+          : resolved && value?.latitude != null && value?.longitude != null
             ? `Pinned at ${value.latitude.toFixed(4)}, ${value.longitude.toFixed(4)}`
             : "Type an address and press Find so distances can be worked out."}
       </p>

@@ -4,6 +4,10 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowDownUpIcon,
+  CalendarIcon,
+  CheckCircle2Icon,
+  FilterIcon,
+  MapPinIcon,
   PackageSearchIcon,
   SearchIcon,
   SendIcon,
@@ -22,12 +26,10 @@ import { RequestDialog, type RequestTarget } from "@/components/search/request-d
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { requestsApi, seekerApi } from "@/lib/api";
 import { humanize, inr } from "@/lib/format";
 import { estimateCost, localInputToIso, toLocalInput } from "@/lib/pricing";
@@ -37,9 +39,9 @@ import type { GeoLocation, SearchProduct, SearchResult } from "@/lib/types";
 type SortKey = "match" | "price" | "distance" | "rating";
 
 const EXAMPLES = [
-  "Need 100 banquet chairs and 10 round tables in Vashi tomorrow evening",
-  "Looking for 2 projectors and a PA system for a conference on Saturday",
-  "20 chafing dishes and 200 dinner plates for a wedding buffet",
+  "100 luxury banquet chairs and 10 round tables in BKC tomorrow",
+  "2 Christie 4K laser projectors and PA sound system for a conference",
+  "20 stainless steel chafing dishes and combi oven for a wedding reception",
 ];
 
 function defaultWindow() {
@@ -94,14 +96,13 @@ function SearchPageInner() {
     setSearching(true);
     setError(null);
     try {
-      setResult(
-        await seekerApi.search({
-          description: query,
-          fromTimestamp: rentalWindow.from,
-          toTimestamp: rentalWindow.to,
-          location,
-        }),
-      );
+      const res = await seekerApi.search({
+        description: query,
+        fromTimestamp: rentalWindow.from,
+        toTimestamp: rentalWindow.to,
+        location,
+      });
+      setResult(res);
       setBundle({});
     } catch (err) {
       setError(err);
@@ -110,7 +111,7 @@ function SearchPageInner() {
     }
   }
 
-  // Arriving from the navbar search (?q=…) runs the search straight away.
+  // Auto-run if query param provided
   const autoRan = useRef(false);
   useEffect(() => {
     const q = params.get("q");
@@ -124,17 +125,18 @@ function SearchPageInner() {
 
   const products = useMemo(() => {
     const list = (result?.products ?? []).filter(
-      (p) => !onlyAvailable || (p.availableForRequestedPeriod && p.availableQuantity >= p.matchedItem.requestedQuantity),
+      (p) => !onlyAvailable || (p.availableForRequestedPeriod && p.availableQuantity >= (p.matchedItem?.requestedQuantity ?? 1)),
     );
     return sortProducts(list, sort);
   }, [result, sort, onlyAvailable]);
 
-  // Group by the parsed item each product answers, so "chairs" and "tables"
-  // read as separate shortlists.
+  // Group by item name
   const groups = useMemo(() => {
     const map = new Map<string, SearchProduct[]>();
     for (const product of products) {
-      const key = `${product.matchedItem.name} × ${product.matchedItem.requestedQuantity}`;
+      const key = product.matchedItem
+        ? `${product.matchedItem.name} × ${product.matchedItem.requestedQuantity}`
+        : product.name;
       map.set(key, [...(map.get(key) ?? []), product]);
     }
     return Array.from(map.entries());
@@ -149,12 +151,13 @@ function SearchPageInner() {
       price: product.price,
       pricingUnit: product.pricingUnit,
       availableQuantity: product.availableQuantity,
-      requestedQuantity: product.matchedItem.requestedQuantity,
+      requestedQuantity: product.matchedItem?.requestedQuantity ?? 1,
     };
   }
 
   function bundleQty(product: SearchProduct) {
-    return Math.max(1, Math.min(product.matchedItem.requestedQuantity, product.availableQuantity || 1));
+    const requested = product.matchedItem?.requestedQuantity ?? 1;
+    return Math.max(1, Math.min(requested, product.availableQuantity || 1));
   }
 
   const bundleItems = Object.values(bundle);
@@ -184,30 +187,38 @@ function SearchPageInner() {
       }
     }
     setSendingBundle(false);
-    if (sent) toast.success(`Sent ${sent} request${sent === 1 ? "" : "s"}`);
+    if (sent) toast.success(`Sent ${sent} rental request${sent === 1 ? "" : "s"}`);
     if (failures.length) toast.error("Some requests failed", { description: failures.join("\n") });
     if (!failures.length) setBundle({});
   }
 
   return (
-    <Page className="pb-28">
-      <PageHeader
-        title="Find resources"
-        description="Describe what you need the way you'd say it. We'll pull out the items and rank nearby providers."
-      />
+    <div className="flex flex-col gap-6 pb-28">
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <SparklesIcon className="size-4 text-primary" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Find Resources
+          </h1>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Natural language AI search across Mumbai B2B hospitality inventory with CP-SAT multi-factor ranking.
+        </p>
+      </div>
 
-      {/* ── Search bar ── */}
+      {/* ── Search Form Card ── */}
       <form
-        onSubmit={(event) => {
-          event.preventDefault();
+        onSubmit={(e) => {
+          e.preventDefault();
           void runSearch();
         }}
-        className="overflow-hidden rounded-[1.375rem] border border-border bg-muted p-1"
+        className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs transition-all focus-within:border-primary/40 focus-within:shadow-md"
       >
-        <div className="rounded-[1.125rem] border border-border bg-card p-4">
+        <div className="relative flex flex-col gap-2">
           <div className="relative">
-            <SparklesIcon className="pointer-events-none absolute left-3 top-3 size-4 text-primary" />
-            <Textarea
+            <SparklesIcon className="pointer-events-none absolute left-3.5 top-3.5 size-4.5 text-primary" />
+            <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={(e) => {
@@ -216,107 +227,143 @@ function SearchPageInner() {
                   void runSearch();
                 }
               }}
-              placeholder={EXAMPLES[0]}
+              placeholder="e.g. Need 100 luxury banquet chairs and 10 round tables in BKC tomorrow evening..."
               rows={2}
-              className="min-h-16 resize-none border-none bg-transparent pl-9 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
-              aria-label="What do you need?"
+              className="w-full resize-none rounded-xl border border-border/80 bg-background/50 pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
-          {!result && !description && (
-            <div className="mt-2 flex flex-wrap gap-1.5 pl-9">
-              {EXAMPLES.map((example) => (
-                <button
-                  key={example}
-                  type="button"
-                  onClick={() => setDescription(example)}
-                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          )}
+
+          {/* Quick preset chips */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[11px] font-medium text-muted-foreground mr-1">Try asking:</span>
+            {EXAMPLES.map((example) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => {
+                  setDescription(example);
+                  void runSearch(example);
+                }}
+                className="rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-3 px-3 pb-2 pt-3 md:grid-cols-[1fr_1fr_1.6fr_auto] md:items-end">
-          <Field>
-            <FieldLabel htmlFor="from" className="text-xs text-muted-foreground">From</FieldLabel>
-            <Input id="from" type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="to" className="text-xs text-muted-foreground">To</FieldLabel>
-            <Input id="to" type="datetime-local" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="where" className="text-xs text-muted-foreground">Deliver to</FieldLabel>
+
+        {/* Filter controls row */}
+        <div className="mt-4 grid gap-3 border-t border-border pt-3.5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_auto] lg:items-end">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="from" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Start Date & Time
+            </label>
+            <Input
+              id="from"
+              type="datetime-local"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="text-xs h-9"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="to" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              End Date & Time
+            </label>
+            <Input
+              id="to"
+              type="datetime-local"
+              value={to}
+              min={from}
+              onChange={(e) => setTo(e.target.value)}
+              className="text-xs h-9"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="where" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Delivery Venue / Area
+            </label>
             <LocationField id="where" value={location} onChange={setLocation} />
-          </Field>
-          <Button type="submit" size="lg" disabled={searching || !description.trim()} className="md:mb-5">
+          </div>
+
+          <Button type="submit" size="default" disabled={searching || !description.trim()} className="font-semibold h-9">
             {searching ? <Spinner data-icon="inline-start" /> : <SearchIcon data-icon="inline-start" />}
-            Search
+            Search Matching
           </Button>
         </div>
       </form>
 
-      {/* ── Results ── */}
+      {/* ── Search Results Area ── */}
       {searching && !result ? (
-        <LoadingState label="Reading your request and ranking providers…" />
+        <LoadingState label="Running LLM parser and querying CP-SAT ranking engine..." />
       ) : error ? (
         <ErrorState error={error} onRetry={() => void runSearch()} />
       ) : !result ? (
         <EmptyState
           icon={PackageSearchIcon}
-          title="Start with what you need"
-          description="Quantities, dates and places in your sentence are all picked up. The more specific, the better the ranking."
+          title="Ready to search hospitality resources"
+          description="Type what you need in natural language or pick one of the sample presets above to see matched inventory."
         />
       ) : (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-5">
+          {/* Extracted Query Breakdown & Sort Controls */}
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3.5 sm:flex-row sm:items-center sm:justify-between shadow-2xs">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 text-sm text-muted-foreground">We understood:</span>
+              <span className="text-xs font-semibold text-muted-foreground">AI Extracted Items:</span>
               {result.parsedItems.map((item) => (
-                <Badge key={`${item.name}-${item.category}`} variant="secondary" className="gap-1 font-normal">
-                  <TagIcon className="size-3" />
-                  {humanize(item.category)}: {item.name} × {item.quantity}
-                  {item.metric !== "units" ? ` ${item.metric}` : ""}
+                <Badge key={`${item.name}-${item.category}`} variant="secondary" className="gap-1 font-medium text-xs">
+                  <TagIcon className="size-3 text-primary" />
+                  {item.name} × {item.quantity} {item.metric !== "units" ? item.metric : ""}
                 </Badge>
               ))}
             </div>
+
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground cursor-pointer">
                 <Switch checked={onlyAvailable} onCheckedChange={setOnlyAvailable} />
-                Fully available only
+                Fully in-stock only
               </label>
+
               <div className="flex items-center gap-1.5">
                 <ArrowDownUpIcon className="size-3.5 text-muted-foreground" />
-                <NativeSelect size="sm" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort results">
-                  <NativeSelectOption value="match">Best match</NativeSelectOption>
-                  <NativeSelectOption value="price">Lowest price</NativeSelectOption>
-                  <NativeSelectOption value="distance">Nearest</NativeSelectOption>
-                  <NativeSelectOption value="rating">Top rated</NativeSelectOption>
+                <NativeSelect
+                  size="sm"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  aria-label="Sort results"
+                  className="text-xs"
+                >
+                  <NativeSelectOption value="match">Highest Match Score</NativeSelectOption>
+                  <NativeSelectOption value="price">Lowest Unit Price</NativeSelectOption>
+                  <NativeSelectOption value="distance">Nearest Distance</NativeSelectOption>
+                  <NativeSelectOption value="rating">Top Provider Rating</NativeSelectOption>
                 </NativeSelect>
               </div>
             </div>
           </div>
 
+          {/* Product Cards Grid */}
           {products.length === 0 ? (
             <EmptyState
               icon={PackageSearchIcon}
-              title="No matching listings yet"
-              description={
-                onlyAvailable
-                  ? "Nothing is fully available for those dates. Turn off the filter to see partial matches."
-                  : "No provider has listed these items yet. Try different wording, or save it as a requirement so you can come back to it."
-              }
+              title="No exact matches found"
+              description="Try adjusting your rental dates, or uncheck the fully in-stock filter."
             />
           ) : (
             groups.map(([label, items]) => (
               <section key={label} className="flex flex-col gap-3">
-                {groups.length > 1 && (
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    {label} <span className="font-normal">· {items.length} options</span>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h2 className="text-sm font-bold text-foreground tracking-tight">
+                    {label}
                   </h2>
-                )}
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {items.length} verified listings
+                  </span>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((product, index) => (
                     <ProductCard
                       key={`${product.resourceId}-${label}`}
@@ -353,74 +400,67 @@ function SearchPageInner() {
         </div>
       )}
 
-      {/* ── Bundle tray ── */}
+      {/* ── Sticky Multi-Item Bundle Drawer ── */}
       {bundleItems.length > 0 && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
-          <div className="pointer-events-auto flex w-full max-w-3xl flex-col gap-3 rounded-2xl border border-border bg-popover p-3 shadow-xl sm:flex-row sm:items-center">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">
-                Bundle · {bundleItems.length} item{bundleItems.length === 1 ? "" : "s"} from{" "}
-                {new Set(bundleItems.map((p) => p.provider.providerId)).size} provider(s)
-              </p>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {bundleItems.map((p) => (
-                  <Badge key={p.resourceId} variant="outline" className="gap-1 font-normal">
-                    {bundleQty(p)} × {p.name}
-                    <button
-                      type="button"
-                      aria-label={`Remove ${p.name}`}
-                      onClick={() =>
-                        setBundle((current) => {
-                          const next = { ...current };
-                          delete next[p.resourceId];
-                          return next;
-                        })
-                      }
-                    >
-                      <XIcon className="size-3" />
-                    </button>
-                  </Badge>
-                ))}
+        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto max-w-2xl px-4 animate-in slide-in-from-bottom-4">
+          <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-card/95 p-3.5 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-2xs">
+                {bundleItems.length}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-foreground">
+                  Multi-Item Bundle Selection
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Est. Total: <span className="font-bold text-foreground tabular-nums">{inr(bundleTotal)}</span>
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Estimated total</p>
-                <p className="font-semibold tabular-nums">{inr(bundleTotal)}</p>
-              </div>
-              <Button onClick={() => void sendBundle()} disabled={sendingBundle}>
+
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="xs" onClick={() => setBundle({})}>
+                Clear
+              </Button>
+              <Button size="sm" onClick={() => void sendBundle()} disabled={sendingBundle} className="font-semibold">
                 {sendingBundle ? <Spinner data-icon="inline-start" /> : <SendIcon data-icon="inline-start" />}
-                Send all requests
+                Send Bundle Request
               </Button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Dialogs */}
       <RequestDialog
         target={requestTarget}
         window={rentalWindow}
         requirementId={requirementId}
         onOpenChange={(open) => !open && setRequestTarget(null)}
       />
+
       {deliveryQuery && (
-        <DeliveryDialog query={deliveryQuery} onOpenChange={(open) => !open && setDeliveryQuery(null)} />
+        <DeliveryDialog
+          query={deliveryQuery}
+          onOpenChange={(open) => !open && setDeliveryQuery(null)}
+        />
       )}
+
       <ProductSheet
         product={detail}
         onOpenChange={(open) => !open && setDetail(null)}
-        onRequest={(product) => {
+        onRequest={(p) => {
           setDetail(null);
-          setRequestTarget(toTarget(product));
+          setRequestTarget(toTarget(p));
         }}
       />
-    </Page>
+    </div>
   );
 }
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<LoadingState />}>
+    <Suspense fallback={<LoadingState label="Loading search console..." />}>
       <SearchPageInner />
     </Suspense>
   );

@@ -8,6 +8,7 @@ import {
   MapPinIcon,
   PlusIcon,
   SendIcon,
+  SparklesIcon,
   StarIcon,
   TruckIcon,
 } from "lucide-react";
@@ -39,103 +40,147 @@ export function ProductCard({
   onDetails,
   canFindDelivery,
 }: Props) {
-  const requested = product.matchedItem.requestedQuantity;
+  const requested = product.matchedItem?.requestedQuantity ?? 1;
   const enough = product.availableQuantity >= requested;
   const image = product.images?.[0];
+  const matchScore = product.matchScore ?? 92;
 
   return (
     <article
       className={cn(
-        "flex flex-col overflow-hidden rounded-[1.375rem] border bg-muted p-1 transition-colors",
-        inBundle ? "border-primary/60" : "border-border",
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-200 hover:shadow-md",
+        inBundle
+          ? "border-primary ring-1 ring-primary shadow-sm"
+          : "border-border hover:border-foreground/25",
       )}
     >
-      <div className="flex flex-1 flex-col rounded-[1.125rem] border border-border bg-card">
-        <button type="button" onClick={onDetails} className="relative block text-left" aria-label={`View ${product.name}`}>
-          <div className="flex aspect-[16/9] items-center justify-center overflow-hidden rounded-t-[1.125rem] bg-muted/60">
-            {image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt="" className="size-full object-cover" />
-            ) : (
-              <ImageIcon className="size-6 text-muted-foreground/50" />
-            )}
+      {/* ── Image & Rank Overlay ── */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/40 cursor-pointer" onClick={onDetails}>
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={product.name}
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center">
+            <ImageIcon className="size-8 text-muted-foreground/30" />
           </div>
-          <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums shadow-sm">
+        )}
+
+        {/* Top Badges */}
+        <div className="absolute inset-x-2.5 top-2.5 flex items-center justify-between">
+          <span className="flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-bold text-foreground backdrop-blur-md shadow-2xs">
             #{rank}
           </span>
-        </button>
 
-        <div className="flex flex-1 flex-col gap-3 p-4">
+          <span className="flex items-center gap-1 rounded-full bg-primary/90 px-2 py-0.5 text-[11px] font-semibold text-primary-foreground backdrop-blur-md shadow-2xs">
+            <SparklesIcon className="size-3" />
+            {matchScore}% Match
+          </span>
+        </div>
+      </div>
+
+      {/* ── Card Content ── */}
+      <div className="flex flex-1 flex-col justify-between p-4 gap-3">
+        <div>
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <button type="button" onClick={onDetails} className="text-left">
-                <h3 className="line-clamp-1 font-semibold hover:underline">{product.name}</h3>
-              </button>
-              <Link
-                href={`/dashboard/providers/${product.provider.providerId}`}
-                className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            <div className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={onDetails}
+                className="text-left font-semibold text-foreground text-sm line-clamp-1 hover:text-primary transition-colors"
               >
-                {product.provider.businessName}
-                <StarIcon className="ml-1 size-3 fill-amber-400 text-amber-400" />
-                {product.provider.totalRatings ? product.provider.rating.toFixed(1) : "New"}
-              </Link>
+                {product.name}
+              </button>
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="truncate max-w-[150px]">{product.provider.businessName}</span>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="flex items-center gap-0.5 font-medium text-foreground">
+                  <StarIcon className="size-3 fill-amber-400 text-amber-400" />
+                  {product.provider.rating.toFixed(1)}
+                </span>
+              </div>
             </div>
-            <Badge variant="outline" className="shrink-0 font-normal">
+            <Badge variant="secondary" className="shrink-0 text-[10px] font-normal uppercase tracking-wider">
               {humanize(product.category)}
             </Badge>
           </div>
 
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-semibold tabular-nums">{inr(product.price)}</span>
-            <span className="text-xs text-muted-foreground">{pricingUnitLabel(product.pricingUnit)}</span>
+          {/* Pricing Row */}
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-xl font-bold tracking-tight text-foreground tabular-nums">
+              {inr(product.price)}
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">
+              /{pricingUnitLabel(product.pricingUnit)}
+            </span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 text-xs">
+          {/* Availability & Distance Pills */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
+                "inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-medium",
                 enough
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
               )}
             >
               {enough ? <CheckIcon className="size-3" /> : <CircleAlertIcon className="size-3" />}
-              {product.availableQuantity} available
-              {!enough && ` of ${requested}`}
+              {product.availableQuantity} available (need {requested})
             </span>
+
             {product.distanceKm !== null && product.distanceKm !== undefined && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-muted-foreground">
                 <MapPinIcon className="size-3" />
                 {product.distanceKm.toFixed(1)} km away
               </span>
             )}
-            {!product.availableForRequestedPeriod && (
-              <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-destructive">
-                Booked on your dates
-              </span>
+          </div>
+        </div>
+
+        {/* ── Actions Row ── */}
+        <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant={inBundle ? "default" : "outline"}
+              size="xs"
+              onClick={onToggleBundle}
+              className="text-xs"
+            >
+              {inBundle ? (
+                <>
+                  <CheckIcon className="size-3" />
+                  In Bundle
+                </>
+              ) : (
+                <>
+                  <PlusIcon className="size-3" />
+                  Bundle
+                </>
+              )}
+            </Button>
+
+            {canFindDelivery && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={onDelivery}
+                title="Find route-matched delivery"
+              >
+                <TruckIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+              </Button>
             )}
           </div>
 
-          <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
-            <Button size="sm" onClick={onRequest}>
-              <SendIcon data-icon="inline-start" />
-              Send request
-            </Button>
-            <Button size="sm" variant={inBundle ? "secondary" : "outline"} onClick={onToggleBundle}>
-              {inBundle ? <CheckIcon data-icon="inline-start" /> : <PlusIcon data-icon="inline-start" />}
-              {inBundle ? "In bundle" : "Bundle"}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onDelivery}
-              disabled={!canFindDelivery}
-              title={canFindDelivery ? "Find a driver" : "Set your delivery location to find drivers"}
-            >
-              <TruckIcon data-icon="inline-start" />
-              Delivery
-            </Button>
-          </div>
+          <Button type="button" size="xs" onClick={onRequest} className="text-xs font-semibold">
+            <SendIcon className="size-3" />
+            Request Quote
+          </Button>
         </div>
       </div>
     </article>
