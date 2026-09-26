@@ -139,3 +139,22 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D014 — Next.js Frontend Integration & Dual-Mode API Client
+- **Date:** 2026-09-27
+- **Decision:** Integrated full Next.js 16 (App Router, Turbopack, TailwindCSS, Radix/shadcn UI) frontend into `main` branch. Integrated 26 routes spanning Business and Driver app shells, marketplace, smart matches, logistics, escrow, notifications, and analytics. Built unified API client in `frontend/lib/api/client.ts` communicating with FastAPI at `http://127.0.0.1:8000/api/v1` with automatic Bearer token injection and graceful demo/mock fallback (`mockStore`) on connection failures.
+- **Alternatives considered:** Keeping frontend on a separate branch, using static HTML/JS prototypes, or hard-failing without mock fallback.
+- **Rejected because:** Branch divergence creates integration friction; hard-failing prevents demo and testing without local backend running.
+- **Accepted because:** Ensures single-branch codebase with seamless live/demo switching and full feature parity across all backend subsystems.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D015 — End-to-End Firebase Authentication & Onboarding Gate Flow
+- **Date:** 2026-09-27
+- **Decision:** Wired live Firebase Web App configuration for project `hospitality-exchange-370a7` in `frontend/.env.local`. Added `auth.authStateReady()` in `getIdToken()` to prevent token resolution race conditions during page hydration. Refactored `frontend/lib/api/client.ts` to exempt `/users/me` and `/drivers/me` from 404 mock-fallback suppression, allowing `ApiError(404)` to propagate to `session-gate.tsx` so newly authenticated users without a Firestore document are seamlessly routed to `/onboarding` (or `/driver/onboarding`) to create their business/driver profile before accessing the workspace.
+- **Alternatives considered:** Auto-creating placeholder user profiles on login, or falling back to mock user when profile is 404.
+- **Rejected because:** Falling back to mock user locks newly registered Firebase users into fake demo data; auto-creating blank profiles skips vital business location/category details needed for search and matching.
+- **Accepted because:** Preserves real identity lifecycle from Firebase Auth -> Onboarding Profile -> Firestore -> Live Dashboard.
+- **Status:** implemented
+- **Supersedes:** —
+
+

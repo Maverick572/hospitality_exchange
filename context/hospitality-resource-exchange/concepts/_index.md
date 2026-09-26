@@ -15,6 +15,7 @@ Notes on domain knowledge and conceptual dependencies for this project.
 | [[notifications-prioritization]] | Transaction-lifecycle notifications for users and drivers; schema and API defined |
 | [[driver-profiles-verification]] | Driver profiles, vehicle specs, Google Sign-In auth status, Firebase custom claims, and DigiLocker roadmap |
 | [[category-registry-and-evidence-rules]] | 31-category B2B taxonomy, photo/video/photo_video evidence rules, and SI unit normalization (kg, liters, m, sqm, units) |
+| [[frontend-and-firebase-auth]] | Next.js 16 frontend, Firebase Auth client/admin lifecycle, profile onboarding gates, and dual-mode mock fallback |
 | [[utilization-analytics]] | ~~Per-provider idle-capacity dashboard~~ — dropped from scope; replaced by dashboard endpoints |
 | [[quotation-requests]] | ~~Lighter-weight price-quote flow~~ — dropped from scope; covered by matching results + counter-offers |
 
