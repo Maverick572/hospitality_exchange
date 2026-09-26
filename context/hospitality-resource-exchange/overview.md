@@ -24,6 +24,8 @@ A B2B marketplace where hospitality businesses (hotels, restaurants, caterers, r
 
 [stated] Full Firestore schema defined: users, resources, requirements, requests, bookings, reviews, notifications, drivers, driverRoutes, deliveryRequests, escrow, conditionEvidence.
 
+[verified] Driver profile creation and Google login auth status endpoints implemented in FastAPI with Pydantic validation, Firebase custom claims (role="driver"), and automated test coverage. See D009.
+
 ## Key decisions
 
 See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full log. Summary:
@@ -35,6 +37,7 @@ See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full 
 - D006: Truck-pooling cut as standalone; logistics-aware matching via driver-published routes retained.
 - D007: Supabase → Firebase migration; single-backend FastAPI architecture.
 - D008: Unified User model (Provider + Seeker as one account); Drivers separate.
+- D009: Driver profile verification via DigiLocker readiness, Google Sign-In status endpoint, and Firebase custom claims (role="driver").
 
 ## Open conflicts
 
