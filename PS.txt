@@ -1,0 +1,184 @@
+# Hospitality Resource Exchange
+
+## Project Idea
+
+**Hospitality Resource Exchange** is a smart B2B marketplace that connects hospitality businesses that have **underutilized resources** with businesses that need those resources temporarily.
+
+The platform brings together **three types of users — Providers, Seekers, and Drivers —** and uses AI-powered matching, logistics optimization, and escrow-based transactions to make temporary resource sharing easier, cheaper, and safer.
+
+### Core Workflow
+
+A **Seeker** submits a requirement such as:
+
+> "I need 300 chairs and 20 tables in Navi Mumbai tomorrow, with delivery before 3 PM, within a ₹25,000 budget."
+
+The platform analyzes the requirement and finds suitable **Providers** based on:
+
+* Resource type and quantity
+* Availability
+* Price
+* Location and distance
+* Budget
+* Delivery requirements
+
+If one provider cannot fulfill the complete requirement, the system can **combine resources from multiple providers** into a single fulfillment bundle.
+
+At the same time, **Drivers** can list their available routes, timings, vehicle capacity, and pricing. The platform can match deliveries with existing driver routes, allowing drivers to earn from spare transport capacity while reducing delivery costs for seekers.
+
+Once a match is selected, the transaction is protected through an **escrow-based payment system**.
+
+### User Roles
+
+#### Provider
+
+Providers can:
+
+* List available hospitality resources
+* Specify quantity, price, location, and availability
+* Receive and manage booking requests
+* Earn revenue from otherwise unused resources
+
+Examples:
+
+* Chairs and tables
+* Audio/visual equipment
+* Kitchen equipment
+* Furniture
+* Event equipment
+* Hospitality spaces
+
+#### Seeker
+
+Seekers can:
+
+* Describe requirements in natural language
+* Search for available resources
+* Set budget, location, quantity, and timing constraints
+* Receive optimized provider matches
+* Combine resources from multiple providers
+* Arrange delivery
+* Track bookings and transactions
+
+#### Driver
+
+Drivers can:
+
+* List routes and destinations
+* Specify available timings
+* Specify vehicle type and capacity
+* Set delivery pricing
+* Accept compatible delivery requests
+* Earn additional income from spare transport capacity
+
+### Smart Matching
+
+The platform combines **resource matching and logistics matching**.
+
+```text
+Seeker Requirement
+        ↓
+AI Requirement Extraction
+        ↓
+Structured Constraints
+        ↓
+Resource Matching
+        ↓
+Provider Selection
+        ↓
+Logistics Matching
+        ↓
+Driver + Route Selection
+        ↓
+Optimized Fulfillment Bundle
+        ↓
+Secure Booking & Escrow
+```
+
+The matching system considers factors such as **availability, price, quantity, distance, timing, budget, and logistics feasibility**.
+
+For complex requirements, multiple providers can be combined into one fulfillment plan.
+
+### Secure Transactions
+
+The platform uses escrow to protect both parties during the transaction.
+
+```text
+Booking Created
+      ↓
+Payment Deposited
+      ↓
+     ESCROW
+      ↓
+Resource Pickup
+      ↓
+Condition Evidence
+      ↓
+Delivery
+      ↓
+Condition Confirmation
+      ↓
+Escrow Released
+      ↓
+Provider + Driver Paid
+```
+
+Timestamped photos/videos can be used to record the condition of resources before and after fulfillment.
+
+If resources are damaged during the transaction, the platform can apply a **damage penalty** according to the agreed terms before releasing the remaining escrow amount.
+
+### Key Innovation
+
+Unlike a conventional rental marketplace, the platform connects **three fragmented resources simultaneously**:
+
+```text
+Unused Hospitality Resources
+             +
+Temporary Business Demand
+             +
+Unused Transportation Capacity
+             ↓
+    Optimized Fulfillment
+```
+
+This allows:
+
+* Providers to monetize idle resources
+* Seekers to source resources more efficiently
+* Drivers to monetize spare route capacity
+* Businesses to reduce procurement and logistics costs
+* Transactions to be protected through escrow and condition verification
+
+### Example
+
+A hotel requires **300 chairs and 20 tables** for an event.
+
+No single provider has everything available.
+
+The platform can identify:
+
+```text
+Provider A → 180 chairs
+Provider B → 120 chairs
+Provider C → 20 tables
+```
+
+It then finds a driver whose existing route is compatible with the pickup and delivery locations.
+
+Instead of the seeker separately contacting three providers and arranging transportation, the platform produces a **single coordinated fulfillment plan** with consolidated pricing, logistics, and payment.
+
+### Technology Stack
+
+* **Frontend:** React
+* **Backend:** Python, FastAPI
+* **Database:** Supabase / PostgreSQL
+* **AI:** LLM-based natural-language requirement extraction
+* **Optimization:** CP-SAT
+* **Maps:** OpenStreetMap
+* **Routing:** OSRM
+* **Deployment:** Vercel + cloud-hosted backend
+
+The overall architecture follows the original proposal's input → intelligence/optimization → execution structure. 
+
+## Vision
+
+**Hospitality Resource Exchange** aims to turn fragmented, underutilized hospitality inventory and transportation capacity into a shared B2B resource network where businesses can **find what they need, monetize what they don't use, and move resources efficiently — all through one secure platform.**
