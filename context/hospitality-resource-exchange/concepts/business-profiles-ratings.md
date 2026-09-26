@@ -1,23 +1,25 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
-sources: ["[[projects/hospitality-resource-exchange/sources/problem-statement]]"]
-confidence: low
+sources: []
+confidence: high
 ---
 
 # Business Profiles, Ratings & Reviews
 
-[stated] Problem statement lists business profiles and ratings/reviews as features the platform "may also incorporate" — optional, not a core "should be able to" requirement.
+[stated] Now a first-class feature. Each user has a profile with rating and totalRatings. Reviews are submitted after completed bookings and aggregate into provider ratings that feed into the matching scorer.
 
 ## Details
 
-[stated] Original spec workflow (message.txt) includes "Receive Rating / Revenue" and "Rate Provider" as the final steps of both provider and seeker workflows — implying ratings were intended as part of the core transaction lifecycle, not purely optional, despite the PS framing them as exploratory.
+[stated] Firestore collections: `users/{userId}` includes rating and totalRatings. `reviews/{reviewId}` with fields: bookingId, reviewerId, providerId, rating, comment, createdAt, updatedAt.
 
-[inferred] Not currently represented as its own concept note or PPT feature — it exists only as the last step of [[projects/hospitality-resource-exchange/concepts/negotiate-book]]'s lifecycle diagram, with no defined data model (what a business profile contains, how rating scores aggregate, whether ratings feed into the matching scorer's "suitability" or "trust" factors).
+[stated] API: `POST /reviews` (rate provider after booking), `GET /users/{userId}/reviews` (get provider rating + review list). Backend computes and updates the aggregate rating — frontend should NOT calculate or directly modify provider ratings.
 
-[inferred] This connects directly to the cold-start/trust problem flagged at the project level: a new marketplace has no rating history for its first transactions, so the matching layer's "trust score" (mentioned in the PPT architecture slide) has nothing to compute from initially.
+[decided] Provider rating is confirmed as a matching/search metric — it appears in match results and influences matchScore.
+
+[stated] Profile API: `POST /users/profile` (create after Firebase signup), `GET /users/me`, `PATCH /users/me`. Profile includes: name, email, phone, businessName, location, profileImage, rating, totalRatings.
 
 ## Relations
 
@@ -25,6 +27,4 @@ depends_on:: [[projects/hospitality-resource-exchange/concepts/negotiate-book]]
 
 ## Open questions
 
-- Is a business profile just identity/contact info, or does it carry a trust/rating score consumed by the matching layer?
-- How is the cold-start problem handled when a new business has zero rating history?
-- Does the "Trust Score, Risk Assessment" mentioned in the PPT's Intelligence Layer (Slide 3) reduce to this rating average, or is it a separate undefined model? (See [[projects/hospitality-resource-exchange/architecture/intelligence-layer]].)
+- Cold-start problem for new businesses with zero rating history remains unaddressed — how does matching handle a provider with no ratings?

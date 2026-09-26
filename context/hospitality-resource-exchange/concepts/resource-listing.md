@@ -1,21 +1,25 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
 sources: []
-confidence: med
+confidence: high
 ---
 
 # Resource Listing
 
-[stated] Providers list resources they have available, capturing: resource type, quantity, capacity, location, availability dates/times, price, minimum rental period, conditions/restrictions, and photos.
+[stated] Users acting as Providers list resources they have available, capturing: name, category, description, quantity, available quantity, price, pricing unit, location (address + lat/lng), availability (date/time slots with quantity), images, and condition.
 
 ## Details
 
-[stated] Example from spec: "300 Banquet Chairs, Available Sept 10-12, Location: Andheri, Price: ₹6,000/day, Minimum rental: 1 day."
+[stated] Firestore collection: `resources/{resourceId}` with fields: providerId, name, category, description, quantity, availableQuantity, price, pricingUnit, location, availability, images[], condition, status, createdAt, updatedAt.
 
-[inferred] This feature is pure CRUD against Supabase (Postgres + PostGIS for location) — it does not touch the LLM parsing layer or the CP-SAT solver, since it's structured form input, not free text.
+[decided] Partial-quantity tracking confirmed: `quantity` (total) and `availableQuantity` (currently free) are separate fields. This supports partial bookings (e.g. 100 of 300 chairs still available).
+
+[stated] API endpoints: `POST /resources`, `GET /resources/my`, `GET /resources/{id}`, `PATCH /resources/{id}`, `DELETE /resources/{id}` (soft-delete via status → "inactive").
+
+[stated] This feature is structured-form CRUD against Firestore via FastAPI — it does not touch the LLM parsing layer or the CP-SAT solver.
 
 ## Relations
 
@@ -23,5 +27,4 @@ depends_on:: [[projects/hospitality-resource-exchange/concepts/availability-cale
 
 ## Open questions
 
-- Is listing entry always structured-form, or can providers also free-text describe a resource (which would route through the LLM parser)?
-- Partial-quantity tracking (e.g. 300 chairs, 100 still free after a partial booking) is not yet confirmed as part of the schema — see project overview open questions.
+- None — schema and API are defined.

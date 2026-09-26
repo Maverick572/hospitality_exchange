@@ -1,23 +1,27 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
-sources: ["[[projects/hospitality-resource-exchange/sources/problem-statement]]"]
-confidence: low
+sources: []
+confidence: high
 ---
 
-# Notifications & Request Prioritization
+# Notifications
 
-[stated] Problem statement separately lists "request prioritization" as a practical challenge the solution should address, and "notifications" as an optional feature the platform may incorporate.
+[stated] Now a first-class feature with a defined schema and API. Notifications cover the full transaction lifecycle for both Users and Drivers.
 
 ## Details
 
-[inferred] Grouped into one note since neither has been designed at all — no concept note, no PPT mention, no architecture placement exists for either.
+[stated] Firestore collection: `notifications/{notificationId}` with fields: userId, type, title, message, referenceId, read, createdAt.
 
-[inferred] Request prioritization likely interacts with the "urgency" field already captured in [[projects/hospitality-resource-exchange/concepts/requirement-posting]] (e.g. "Urgency: High" in the original spec example) — but there is no defined mechanism for how urgency affects queue order, provider notification timing, or whether high-urgency requests get preferential solver treatment in [[projects/hospitality-resource-exchange/architecture/optimization-layer]].
+[stated] API: `GET /notifications` (get all for current user), `PATCH /notifications/{id}/read` (mark as read).
 
-[inferred] Notifications are plumbing (Supabase realtime/webhooks or a push service) — low algorithmic complexity, but zero design work has been done, including which events trigger a notification (new match, booking accepted, dispute raised, deposit released).
+[stated] User notification types: new matches, resource/booking requests, negotiation updates, booking confirmation, driver assignment, delivery updates, payment/escrow updates.
+
+[stated] Driver notification types: route-matched delivery opportunities, accepted delivery requests, pickup reminders, delivery updates, payment updates.
+
+[stated] Request prioritization (urgency-based queue ordering) is not explicitly modeled in the current API — urgency affects matching results but not notification ordering.
 
 ## Relations
 
@@ -26,6 +30,4 @@ depends_on:: [[projects/hospitality-resource-exchange/concepts/negotiate-book]]
 
 ## Open questions
 
-- How does "urgency" translate into actual prioritization behavior — queue order, notification timing, solver weighting, or all three?
-- Which events trigger notifications, and via what channel (in-app, email, SMS)?
-- Is this in scope for the hackathon MVP at all, or explicitly deferred?
+- None — schema and API are defined. Urgency-based prioritization is deferred.
