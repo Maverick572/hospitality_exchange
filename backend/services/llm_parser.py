@@ -1,10 +1,11 @@
 """Parse natural-language hospitality requirements into validated items."""
 
 from enum import Enum
+import json
 import os
 
 from groq import Groq
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
 class ResourceCategory(str, Enum):
@@ -103,3 +104,20 @@ def _request_completion(description: str) -> str:
         raise
     except Exception:
         raise ParserServiceError("The requirement parser service is unavailable.") from None
+
+
+def parse_requirement(description: str) -> list[ParsedItem]:
+    """Extract and validate hospitality resources from a search description."""
+
+    if not description or not description.strip():
+        return []
+
+    content = _request_completion(description.strip())
+
+    try:
+        payload = json.loads(content)
+        result = RequirementParseResult.model_validate(payload)
+    except (json.JSONDecodeError, TypeError, ValidationError):
+        raise ParserServiceError("The requirement parser returned invalid data.") from None
+
+    return result.items
