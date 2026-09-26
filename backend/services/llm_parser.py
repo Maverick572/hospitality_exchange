@@ -55,7 +55,18 @@ class ParsedItem(BaseModel):
     def normalize_metric(cls, value: object) -> object:
         if not isinstance(value, str) or not value.strip():
             return "units"
-        return value.strip().lower()
+        val = value.strip().lower()
+        if val in ("kilogram", "kilograms", "kgs", "kilo", "kilos"):
+            return "kg"
+        if val in ("liter", "litre", "liters", "litres", "ltr", "ltrs", "l"):
+            return "liters"
+        if val in ("meter", "meters", "metre", "metres"):
+            return "m"
+        if val in ("sq meter", "sq meters", "sqm", "sq_m", "square meter", "square meters"):
+            return "sqm"
+        if val in ("unit", "units", "pieces", "piece", "pcs", "nos"):
+            return "units"
+        return val
 
 
 class RequirementParseResult(BaseModel):
@@ -84,13 +95,18 @@ Rules:
 2. Normalize each item name to a lowercase singular noun.
 3. Convert written quantities to positive numbers. If a requested resource has no quantity, default to 1.
 4. Use ONLY standard SI / metric units for the "metric" field:
-   - "kg" for mass and weight (convert non-SI or smaller units like grams, pounds, ounces to kg, e.g. 500g -> 0.5 kg).
-   - "liters" for volume and liquids (convert gallons, ml, etc. to liters).
+   - "kg" for mass, weight, produce, solid raw ingredients, and bulk commodities (e.g. onions, tomatoes, potatoes, rice, vegetables, spices, flour, sugar, pulses).
+     * Robustly recognize bulk/agricultural units and common typos/phonetic spellings:
+       - 1 quintal (including typos: quitntal, quitnal, quental, quintle, qtl) = 100 kg (e.g. "100 quitntal onion" -> quantity: 10000, metric: "kg"; "20000 quitnal tomato" -> quantity: 2000000, metric: "kg").
+       - 1 ton / metric tonne (or tons, tonnes, mt) = 1000 kg.
+       - Grams (g), mg, lbs, pounds, ounces -> convert to kg (e.g. 500g -> 0.5 kg).
+   - "liters" for volume and liquids (e.g. cooking oil, milk, water, juice, syrups; convert gallons, ml, etc. to liters).
    - "m" for length or distance.
-   - "sqm" for area and space (convert sq ft, acres, etc. to sqm).
-   - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, plates).
-   Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units or "units". Default to "units" if no unit is specified.
-5. Exclude items with zero or negative intent.
+   - "sqm" for area and space (convert sq ft, sq yards, acres, etc. to sqm).
+   - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, appliances, cookware, utensils).
+   Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units.
+   Items in "raw_ingredients" must use "kg" for solids/produce and "liters" for liquids; NEVER use "units" for bulk produce or raw ingredients. Default to "units" only for countable equipment, furniture, and physical articles.
+5. Exclude items with zero or negative intent, or items that are not hospitality equipment, resources, or supplies.
 6. Use only these categories:
 {_CATEGORY_BLOCK}
 7. Return an empty items list when no hospitality resource or supply is requested.
