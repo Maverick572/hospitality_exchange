@@ -34,34 +34,29 @@ function ChartCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-[1.375rem] border border-border bg-muted p-1 pt-0 gap-0",
+        "overflow-hidden rounded-xl border border-border bg-card shadow-xs transition-all duration-200 hover:border-foreground/20",
         className,
       )}
       {...props}
     >
       <div
         className={cn(
-          "flex items-center gap-1 px-3 py-1.5",
-          action && "justify-between",
+          "flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3",
           labelClassName,
         )}
       >
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-2">
           {Icon ? (
-            <Icon className="size-3 text-muted-foreground" aria-hidden="true" />
+            <Icon className="size-4 text-primary" aria-hidden="true" />
           ) : null}
-          <span className="text-sm text-muted-foreground">{title}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{title}</span>
         </span>
         {action}
       </div>
-      <div
-        className={cn(
-          "overflow-hidden rounded-[1.125rem] border border-border bg-card",
-          panelClassName,
-        )}
-      >
+
+      <div className={cn("overflow-hidden", panelClassName)}>
         {header ? (
-          <CardHeader className={cn("px-6 pb-2 pt-6", headerClassName)}>
+          <CardHeader className={cn("px-5 pb-2 pt-4", headerClassName)}>
             {header}
           </CardHeader>
         ) : null}
