@@ -32,6 +32,21 @@ def create_escrow(
 ):
     """
     Create escrow for a booking (or retrieve existing if already created).
+    Firestore Schema (schema.txt):
+      - escrowId
+      - bookingId
+      - seekerId
+      - providerId
+      - driverId
+      - amount
+      - depositAmount
+      - penaltyAmount
+      - providerAmount
+      - driverAmount
+      - status ("PENDING")
+      - createdAt
+      - fundedAt
+      - releasedAt
     """
     booking_id = payload.get("bookingId")
     if not booking_id:
@@ -47,7 +62,7 @@ def create_escrow(
     try:
         existing_docs = db.collection("escrow").where("bookingId", "==", booking_id).stream()
         for doc in existing_docs:
-            esc = doc.to_dict()
+            esc = doc.to_dict() or {}
             esc["escrowId"] = doc.id
             return standard_response(
                 data={
@@ -62,7 +77,7 @@ def create_escrow(
     except Exception:
         pass
 
-    # 2. Retrieve booking to derive amounts
+    # 2. Retrieve booking to derive amounts and parties
     doc_ref, booking = get_doc_or_404(db, "bookings", booking_id)
 
     escrow_id = f"escrow_{uuid.uuid4().hex[:12]}"
@@ -113,13 +128,16 @@ def create_escrow(
 @router.post("/{escrow_id}/fund")
 def fund_escrow(
     escrow_id: str,
-    payload: dict,
+    payload: dict | None = None,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Fund escrow (mock payment confirmation).
     Transitions escrow status PENDING -> FUNDED.
     """
+    if payload is None:
+        payload = {}
+
     payment_reference = payload.get("paymentReference", f"pay_mock_{uuid.uuid4().hex[:8]}")
 
     if db is None:
@@ -127,7 +145,7 @@ def fund_escrow(
 
     doc_ref, escrow = get_doc_or_404(db, "escrow", escrow_id)
 
-    if escrow.get("status") != "PENDING":
+    if (escrow.get("status") or "").upper() != "PENDING":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot fund escrow with status '{escrow.get('status')}'. Escrow must be PENDING."
@@ -156,7 +174,7 @@ def fund_escrow(
     if escrow.get("providerId"):
         emit_notification(
             user_id=escrow["providerId"],
-            type="escrow_funded",
+            type="ESCROW_FUNDED",
             title="Escrow Funded",
             message=f"Escrow {escrow_id} for booking {booking_id} has been funded (₹{escrow.get('amount')}).",
             reference_id=escrow_id
@@ -196,7 +214,7 @@ def release_escrow(
 
     doc_ref, escrow = get_doc_or_404(db, "escrow", escrow_id)
 
-    current_status = escrow.get("status")
+    current_status = (escrow.get("status") or "").upper()
 
     # Double release guard
     if current_status == "RELEASED":
@@ -205,7 +223,7 @@ def release_escrow(
             detail="Escrow has already been released."
         )
 
-    if current_status not in ("FUNDED", "DELIVERED"):
+    if current_status not in ("FUNDED", "DELIVERED", "IN_TRANSIT", "PENDING_RELEASE"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot release escrow with status '{current_status}'. Escrow must be FUNDED or DELIVERED."
@@ -247,7 +265,7 @@ def release_escrow(
     if escrow.get("providerId"):
         emit_notification(
             user_id=escrow["providerId"],
-            type="escrow_released",
+            type="ESCROW_RELEASED",
             title="Payment Released",
             message=f"₹{provider_amount} has been released to your account for booking {booking_id}.",
             reference_id=escrow_id
@@ -257,7 +275,7 @@ def release_escrow(
     if escrow.get("driverId") and driver_amount > 0:
         emit_notification(
             user_id=escrow["driverId"],
-            type="escrow_released",
+            type="ESCROW_RELEASED",
             title="Delivery Payout Released",
             message=f"₹{driver_amount} has been released for delivery of booking {booking_id}.",
             reference_id=escrow_id
@@ -292,5 +310,9 @@ def get_escrow_detail(
 
     doc_ref, escrow = get_doc_or_404(db, "escrow", escrow_id)
     escrow["escrowId"] = escrow_id
+
+    # Format status for contract consistency
+    if "status" in escrow and isinstance(escrow["status"], str):
+        escrow["status"] = escrow["status"].lower()
 
     return standard_response(data=serialize_firestore_doc(escrow))

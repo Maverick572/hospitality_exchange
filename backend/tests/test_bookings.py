@@ -169,5 +169,5 @@ def test_confirm_receipt(mock_firebase):
         assert res_ok.status_code == 200
         data = res_ok.json()["data"]
         assert data["status"] == "delivered"
-        assert data["escrowStatus"] == "delivered"
+        assert data["escrowStatus"] == "pending_release"
         assert store["bookings"]["booking_001"]["status"] == "delivered"

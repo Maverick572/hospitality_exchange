@@ -32,6 +32,15 @@ def create_review(
     """
     Submit a review and rating for a completed booking.
     Atomically updates provider aggregate rating and totalRatings count.
+    Firestore Schema (schema.txt):
+      - reviewId
+      - bookingId
+      - reviewerId
+      - providerId
+      - rating
+      - comment
+      - createdAt
+      - updatedAt
     """
     reviewer_id = current_user["uid"]
     booking_id = payload.get("bookingId")
@@ -64,11 +73,11 @@ def create_review(
     if db is None:
         raise HTTPException(status_code=500, detail="Database client unavailable.")
 
-    # 1. Check for duplicate review (Review Focus #4)
+    # 1. Check for duplicate review by same reviewer for same booking
     try:
         existing_reviews = db.collection("reviews").where("bookingId", "==", booking_id).stream()
         for rev in existing_reviews:
-            r_data = rev.to_dict()
+            r_data = rev.to_dict() or {}
             if r_data.get("reviewerId") == reviewer_id:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
@@ -117,7 +126,7 @@ def create_review(
     # 4. Notify provider
     emit_notification(
         user_id=provider_id,
-        type="review_received",
+        type="REVIEW_RECEIVED",
         title="New Review Received",
         message=f"You received a {rating}-star review for booking {booking_id}.",
         reference_id=review_id
@@ -167,8 +176,25 @@ def get_user_reviews(
     try:
         docs = db.collection("reviews").where("providerId", "==", user_id).stream()
         for doc in docs:
-            r = doc.to_dict()
+            r = doc.to_dict() or {}
             r["reviewId"] = doc.id
+
+            # Enrich reviewerName if missing
+            if "reviewerName" not in r:
+                rev_id = r.get("reviewerId")
+                if rev_id:
+                    try:
+                        u_rev_snap = db.collection("users").document(rev_id).get()
+                        if u_rev_snap.exists:
+                            u_rev_data = u_rev_snap.to_dict() or {}
+                            r["reviewerName"] = u_rev_data.get("businessName") or u_rev_data.get("name") or "Anonymous"
+                        else:
+                            r["reviewerName"] = rev_id
+                    except Exception:
+                        r["reviewerName"] = rev_id
+                else:
+                    r["reviewerName"] = "Anonymous"
+
             reviews_list.append(serialize_firestore_doc(r))
     except Exception:
         pass

@@ -1,10 +1,10 @@
 """
 ================================================================================
-TRANSACTION LAYER MODULE (Owned by Roh)
+TRANSACTION & APPLICATION LAYER MODULE
 ================================================================================
 
 This package encapsulates the complete transactional lifecycle for the
-Hospitality Resource Exchange platform:
+Hospitality Resource Exchange platform according to schema.txt & backendAPI.md:
 - Requests & Negotiation: POST /requests, GET /requests/provider,
                           POST /requests/{id}/counter, POST /requests/{id}/accept,
                           POST /requests/{id}/reject
@@ -14,21 +14,8 @@ Hospitality Resource Exchange platform:
                           POST /escrow/{id}/release, GET /escrow/{id}
 - Condition Evidence:     POST /condition-evidence
 - Reviews & Ratings:      POST /reviews, GET /users/{userId}/reviews
-
---------------------------------------------------------------------------------
-INTEGRATION INSTRUCTIONS FOR backend/main.py:
---------------------------------------------------------------------------------
-To mount the transaction layer into the main application without merge conflicts,
-add the following 2 steps to backend/main.py:
-
-1. Import the router:
-   from transactions import router as transactions_router
-
-2. Register the router with prefix="/api/v1":
-   app.include_router(
-       transactions_router,
-       prefix="/api/v1"
-   )
+- Notifications:          GET /notifications, PATCH /notifications/{id}/read
+- Dashboard:              GET /dashboard/user, GET /dashboard/driver
 
 ================================================================================
 """
@@ -40,6 +27,8 @@ from transactions.bookings import router as bookings_router
 from transactions.escrow import router as escrow_router
 from transactions.evidence import router as evidence_router
 from transactions.reviews import router as reviews_router
+from transactions.notifications import router as notifications_router
+from transactions.dashboard import router as dashboard_router
 
 router = APIRouter()
 
@@ -49,5 +38,7 @@ router.include_router(bookings_router)
 router.include_router(escrow_router)
 router.include_router(evidence_router)
 router.include_router(reviews_router)
+router.include_router(notifications_router)
+router.include_router(dashboard_router)
 
 __all__ = ["router"]

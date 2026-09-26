@@ -32,6 +32,15 @@ def record_condition_evidence(
     """
     Record condition evidence metadata (image URL from Firebase Storage + description).
     Stages allowed: 'PICKUP', 'DELIVERY'.
+    Firestore Schema (schema.txt):
+      - evidenceId
+      - bookingId
+      - uploadedBy
+      - type
+      - imageUrl
+      - timestamp
+      - description
+      - stage
     """
     user_id = current_user["uid"]
     booking_id = payload.get("bookingId")

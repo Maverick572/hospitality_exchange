@@ -32,6 +32,19 @@ def create_request(
 ):
     """
     Seeker creates a resource request to a provider.
+    Firestore Schema (schema.txt):
+      - requestId
+      - requirementId
+      - seekerId
+      - providerId
+      - resourceId
+      - requestedQuantity
+      - offeredPrice
+      - counterPrice
+      - message
+      - status ("pending")
+      - createdAt
+      - updatedAt
     """
     seeker_id = current_user["uid"]
     provider_id = payload.get("providerId")
@@ -45,12 +58,6 @@ def create_request(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="providerId and resourceId are required."
-        )
-
-    if provider_id == seeker_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You cannot submit a request for your own resource."
         )
 
     if requested_quantity is None or requested_quantity <= 0:
@@ -79,8 +86,6 @@ def create_request(
         "counterPrice": None,
         "message": message,
         "status": "pending",
-        "bookingId": None,
-        "rejectionReason": None,
         "createdAt": now,
         "updatedAt": now
     }
@@ -90,7 +95,7 @@ def create_request(
 
     emit_notification(
         user_id=provider_id,
-        type="request_received",
+        type="REQUEST_RECEIVED",
         title="New Resource Request",
         message=f"You received a request for {requested_quantity} items: '{message}'",
         reference_id=request_id
@@ -113,6 +118,7 @@ def get_provider_requests(
 ):
     """
     Get requests received by the authenticated provider.
+    Enriches seeker and resource metadata matching backendAPI.md contract.
     """
     provider_id = current_user["uid"]
 
@@ -121,10 +127,38 @@ def get_provider_requests(
         query = db.collection("requests").where("providerId", "==", provider_id)
         docs = query.stream()
         for doc in docs:
-            item = doc.to_dict()
+            item = doc.to_dict() or {}
             item["requestId"] = doc.id
+
             if status_filter and item.get("status") != status_filter:
                 continue
+
+            # Enrich seeker details if not nested
+            seeker_id = item.get("seekerId")
+            if "seeker" not in item and seeker_id:
+                seeker_info = {"userId": seeker_id, "businessName": seeker_id}
+                try:
+                    s_snap = db.collection("users").document(seeker_id).get()
+                    if s_snap.exists:
+                        s_data = s_snap.to_dict() or {}
+                        seeker_info["businessName"] = s_data.get("businessName") or s_data.get("name") or seeker_id
+                except Exception:
+                    pass
+                item["seeker"] = seeker_info
+
+            # Enrich resource details if not nested
+            resource_id = item.get("resourceId")
+            if "resource" not in item and resource_id:
+                resource_info = {"resourceId": resource_id, "name": "Resource"}
+                try:
+                    r_snap = db.collection("resources").document(resource_id).get()
+                    if r_snap.exists:
+                        r_data = r_snap.to_dict() or {}
+                        resource_info["name"] = r_data.get("name") or "Resource"
+                except Exception:
+                    pass
+                item["resource"] = resource_info
+
             results.append(serialize_firestore_doc(item))
 
     return standard_response(data=results)
@@ -186,6 +220,9 @@ def counter_request(
         "status": "countered",
         "updatedAt": now
     }
+    if message:
+        update_data["message"] = message
+
     doc_ref.update(update_data)
 
     # Determine recipient of the notification
@@ -193,9 +230,9 @@ def counter_request(
 
     emit_notification(
         user_id=recipient_id,
-        type="request_countered",
+        type="REQUEST_COUNTERED",
         title="Counter-Offer Received",
-        message=f"New counter offer: {quantity} items for ₹{price}. {message}",
+        message=f"New counter offer: {quantity} items for ₹{price}. {message}".strip(),
         reference_id=request_id
     )
 
@@ -221,8 +258,8 @@ def accept_request(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Accept the current offer / counter-offer.
-    Critical state transition: creates booking and initializes escrow.
+    Accept current offer / counter-offer.
+    Critical state transition: creates booking and initializes escrow matching schema.txt.
     """
     if payload is None:
         payload = {}
@@ -257,26 +294,59 @@ def accept_request(
     deposit_amount = float(payload.get("depositAmount", default_deposit) if payload.get("depositAmount") is not None else default_deposit)
     total_amount = round(resource_amount + delivery_amount + deposit_amount, 2)
 
+    # Resolve locations and dates from payload, requirement, or resource
+    pickup_location = payload.get("pickupLocation") or {}
+    delivery_location = payload.get("deliveryLocation") or {}
+    pickup_date = payload.get("pickupDate")
+    delivery_date = payload.get("deliveryDate")
+
+    # If requirement exists, extract missing delivery location or date
+    req_id = req.get("requirementId")
+    if req_id:
+        try:
+            req_snap = db.collection("requirements").document(req_id).get()
+            if req_snap.exists:
+                req_doc_data = req_snap.to_dict() or {}
+                if not delivery_location and "location" in req_doc_data:
+                    delivery_location = req_doc_data["location"]
+                if not delivery_date and "requiredDate" in req_doc_data:
+                    delivery_date = req_doc_data["requiredDate"]
+                    pickup_date = pickup_date or delivery_date
+        except Exception:
+            pass
+
+    # If resource exists, extract missing pickup location
+    res_id = req.get("resourceId")
+    if res_id and not pickup_location:
+        try:
+            res_snap = db.collection("resources").document(res_id).get()
+            if res_snap.exists:
+                res_doc_data = res_snap.to_dict() or {}
+                pickup_location = res_doc_data.get("location", {})
+        except Exception:
+            pass
+
     now = datetime.now(timezone.utc)
     booking_id = f"booking_{uuid.uuid4().hex[:12]}"
     escrow_id = f"escrow_{uuid.uuid4().hex[:12]}"
 
+    # Booking Schema (schema.txt)
     booking_data = {
         "bookingId": booking_id,
         "seekerId": req["seekerId"],
         "providerId": req["providerId"],
         "resourceId": req["resourceId"],
-        "requirementId": req.get("requirementId"),
         "driverId": None,
+        "requirementId": req.get("requirementId"),
         "quantity": req.get("requestedQuantity", 1),
         "resourceAmount": resource_amount,
         "deliveryAmount": delivery_amount,
         "depositAmount": deposit_amount,
         "totalAmount": total_amount,
-        "pickupLocation": payload.get("pickupLocation") or {},
-        "deliveryLocation": payload.get("deliveryLocation") or {},
-        "pickupDate": payload.get("pickupDate"),
-        "deliveryDate": payload.get("deliveryDate"),
+        "pickupLocation": pickup_location,
+        "deliveryLocation": delivery_location,
+        "pickupDate": pickup_date,
+        "deliveryDate": delivery_date,
         "status": "confirmed",
         "escrowStatus": "pending",
         "escrowId": escrow_id,
@@ -284,6 +354,7 @@ def accept_request(
         "updatedAt": now
     }
 
+    # Escrow Schema (schema.txt)
     escrow_data = {
         "escrowId": escrow_id,
         "bookingId": booking_id,
@@ -295,7 +366,6 @@ def accept_request(
         "penaltyAmount": 0.0,
         "providerAmount": resource_amount,
         "driverAmount": delivery_amount,
-        "paymentReference": None,
         "status": "PENDING",
         "createdAt": now,
         "fundedAt": None,
@@ -315,14 +385,14 @@ def accept_request(
     # Notify both parties
     emit_notification(
         user_id=req["seekerId"],
-        type="booking_confirmed",
+        type="BOOKING_CONFIRMED",
         title="Booking Confirmed",
         message=f"Your request for resource {req['resourceId']} has been confirmed into booking {booking_id}.",
         reference_id=booking_id
     )
     emit_notification(
         user_id=req["providerId"],
-        type="booking_confirmed",
+        type="BOOKING_CONFIRMED",
         title="Booking Confirmed",
         message=f"Booking {booking_id} has been created for your resource {req['resourceId']}.",
         reference_id=booking_id
@@ -345,12 +415,15 @@ def accept_request(
 @router.post("/{request_id}/reject")
 def reject_request(
     request_id: str,
-    payload: dict,
+    payload: dict | None = None,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Reject request with a reason.
+    Reject request with an optional reason.
     """
+    if payload is None:
+        payload = {}
+
     user_id = current_user["uid"]
     reason = payload.get("reason", "No reason provided.")
 
@@ -381,7 +454,7 @@ def reject_request(
     recipient_id = req["seekerId"] if user_id == req["providerId"] else req["providerId"]
     emit_notification(
         user_id=recipient_id,
-        type="request_rejected",
+        type="REQUEST_REJECTED",
         title="Request Rejected",
         message=f"Request {request_id} was rejected. Reason: {reason}",
         reference_id=request_id

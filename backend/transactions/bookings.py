@@ -33,6 +33,26 @@ def get_my_bookings(
     """
     Get bookings involving the authenticated user (as seeker, provider, or driver).
     Optional filter by status (?status=active, confirmed, delivered, etc.).
+    Firestore Schema (schema.txt):
+      - bookingId
+      - seekerId
+      - providerId
+      - resourceId
+      - driverId
+      - requirementId
+      - quantity
+      - resourceAmount
+      - deliveryAmount
+      - depositAmount
+      - totalAmount
+      - pickupLocation
+      - deliveryLocation
+      - pickupDate
+      - deliveryDate
+      - status
+      - escrowStatus
+      - createdAt
+      - updatedAt
     """
     user_id = current_user["uid"]
     bookings = []
@@ -42,7 +62,7 @@ def get_my_bookings(
         docs = col_ref.stream()
 
         for doc in docs:
-            b = doc.to_dict()
+            b = doc.to_dict() or {}
             b["bookingId"] = doc.id
 
             is_seeker = b.get("seekerId") == user_id
@@ -59,9 +79,10 @@ def get_my_bookings(
                 continue
 
             if status_filter:
-                if status_filter == "active" and b.get("status") in ("completed", "cancelled"):
+                b_status = b.get("status", "").lower()
+                if status_filter == "active" and b_status in ("completed", "cancelled"):
                     continue
-                elif status_filter != "active" and b.get("status") != status_filter:
+                elif status_filter != "active" and b_status != status_filter.lower():
                     continue
 
             bookings.append(serialize_firestore_doc(b))
@@ -103,7 +124,9 @@ def get_booking_detail(
     try:
         ev_docs = db.collection("conditionEvidence").where("bookingId", "==", booking_id).stream()
         for ev in ev_docs:
-            evidence_list.append(serialize_firestore_doc(ev.to_dict()))
+            ev_dict = ev.to_dict() or {}
+            ev_dict["evidenceId"] = ev.id
+            evidence_list.append(serialize_firestore_doc(ev_dict))
     except Exception:
         pass
     if evidence_list:
@@ -119,13 +142,16 @@ def get_booking_detail(
 @router.post("/{booking_id}/confirm-receipt")
 def confirm_receipt(
     booking_id: str,
-    payload: dict,
+    payload: dict | None = None,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Seeker confirms successful delivery receipt.
-    Updates booking status to 'delivered' and escrowStatus to 'delivered'.
+    Updates booking status to 'delivered' and escrowStatus to 'pending_release'.
     """
+    if payload is None:
+        payload = {}
+
     user_id = current_user["uid"]
     received = payload.get("received", True)
     condition_confirmed = payload.get("conditionConfirmed", True)
@@ -145,13 +171,15 @@ def confirm_receipt(
     now = datetime.now(timezone.utc)
     update_data = {
         "status": "delivered",
-        "escrowStatus": "delivered",
+        "escrowStatus": "pending_release",
         "receivedConfirmed": received,
         "conditionConfirmed": condition_confirmed,
-        "deliveryNotes": notes,
         "deliveredAt": now,
         "updatedAt": now
     }
+    if notes:
+        update_data["deliveryNotes"] = notes
+
     doc_ref.update(update_data)
 
     # Sync with linked escrow document if exists
@@ -165,19 +193,20 @@ def confirm_receipt(
             pass
 
     # Notify provider
-    emit_notification(
-        user_id=booking["providerId"],
-        type="delivery_confirmed",
-        title="Delivery Receipt Confirmed",
-        message=f"The seeker has confirmed receipt of resources for booking {booking_id}.",
-        reference_id=booking_id
-    )
+    if booking.get("providerId"):
+        emit_notification(
+            user_id=booking["providerId"],
+            type="DELIVERY_CONFIRMED",
+            title="Delivery Receipt Confirmed",
+            message=f"The seeker has confirmed receipt of resources for booking {booking_id}.",
+            reference_id=booking_id
+        )
 
     # Notify driver if assigned
     if booking.get("driverId"):
         emit_notification(
             user_id=booking["driverId"],
-            type="delivery_confirmed",
+            type="DELIVERY_CONFIRMED",
             title="Delivery Receipt Confirmed",
             message=f"Delivery confirmed for booking {booking_id}. Payout ready for release.",
             reference_id=booking_id
@@ -187,7 +216,7 @@ def confirm_receipt(
         data={
             "bookingId": booking_id,
             "status": "delivered",
-            "escrowStatus": "delivered"
+            "escrowStatus": "pending_release"
         },
         message="Receipt confirmed successfully."
     )
