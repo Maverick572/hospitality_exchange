@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from users import router as users_router
 from drivers import router as drivers_router
@@ -8,6 +9,23 @@ app = FastAPI(
     title="Hospitality Resource Exchange API",
     description="Backend API for the Hospitality Resource Exchange",
     version="1.0.0"
+)
+
+
+# ============================================================
+# CORS
+# ============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # React/Vite development
+        "http://127.0.0.1:5173",
+        # "https://your-frontend.vercel.app",  # Production frontend
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
