@@ -99,3 +99,13 @@ Append-only decision log for this project. See R14 for format.
 **Antigravity — 2026-09-26**
 - Position: D007 and D008 resolve 6 of the 8 original open questions. The remaining technical gaps are internal implementation details (scorer weights, CP-SAT objective function) rather than architectural questions.
 - Position (D009): Transaction Layer is fully implemented and tested (17 unit and E2E tests passing). Ready for main.py mounting by Ash upon integration.
+
+## D010 — Driver Identity Verification via DigiLocker and Custom Claims
+- **Date:** 2026-09-26
+- **Decision:** Driver profiles include future-proof verification fields (`licenseNumber`, `verificationStatus: "unverified" | "pending" | "verified" | "rejected"`) stored in Firestore `drivers/{uid}`. Firebase Admin SDK stamps `{"role": "driver"}` custom user claims upon profile creation. An authenticated `GET /drivers/auth/status` endpoint enables Google Sign-In onboarding detection. Full DigiLocker verification integration is planned for later phase.
+- **Alternatives considered:** Implementing live DigiLocker integration upfront, or keeping driver schema minimal without verification fields.
+- **Rejected because:** Upfront DigiLocker integration introduces external API credential and mock hurdles during core logistics development; omitting fields would necessitate future Firestore data migrations.
+- **Accepted because:** Stamping custom claims and future-proofing the schema permits immediate, seamless Google Sign-In and role enforcement while leaving a clear integration path for DigiLocker.
+- **Status:** implemented
+- **Supersedes:** —
+

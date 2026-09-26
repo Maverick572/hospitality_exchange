@@ -13,6 +13,7 @@ Notes on domain knowledge and conceptual dependencies for this project.
 | [[bundled-requests]] | Multi-resource requests solved via CP-SAT across multiple providers; `/matching/bundle` endpoint defined |
 | [[business-profiles-ratings]] | User profiles with aggregate rating + reviews; provider rating feeds into matching scorer |
 | [[notifications-prioritization]] | Transaction-lifecycle notifications for users and drivers; schema and API defined |
+| [[driver-profiles-verification]] | Driver profiles, vehicle specs, Google Sign-In auth status, Firebase custom claims, and DigiLocker roadmap |
 | [[utilization-analytics]] | ~~Per-provider idle-capacity dashboard~~ — dropped from scope; replaced by dashboard endpoints |
 | [[quotation-requests]] | ~~Lighter-weight price-quote flow~~ — dropped from scope; covered by matching results + counter-offers |
 
