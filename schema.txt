@@ -1,0 +1,253 @@
+FIREBASE FIRESTORE SCHEMA
+Hospitality Resource Exchange
+================================
+
+TOP-LEVEL COLLECTIONS
+=====================
+
+users/
+  {userId}
+    - name
+    - email
+    - phone
+    - businessName
+    - location
+    - profileImage
+    - rating
+    - totalRatings
+    - createdAt
+    - updatedAt
+
+resources/
+  {resourceId}
+    - providerId
+    - name
+    - category
+    - description
+    - quantity
+    - availableQuantity
+    - price
+    - pricingUnit
+    - location
+    - availability
+    - images[]
+    - condition
+    - status
+    - createdAt
+    - updatedAt
+
+requirements/
+  {requirementId}
+    - seekerId
+    - description
+    - category
+    - quantity
+    - location
+    - requiredDate
+    - startTime
+    - endTime
+    - budget
+    - deliveryRequired
+    - status
+    - createdAt
+    - updatedAt
+
+requests/
+  {requestId}
+    - requirementId
+    - seekerId
+    - providerId
+    - resourceId
+    - requestedQuantity
+    - offeredPrice
+    - counterPrice
+    - message
+    - status
+    - createdAt
+    - updatedAt
+
+bookings/
+  {bookingId}
+    - seekerId
+    - providerId
+    - resourceId
+    - driverId
+    - requirementId
+    - quantity
+    - resourceAmount
+    - deliveryAmount
+    - depositAmount
+    - totalAmount
+    - pickupLocation
+    - deliveryLocation
+    - pickupDate
+    - deliveryDate
+    - status
+    - escrowStatus
+    - createdAt
+    - updatedAt
+
+reviews/
+  {reviewId}
+    - bookingId
+    - reviewerId
+    - providerId
+    - rating
+    - comment
+    - createdAt
+    - updatedAt
+
+notifications/
+  {notificationId}
+    - userId
+    - type
+    - title
+    - message
+    - referenceId
+    - read
+    - createdAt
+
+
+DRIVER COLLECTIONS
+==================
+
+drivers/
+  {driverId}
+    - name
+    - email
+    - phone
+    - vehicleType
+    - vehicleNumber
+    - capacity
+    - rating
+    - totalRatings
+    - status
+    - createdAt
+    - updatedAt
+
+driverRoutes/
+  {routeId}
+    - driverId
+    - startLocation
+    - destination
+    - stops[]
+    - routeGeometry
+    - travelDate
+    - departureTime
+    - arrivalTime
+    - availableCapacity
+    - price
+    - status
+    - createdAt
+    - updatedAt
+
+deliveryRequests/
+  {deliveryRequestId}
+    - routeId
+    - driverId
+    - bookingId
+    - pickupLocation
+    - deliveryLocation
+    - requiredCapacity
+    - estimatedEarnings
+    - status
+    - createdAt
+    - updatedAt
+
+
+ESCROW
+======
+
+escrow/
+  {escrowId}
+    - bookingId
+    - seekerId
+    - providerId
+    - driverId
+    - amount
+    - depositAmount
+    - penaltyAmount
+    - providerAmount
+    - driverAmount
+    - status
+    - createdAt
+    - fundedAt
+    - releasedAt
+
+Escrow status:
+  - PENDING
+  - FUNDED
+  - IN_TRANSIT
+  - DELIVERED
+  - RELEASED
+
+
+CONDITION EVIDENCE
+==================
+
+conditionEvidence/
+  {evidenceId}
+    - bookingId
+    - uploadedBy
+    - type
+    - imageUrl
+    - timestamp
+    - description
+    - stage
+
+Evidence stage:
+  - PICKUP
+  - DELIVERY
+
+Store actual images/videos in Firebase Storage.
+Store their metadata and URLs in Firestore.
+
+
+CORE RELATIONSHIPS
+==================
+
+User
+  |
+  +-- Resource
+  |     |
+  |     +-- Provider
+  |
+  +-- Requirement
+        |
+        +-- Request
+              |
+              +-- Booking
+                    |
+                    +-- Provider
+                    +-- Driver
+                    +-- Seeker
+                    +-- Escrow
+                    +-- Condition Evidence
+                    +-- Review
+                    +-- Delivery Request
+
+
+MATCHING FLOW
+=============
+
+Requirement
+    |
+    v
+FastAPI
+    |
+    +-- Retrieve candidate Resources from Firestore
+    |
+    +-- Retrieve candidate Driver Routes from Firestore
+    |
+    v
+Matching / Optimization
+    |
+    v
+Results
+
+Firestore should store the actual business state:
+resources, requirements, requests, bookings, routes,
+payments, reviews, etc.
+
+The matching result does not need to be permanently stored unless
+required by the application. It can be calculated dynamically.
