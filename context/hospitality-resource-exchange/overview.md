@@ -3,7 +3,7 @@ type: project
 status: stable
 project_status: active
 tags: [project/hospitality-resource-exchange]
-updated: 2026-09-26
+updated: 2026-09-27
 ---
 
 # Hospitality Resource Exchange
@@ -26,6 +26,8 @@ A B2B marketplace where hospitality businesses (hotels, restaurants, caterers, r
 
 [verified] Driver profile creation and Google login auth status endpoints implemented in FastAPI with Pydantic validation, Firebase custom claims (role="driver"), and automated test coverage. See D009.
 
+[verified] Standardized 31-category B2B registry implemented (`shared/categories.json`), auto-generating backend enum and LLM system prompt, coupling categories to evidence types (photo/video), enforcing strict SI units, and handling agricultural bulk conversions. See D011.
+
 ## Key decisions
 
 See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full log. Summary:
@@ -39,6 +41,7 @@ See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full 
 - D008: Unified User model (Provider + Seeker as one account); Drivers separate.
 - D009: Modular transaction layer architecture (15 endpoints under `backend/transactions/`); negotiation revival; escrow damage penalty capping.
 - D010: Driver profile verification via DigiLocker readiness, Google Sign-In status endpoint, and Firebase custom claims (role="driver").
+- D011: Unified 31-category B2B registry (`shared/categories.json`), photo/video evidence rules, condition media validation, and SI unit standard with agricultural bulk conversions.
 
 ## Open conflicts
 

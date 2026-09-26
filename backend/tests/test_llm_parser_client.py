@@ -49,11 +49,11 @@ def test_groq_call_uses_strict_json_mode_and_deterministic_temperature(monkeypat
 def test_system_prompt_contains_extraction_guardrails():
     prompt = parser.SYSTEM_PROMPT
 
-    assert '"furniture"' in prompt
-    assert '"audio_visual"' in prompt
-    assert '"kitchen_equipment"' in prompt
-    assert '"event_equipment"' in prompt
-    assert '"space"' in prompt
+    assert '"banquet_seating"' in prompt
+    assert '"sound_system"' in prompt
+    assert '"cooking_equipment"' in prompt
+    assert '"staging_structures"' in prompt
+    assert '"venue_space"' in prompt
     assert '"other"' in prompt
     assert "location" in prompt.lower()
     assert "delivery" in prompt.lower()

@@ -109,3 +109,13 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D011 — Unified Category Registry with Evidence-Type UX and SI Unit Standardization
+- **Date:** 2026-09-27
+- **Decision:** Replace legacy 7 hardcoded categories with a 31-category registry sourced from real B2B marketplaces (Amazon Business, Udaan, IndiaMART, WebstaurantStore, Moglix) in `shared/categories.json`. Serves as single source of truth for backend and frontend. Categories are mapped to `evidenceType` (`photo` for 17 physical goods, `video` for 10 powered/mechanical assets, `photo_video` for 3 spaces/transport, and `other`), defining frontend media capture rules during resource check-in/checkout. Media type validation is enforced on condition evidence endpoints. The Python `ResourceCategory` enum and LLM system prompt are auto-generated from JSON. The parser enforces SI units (`kg`, `liters`, `m`, `sqm`, `units`), agricultural conversions (1 quintal = 100 kg, 1 metric ton = 1000 kg, with typo tolerance), and defaults `raw_ingredients` to `kg`/`liters`. A `GET /api/v1/categories` endpoint exposes category definitions.
+- **Alternatives considered:** Duplicate hardcoded enums in frontend and backend, or open-ended user-defined tags.
+- **Rejected because:** Duplicate enums drift out of sync; open-ended tags break algorithmic matching (CP-SAT/scorer) and prevent standardized evidence workflows.
+- **Accepted because:** Single source of truth eliminates drift, evidence-type coupling prevents disputes on mechanical/space assets, and SI normalization ensures consistent solver input.
+- **Status:** implemented
+- **Supersedes:** —
+
+

@@ -66,7 +66,7 @@ def mock_firestore():
                 "resourceId": "res_high_avail_cheap_near",
                 "providerId": "provider_near",
                 "name": "Banquet Chairs",
-                "category": "furniture",
+                "category": "banquet_seating",
                 "description": "Premium comfortable banquet chairs",
                 "quantity": 500,
                 "availableQuantity": 500,
@@ -77,7 +77,7 @@ def mock_firestore():
                 "resourceId": "res_high_avail_expensive_near",
                 "providerId": "provider_near",
                 "name": "Banquet Chairs",
-                "category": "furniture",
+                "category": "banquet_seating",
                 "description": "Luxury gold banquet chairs",
                 "quantity": 500,
                 "availableQuantity": 500,
@@ -88,7 +88,7 @@ def mock_firestore():
                 "resourceId": "res_high_avail_cheap_far",
                 "providerId": "provider_far",
                 "name": "Banquet Chairs",
-                "category": "furniture",
+                "category": "banquet_seating",
                 "description": "Standard banquet chairs",
                 "quantity": 500,
                 "availableQuantity": 500,
@@ -99,7 +99,7 @@ def mock_firestore():
                 "resourceId": "res_low_avail",
                 "providerId": "provider_near",
                 "name": "Banquet Chairs",
-                "category": "furniture",
+                "category": "banquet_seating",
                 "description": "Only a few banquet chairs",
                 "quantity": 10,
                 "availableQuantity": 10,
@@ -151,7 +151,7 @@ def test_seeker_search_ranking_order(mock_firestore):
     3. Nearest location (closest distance in km first)
     """
     mock_parsed_items = [
-        ParsedItem(category=ResourceCategory.FURNITURE, name="chair", quantity=100, metric="units")
+        ParsedItem(category=ResourceCategory.BANQUET_SEATING, name="chair", quantity=100, metric="units")
     ]
 
     with patch("seeker.search.parse_requirement", return_value=mock_parsed_items):
@@ -193,7 +193,7 @@ def test_seeker_router_endpoint(mock_firestore):
     client = TestClient(app)
 
     mock_parsed_items = [
-        ParsedItem(category=ResourceCategory.FURNITURE, name="chair", quantity=50, metric="units")
+        ParsedItem(category=ResourceCategory.BANQUET_SEATING, name="chair", quantity=50, metric="units")
     ]
 
     with patch("seeker.search.parse_requirement", return_value=mock_parsed_items), \
