@@ -13,71 +13,77 @@ Sign up / Login
 User profile
 Business/contact details
 Location
-2. Manage Resources
-
-Users can act as Providers by:
-
-Add resource
-Name/category
-Quantity
-Price
-Description
-Photos
-Edit/remove resources
-Set resource availability
-3. Create & Manage Requirements & Natural Language Search
-
-Users can act as Seekers by:
-
-- Search Bar Natural Language Query: Enter freeform natural language text describing required resources, quantities, and dates (e.g., "Need 100 banquet chairs and 10 round tables in Andheri tomorrow evening")
-- To / From Timestamps: Specify rental/usage time window using start and end timestamps (ISO 8601 or YYYY-MM-DD)
-- Seeker Location: Provide seeker delivery location (coordinates and address) for proximity calculations
-- LLM Parser Integration: Automatic extraction of structured hospitality items, categories, and quantities from text
-- Specify budget, delivery requirements, and custom notes
-- Save requirement to profile or directly query live marketplace inventory
-- Edit/cancel requirements
-- View active requirements
-
-4. Discover & Intelligent Multi-Criteria Matching
-
-The platform matches seekers with suitable providers and products based on:
-
-1. Best Availability: Product stock matches or exceeds requested quantity, verified calendar date/time availability slots
-2. Lowest Price: Cost-effective resource pricing (per item / per day)
-3. Nearest Location: Proximity to seeker location using product coordinates (with fallback to provider business location)
-4. Provider Rating & Reviews: High-trust verified hospitality providers
-5. Logistics Compatibility: Driver routes passing near pickup and delivery points
-
-Users can:
-
-- Execute real-time LLM-based search across all active Firestore products/resources
-- View ranked product listings with availability score badges, distance in km, unit price, and provider details
-- Filter/sort results by availability, price, distance, and rating
-- View resource details and verified photos
-- View provider profile, ratings and reviews
-- View available logistics and driver route options
-- Select multiple products for bundled requirement fulfillment
-
-5. Requests & Negotiation
-
-Users can:
-
-Receive resource requests when acting as a Provider
-Send requests when acting as a Seeker
-Accept/reject requests
-Make and respond to counter-offers
-Negotiate price and terms
-6. Booking & Logistics
-
-Once an agreement is reached:
-
-Confirm booking
-Select/assign suitable logistics
-View driver and delivery details
-Track booking/delivery status
-Confirm pickup/handover
-Upload pickup condition photos/videos
-7. Escrow & Payments
+16: 2. Manage Resources & Category Registry
+17: 
+18: Users can act as Providers by:
+19: 
+20: - Add resource with standardized category from the 31-category B2B registry (`shared/categories.json`)
+21: - Standardized SI Metrics: `units` (furniture/tableware), `kg` (raw ingredients/produce), `liters` (liquids/beverages), `sqm` (event spaces), `m` (staging/cables)
+22: - Price & pricing unit (`per_item_per_day`, `per_kg`, `per_sqm`, etc.)
+23: - Description & condition rating
+24: - Photos and media
+25: - Edit/remove resources
+26: - Set resource calendar availability
+27: 
+28: 3. Create & Manage Requirements & Natural Language Search
+29: 
+30: Users can act as Seekers by:
+31: 
+32: - Search Bar Natural Language Query: Enter freeform natural language text describing required resources, quantities, and dates (e.g., "Need 100 banquet chairs and 10 round tables in Andheri tomorrow evening", "Need 2 quintals of basmati rice")
+33: - Automatic SI Unit & Agricultural Normalization: Automatic conversion of bulk agricultural terms (1 quintal = 100 kg, 1 ton = 1000 kg) and standard metrics
+34: - To / From Timestamps: Specify rental/usage time window using start and end timestamps (ISO 8601 or YYYY-MM-DD)
+35: - Seeker Location: Provide seeker delivery location (coordinates and address) for proximity calculations
+36: - LLM Parser Integration: Automatic extraction of structured hospitality items, 31 standard categories, and quantities from text
+37: - Specify budget, delivery requirements, and custom notes
+38: - Save requirement to profile or directly query live marketplace inventory
+39: - Edit/cancel requirements
+40: - View active requirements
+41: 
+42: 4. Discover & Intelligent Multi-Criteria Matching
+43: 
+44: The platform matches seekers with suitable providers and products based on:
+45: 
+46: 1. Best Availability: Product stock matches or exceeds requested quantity, verified calendar date/time availability slots
+47: 2. Lowest Price: Cost-effective resource pricing (per item / per day)
+48: 3. Nearest Location: Proximity to seeker location using product coordinates (with fallback to provider business location)
+49: 4. Provider Rating & Reviews: High-trust verified hospitality providers
+50: 5. Logistics Compatibility: Driver routes passing near pickup and delivery points
+51: 
+52: Users can:
+53: 
+54: - Execute real-time LLM-based search across all active Firestore products/resources
+55: - View ranked product listings with availability score badges, distance in km, unit price, and provider details
+56: - Filter/sort results by availability, price, distance, and rating
+57: - View resource details and verified photos
+58: - View provider profile, ratings and reviews
+59: - View available logistics and driver route options
+60: - Select multiple products for bundled requirement fulfillment
+61: 
+62: 5. Requests & Negotiation
+63: 
+64: Users can:
+65: 
+66: Receive resource requests when acting as a Provider
+67: Send requests when acting as a Seeker
+68: Accept/reject requests
+69: Make and respond to counter-offers
+70: Negotiate price and terms
+71: 
+72: 6. Booking & Fulfillment (Category-Aware Condition Evidence)
+73: 
+74: Once an agreement is reached:
+75: 
+76: - Confirm booking
+77: - Select/assign suitable logistics
+78: - View driver and delivery details
+79: - Track booking/delivery status
+80: - Confirm pickup/handover
+81: - Upload Category-Aware Condition Evidence:
+82:   * Photo Evidence: for 17 static physical goods categories (furniture, tableware, linen, decor, uniforms)
+83:   * Video Evidence: for 10 powered/mechanical assets (cooking equipment, refrigeration, AV sound/display, dishwashers, generators) to verify operational state
+84:   * Photo/Video: for 3 spaces & transport categories (event spaces, cold rooms, vehicles)
+85: 
+86: 7. Escrow & Payments
 Make/receive payments
 View escrow status
 View transaction amount and breakdown

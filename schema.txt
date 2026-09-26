@@ -22,12 +22,12 @@ resources/
   {resourceId}
     - providerId
     - name
-    - category
+    - category: string (one of 31 standard slugs in shared/categories.json)
     - description
-    - quantity
-    - availableQuantity
-    - price
-    - pricingUnit
+    - quantity: number (SI metric: units, kg, liters, sqm, m)
+    - availableQuantity: number
+    - price: number
+    - pricingUnit: string (e.g. per_item_per_day, per_kg, per_sqm)
     - location: { address, latitude, longitude }
     - availability: [ { date, quantity } ]
     - images[]
@@ -40,7 +40,7 @@ requirements/
   {requirementId}
     - seekerId
     - description
-    - items: [ { category, name, quantity } ]
+    - items: [ { category, name, quantity, unit } ]
     - location: { address, latitude, longitude }
     - requiredDate
     - startTime
