@@ -332,11 +332,163 @@ DELETE /requirements/{requirementId}
 Cancel/deactivate requirement.
 
 
-4. MATCHING & SEARCH
-====================
+4. SEEKER SEARCH & MATCHING
+===========================
+
+POST /requirements/parse
+Parse natural language requirement text into structured hospitality items using LLM.
+
+REQUEST:
+{
+  "description": "Need 50 banquet chairs and 5 round tables in Bandra tomorrow for dinner service"
+}
+
+RESPONSE 200:
+{
+  "success": true,
+  "data": {
+    "description": "Need 50 banquet chairs and 5 round tables in Bandra tomorrow for dinner service",
+    "items": [
+      {
+        "category": "furniture",
+        "name": "banquet chairs",
+        "quantity": 50
+      },
+      {
+        "category": "furniture",
+        "name": "round tables",
+        "quantity": 5
+      }
+    ]
+  }
+}
+
+
+POST /seeker/search
+Search available products / resources in Firestore using natural language text, date/time window, and optional seeker location.
+
+REQUEST:
+{
+  "description": "Need 50 banquet chairs and 5 round tables in Bandra tomorrow evening",
+  "fromTimestamp": "2026-09-28T18:00:00Z",
+  "toTimestamp": "2026-09-28T23:00:00Z",
+  "location": {
+    "address": "Bandra West, Mumbai",
+    "latitude": 19.0596,
+    "longitude": 72.8295
+  }
+}
+
+BACKEND SEARCH & RANKING FLOW:
+1. Natural language query is passed to LLM parser (Groq / Gemini) to extract structured items and quantities.
+2. Active products/resources are retrieved from Firestore.
+3. Candidate products are checked against the requested date/time window and quantity:
+   - Evaluates product calendar availability slots: [{ date: "YYYY-MM-DD", quantity: N }].
+   - Calculates availability score (bonus for full quantity and verified date slot).
+4. Distance calculation:
+   - Uses product location coordinates if present.
+   - Falls back to provider business location from `users/{providerId}`.
+   - Computes Haversine distance in km from seeker location.
+5. Multi-Criteria Ranking:
+   - 1st priority: Best availability (descending availabilityScore)
+   - 2nd priority: Lowest price (ascending price)
+   - 3rd priority: Nearest location (ascending distanceKm)
+
+RESPONSE 200:
+{
+  "success": true,
+  "data": {
+    "query": {
+      "description": "Need 50 banquet chairs and 5 round tables in Bandra tomorrow evening",
+      "fromTimestamp": "2026-09-28T18:00:00Z",
+      "toTimestamp": "2026-09-28T23:00:00Z",
+      "location": {
+        "address": "Bandra West, Mumbai",
+        "latitude": 19.0596,
+        "longitude": 72.8295
+      }
+    },
+    "parsedItems": [
+      {
+        "category": "furniture",
+        "name": "banquet chairs",
+        "quantity": 50
+      },
+      {
+        "category": "furniture",
+        "name": "round tables",
+        "quantity": 5
+      }
+    ],
+    "totalFound": 2,
+    "results": [
+      {
+        "resourceId": "res_001",
+        "providerId": "user_123",
+        "name": "Banquet Chairs - Premium Red",
+        "category": "furniture",
+        "description": "Stackable banquet chairs in pristine condition",
+        "quantity": 100,
+        "availableQuantity": 80,
+        "price": 25.0,
+        "pricingUnit": "per_item_per_day",
+        "location": {
+          "address": "Bandra West, Mumbai",
+          "latitude": 19.0596,
+          "longitude": 72.8295
+        },
+        "provider": {
+          "userId": "user_123",
+          "businessName": "Grand Imperial Banquets",
+          "rating": 4.8,
+          "totalRatings": 42,
+          "location": {
+            "address": "Bandra West, Mumbai",
+            "latitude": 19.0596,
+            "longitude": 72.8295
+          }
+        },
+        "distanceKm": 0.8,
+        "availabilityScore": 2.5,
+        "status": "active"
+      },
+      {
+        "resourceId": "res_002",
+        "providerId": "user_456",
+        "name": "Round Dining Tables (6-seater)",
+        "category": "furniture",
+        "description": "Sturdy 6-seater wooden round tables",
+        "quantity": 15,
+        "availableQuantity": 10,
+        "price": 250.0,
+        "pricingUnit": "per_item_per_day",
+        "location": {
+          "address": "Khar West, Mumbai",
+          "latitude": 19.0700,
+          "longitude": 72.8330
+        },
+        "provider": {
+          "userId": "user_456",
+          "businessName": "Ocean View Events",
+          "rating": 4.6,
+          "totalRatings": 19,
+          "location": {
+            "address": "Khar West, Mumbai",
+            "latitude": 19.0700,
+            "longitude": 72.8330
+          }
+        },
+        "distanceKm": 1.4,
+        "availabilityScore": 2.5,
+        "status": "active"
+      }
+    ]
+  }
+}
+
 
 POST /matching/search
-Find suitable resources/providers for a requirement.
+Find suitable resources/providers for a stored requirement.
 
 REQUEST:
 {
@@ -701,8 +853,87 @@ DELETE /driver-routes/{routeId}
 Deactivate route.
 
 
-9. DRIVER ROUTE MATCHING
-========================
+9. DRIVER ROUTE MATCHING & LOGISTICS
+===================================
+
+POST /logistics/match-routes
+Find and rank driver routes between two organizations (pickup = provider, delivery = seeker) using OR-Tools CP-SAT solver.
+
+REQUEST:
+{
+  "pickupLocation": {
+    "address": "Bandra West, Mumbai",
+    "latitude": 19.0596,
+    "longitude": 72.8295
+  },
+  "deliveryLocation": {
+    "address": "Vashi, Navi Mumbai",
+    "latitude": 19.0760,
+    "longitude": 72.9930
+  },
+  "requiredCapacity": 100,
+  "travelDate": "2026-09-28"
+}
+
+OPTIMIZATION SOLVER DETAILS:
+- Waypoint Detour Calculation: Computes Haversine distance from pickup & delivery locations to each stop on the route.
+- Constraints:
+  * Maximum allowable detour: <= 25.0 km
+  * Route capacity: >= requiredCapacity
+  * Active route status and travelDate compatibility
+- CP-SAT Objective (Multi-Objective Pareto Minimization):
+  * Total detour distance = pickupDetour + deliveryDetour (primary weight)
+  * Delivery price (secondary weight)
+  * Capacity wastage / excess capacity fit
+  * Directional order preference (pickup occurs before delivery along the route path)
+
+RESPONSE 200:
+{
+  "success": true,
+  "data": [
+    {
+      "routeId": "route_101",
+      "driverId": "driver_001",
+      "driver": {
+        "driverId": "driver_001",
+        "name": "Amit Deshmukh",
+        "vehicleType": "3-Wheeler Tempo",
+        "vehicleNumber": "MH02GH3456",
+        "rating": 4.9
+      },
+      "startLocation": {
+        "address": "Bandra West, Mumbai",
+        "latitude": 19.0596,
+        "longitude": 72.8295
+      },
+      "destination": {
+        "address": "Panvel, Navi Mumbai",
+        "latitude": 18.9894,
+        "longitude": 73.1175
+      },
+      "stops": [
+        {
+          "address": "Kurla, Mumbai",
+          "latitude": 19.0726,
+          "longitude": 72.8793
+        }
+      ],
+      "travelDate": "2026-09-28",
+      "departureTime": "08:00",
+      "arrivalTime": "11:00",
+      "availableCapacity": 190,
+      "price": 1200.0,
+      "pickup_detour_km": 0.0,
+      "delivery_detour_km": 8.6,
+      "total_detour_km": 8.6,
+      "routeOverlap": 0.83,
+      "directionallyValid": true,
+      "matchScore": 0.94,
+      "status": "active"
+    }
+  ]
+}
+
 
 GET /driver-routes/{routeId}/matches
 Find delivery opportunities compatible with a driver's route.
