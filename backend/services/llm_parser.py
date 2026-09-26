@@ -3,6 +3,7 @@
 from enum import Enum
 import json
 import os
+from typing import Union
 
 from dotenv import load_dotenv
 from groq import Groq
@@ -16,6 +17,7 @@ class ResourceCategory(str, Enum):
 
     FURNITURE = "furniture"
     AUDIO_VISUAL = "audio_visual"
+    ELECTRONICS = "electronics"
     KITCHEN_EQUIPMENT = "kitchen_equipment"
     EVENT_EQUIPMENT = "event_equipment"
     SPACE = "space"
@@ -27,7 +29,7 @@ class ParsedItem(BaseModel):
 
     category: ResourceCategory
     name: str = Field(min_length=1)
-    quantity: int = Field(ge=1)
+    quantity: Union[int, float] = Field(gt=0)
     metric: str = Field(default="units", min_length=1)
 
     @field_validator("category", mode="before")
@@ -43,6 +45,17 @@ class ParsedItem(BaseModel):
         if not isinstance(value, str):
             return value
         return " ".join(value.split()).lower()
+
+    @field_validator("quantity", mode="before")
+    @classmethod
+    def normalize_quantity(cls, value: object) -> object:
+        if isinstance(value, (int, float)):
+            if value <= 0:
+                raise ValueError("Quantity must be greater than 0")
+            if float(value).is_integer():
+                return int(value)
+            return round(float(value), 3)
+        return value
 
     @field_validator("metric", mode="before")
     @classmethod
@@ -70,10 +83,16 @@ Extract only requested hospitality resources, supplies, equipment, and ingredien
 Rules:
 1. Ignore location, dates, times, budgets, delivery, and transportation details.
 2. Normalize each item name to a lowercase singular noun.
-3. Convert written quantities to positive integers. If a requested resource has no quantity, default to 1.
-4. Extract the metric/unit of measurement for each item into the "metric" field (e.g., "kg", "g", "liters", "units", "boxes", "plates", "hours"). If no specific metric is mentioned (e.g., "20 chairs"), default to "units".
+3. Convert written quantities to positive numbers. If a requested resource has no quantity, default to 1.
+4. Use ONLY standard SI / metric units for the "metric" field:
+   - "kg" for mass and weight (convert non-SI or smaller units like grams, pounds, ounces to kg, e.g. 500g -> 0.5 kg).
+   - "liters" for volume and liquids (convert gallons, ml, etc. to liters).
+   - "m" for length or distance.
+   - "sqm" for area and space (convert sq ft, acres, etc. to sqm).
+   - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, plates).
+   Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units or "units". Default to "units" if no unit is specified.
 5. Exclude items with zero or negative intent.
-6. Use only these categories: "furniture", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other". (Use "other" for raw ingredients, food, and supplies).
+6. Use only these categories: "furniture", "electronics", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other". (Use "other" for raw ingredients, food, and supplies).
 7. Return an empty items list when no hospitality resource or supply is requested.
 
 Return only valid JSON with this root object shape:
