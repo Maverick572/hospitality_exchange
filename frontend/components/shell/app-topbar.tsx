@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BoxesIcon,
   ChevronRightIcon,
   MoonIcon,
   SearchIcon,
@@ -11,10 +12,12 @@ import {
   SunIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 
 import { NotificationsMenu } from "@/components/shell/notifications-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { usePerspective } from "@/lib/perspective";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +47,7 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
   const router = useRouter();
   const meta = pageMeta(config, pathname);
   const { theme, setTheme } = useTheme();
+  const { perspective, setPerspective } = usePerspective();
 
   const [isLive, setIsLive] = useState(!mockStore.forceDemo);
   const [forceDemo, setForceDemo] = useState(mockStore.forceDemo);
@@ -92,16 +96,56 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
   return (
     <>
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-        {/* ── Breadcrumb Navigation ── */}
-        <div className="flex items-center gap-2 text-xs font-medium">
-          <Link
-            href={config.home.href}
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {config.kind === "driver" ? "Driver Fleet" : "Workspace"}
-          </Link>
-          <ChevronRightIcon className="size-3 text-muted-foreground/60" />
-          <span className="font-semibold text-foreground">{meta.title}</span>
+        {/* ── Breadcrumb Navigation & Perspective Toggle ── */}
+        <div className="flex items-center gap-3 sm:gap-4 text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <Link
+              href={config.home.href}
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {config.kind === "driver" ? "Driver Fleet" : "Workspace"}
+            </Link>
+            <ChevronRightIcon className="size-3 text-muted-foreground/60" />
+            <span className="font-semibold text-foreground">{meta.title}</span>
+          </div>
+
+          {/* Perspective Toggle (HACK-CELESTIAL layout) */}
+          {config.kind === "business" && (
+            <div className="hidden sm:flex items-center rounded-xl bg-muted/60 p-0.5 border border-border shadow-2xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setPerspective("seeker");
+                  toast.success("Seeker View Active: Sourcing equipment, capacity & smart matches");
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer",
+                  perspective === "seeker"
+                    ? "bg-background text-primary shadow-xs font-bold border border-border/80"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <SearchIcon className={cn("size-3.5", perspective === "seeker" ? "text-primary" : "text-muted-foreground")} />
+                <span>Seeker View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPerspective("provider");
+                  toast.success("Provider View Active: Managing resources & monetizing inventory");
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer",
+                  perspective === "provider"
+                    ? "bg-background text-primary shadow-xs font-bold border border-border/80"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <BoxesIcon className={cn("size-3.5", perspective === "provider" ? "text-primary" : "text-muted-foreground")} />
+                <span>Provider View</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Center Quick Search Button ── */}

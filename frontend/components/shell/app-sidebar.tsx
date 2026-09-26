@@ -10,13 +10,17 @@ import {
   ChevronsUpDownIcon,
   HotelIcon,
   LogOutIcon,
+  PackageIcon,
+  SearchIcon,
   SparklesIcon,
   TruckIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { usePerspective } from "@/lib/perspective";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +51,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
   const isDriver = config.kind === "driver";
 
   const [collapsed, setCollapsed] = useState(false);
+  const { perspective, setPerspective, togglePerspective } = usePerspective();
 
   // Read saved collapse state from localStorage
   useEffect(() => {
@@ -102,7 +107,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
 
       {/* ── Workspace / Business Card ── */}
       {!collapsed ? (
-        <div className="p-3">
+        <div className="p-3 pb-2">
           <div className="flex items-center gap-2.5 rounded-xl border border-sidebar-border bg-sidebar-accent/50 p-2.5 text-sidebar-accent-foreground shadow-2xs">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-background text-primary shadow-2xs">
               {isDriver ? <TruckIcon className="size-4" /> : <HotelIcon className="size-4" />}
@@ -133,14 +138,86 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
         </div>
       )}
 
+      {/* ── Seeker vs Provider Perspective Switcher ── */}
+      {!isDriver && !collapsed && (
+        <div className="px-3 pb-2">
+          <div className="p-1 rounded-xl bg-muted/60 flex items-center gap-1 border border-border shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                setPerspective("seeker");
+                toast.success("Seeker View Active: Sourcing equipment, capacity & smart matches");
+              }}
+              className={cn(
+                "flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                perspective === "seeker"
+                  ? "bg-background text-primary shadow-xs font-bold border border-border/80"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+              )}
+            >
+              <SearchIcon className={cn("size-3", perspective === "seeker" ? "text-primary" : "text-muted-foreground")} />
+              <span>Seeker</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPerspective("provider");
+                toast.success("Provider View Active: Managing resources & monetizing inventory");
+              }}
+              className={cn(
+                "flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                perspective === "provider"
+                  ? "bg-background text-primary shadow-xs font-bold border border-border/80"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+              )}
+            >
+              <PackageIcon className={cn("size-3", perspective === "provider" ? "text-primary" : "text-muted-foreground")} />
+              <span>Provider</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isDriver && collapsed && (
+        <div className="flex justify-center pb-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => {
+                  togglePerspective();
+                  toast.success(perspective === "seeker" ? "Switched to Provider View" : "Switched to Seeker View");
+                }}
+                className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/60 text-primary shadow-2xs hover:bg-muted cursor-pointer"
+              >
+                {perspective === "seeker" ? <SearchIcon className="size-3.5" /> : <PackageIcon className="size-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs font-medium">
+              {perspective === "seeker" ? "Seeker Active (Click to switch)" : "Provider Active (Click to switch)"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+
       {/* ── Nav Groups ── */}
       <div className="flex-1 overflow-y-auto px-2 py-1 scrollbar-none">
         <nav className="flex flex-col gap-4">
           {config.groups.map((group) => (
             <div key={group.label} className="flex flex-col gap-1">
               {!collapsed && (
-                <div className="px-2.5 py-1 text-[10px] font-semibold text-muted-foreground/70 tracking-wider">
-                  {group.label}
+                <div className="flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold text-muted-foreground/70 tracking-wider">
+                  <span>{group.label}</span>
+                  {group.label === "SEEKER SOURCING" && perspective === "seeker" && (
+                    <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary tracking-normal">
+                      ACTIVE
+                    </span>
+                  )}
+                  {group.label === "PROVIDER INVENTORY" && perspective === "provider" && (
+                    <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary tracking-normal">
+                      ACTIVE
+                    </span>
+                  )}
                 </div>
               )}
               {group.items.map((item) => {

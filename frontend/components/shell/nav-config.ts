@@ -58,7 +58,6 @@ export const BUSINESS_SHELL: ShellConfig = {
       label: "SHARED LOGISTICS",
       items: [
         { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match", badge: "81% OFF" },
-        { href: "/driver", icon: RouteIcon, label: "Driver Fleet" },
       ],
     },
     {
