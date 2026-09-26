@@ -1,17 +1,15 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from firebase_admin import firestore
 
 from core.auth import get_current_user
+from core.firebase import db
 
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
-
-db = firestore.client()
 
 
 # ============================================================
