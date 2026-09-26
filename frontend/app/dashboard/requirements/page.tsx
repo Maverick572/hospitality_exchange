@@ -6,10 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   CalendarIcon,
   ClipboardListIcon,
+  LockIcon,
   MapPinIcon,
   PencilIcon,
   PlusIcon,
   SearchIcon,
+  ShieldAlertIcon,
   SparklesIcon,
   TruckIcon,
   WalletIcon,
@@ -27,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { requirementsApi } from "@/lib/api";
 import { humanize, inr, shortDate } from "@/lib/format";
+import { usePerspective } from "@/lib/perspective";
 import { toLocalInput } from "@/lib/pricing";
 import { useBusinessSession } from "@/lib/session";
 import type { Requirement } from "@/lib/types";
@@ -45,6 +48,7 @@ function RequirementsPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { profile } = useBusinessSession();
+  const { perspective, setPerspective } = usePerspective();
   const requirements = useApi(requirementsApi.getMine);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Requirement | null>(null);
@@ -75,17 +79,52 @@ function RequirementsPageInner() {
         title="Requirements"
         description="Saved needs with dates, budget and delivery details. Find matches for any of them in one click."
         actions={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <PlusIcon data-icon="inline-start" />
-            Post a requirement
-          </Button>
+          perspective === "seeker" ? (
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+              className="cursor-pointer font-bold shadow-xs"
+            >
+              <PlusIcon data-icon="inline-start" />
+              Post a requirement
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => toast.error("Switch to Seeker View to post event requirements.")}
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-2xs cursor-not-allowed hover:bg-muted"
+              title="Switch to Seeker View to post requirements"
+            >
+              <LockIcon className="size-3.5 text-muted-foreground" />
+              <span>Post Requirement (Seeker Only)</span>
+            </button>
+          )
         }
       />
+
+      {/* ── Provider Mode Alert Banner ── */}
+      {perspective === "provider" && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 font-medium">
+            <ShieldAlertIcon className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Provider View Active:</strong> Provider view manages and monetizes existing venue assets. Sourcing requirements can only be posted in <strong>Seeker View</strong>.
+            </span>
+          </div>
+          <Button
+            size="xs"
+            onClick={() => {
+              setPerspective("seeker");
+              toast.success("Switched to Seeker View");
+            }}
+            className="shrink-0 text-xs font-semibold"
+          >
+            Switch to Seeker View
+          </Button>
+        </div>
+      )}
 
       {/* ── Status Filter Tabs ── */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
