@@ -28,6 +28,7 @@ class ParsedItem(BaseModel):
     category: ResourceCategory
     name: str = Field(min_length=1)
     quantity: int = Field(ge=1)
+    metric: str = Field(default="units", min_length=1)
 
     @field_validator("category", mode="before")
     @classmethod
@@ -43,6 +44,13 @@ class ParsedItem(BaseModel):
             return value
         return " ".join(value.split()).lower()
 
+    @field_validator("metric", mode="before")
+    @classmethod
+    def normalize_metric(cls, value: object) -> object:
+        if not isinstance(value, str) or not value.strip():
+            return "units"
+        return value.strip().lower()
+
 
 class RequirementParseResult(BaseModel):
     """Root object returned by the Groq JSON response."""
@@ -57,18 +65,19 @@ class ParserServiceError(Exception):
 DEFAULT_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 SYSTEM_PROMPT = """You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
-Extract only requested hospitality resources from the user's text.
+Extract only requested hospitality resources, supplies, equipment, and ingredients from the user's text.
 
 Rules:
 1. Ignore location, dates, times, budgets, delivery, and transportation details.
 2. Normalize each item name to a lowercase singular noun.
 3. Convert written quantities to positive integers. If a requested resource has no quantity, default to 1.
-4. Exclude items with zero or negative intent.
-5. Use only these categories: "furniture", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other".
-6. Return an empty items list when no hospitality resource is requested.
+4. Extract the metric/unit of measurement for each item into the "metric" field (e.g., "kg", "g", "liters", "units", "boxes", "plates", "hours"). If no specific metric is mentioned (e.g., "20 chairs"), default to "units".
+5. Exclude items with zero or negative intent.
+6. Use only these categories: "furniture", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other". (Use "other" for raw ingredients, food, and supplies).
+7. Return an empty items list when no hospitality resource or supply is requested.
 
 Return only valid JSON with this root object shape:
-{"items": [{"category": "furniture", "name": "chair", "quantity": 1}]}
+{"items": [{"category": "furniture", "name": "chair", "quantity": 1, "metric": "units"}]}
 """
 
 

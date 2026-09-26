@@ -41,3 +41,11 @@ def test_empty_item_result_is_valid():
     result = RequirementParseResult(items=[])
 
     assert result.items == []
+
+
+def test_metric_normalization_and_default():
+    item1 = ParsedItem(category=ResourceCategory.OTHER, name="rice", quantity=30, metric="  KG ")
+    assert item1.metric == "kg"
+
+    item2 = ParsedItem(category=ResourceCategory.FURNITURE, name="chair", quantity=20)
+    assert item2.metric == "units"

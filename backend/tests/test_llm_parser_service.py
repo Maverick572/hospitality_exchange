@@ -20,8 +20,8 @@ def test_parse_requirement_returns_validated_items(monkeypatch):
     )
 
     assert [item.model_dump() for item in result] == [
-        {"category": "furniture", "name": "chair", "quantity": 300},
-        {"category": "furniture", "name": "table", "quantity": 20},
+        {"category": "furniture", "name": "chair", "quantity": 300, "metric": "units"},
+        {"category": "furniture", "name": "table", "quantity": 20, "metric": "units"},
     ]
 
 
