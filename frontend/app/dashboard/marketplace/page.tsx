@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockIcon, PlusIcon, ShieldAlertIcon, SparklesIcon } from "lucide-react";
@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { MarketplaceCard } from "@/components/marketplace/marketplace-card";
 import { Button } from "@/components/ui/button";
-import { mockStore } from "@/lib/mock-store";
+import { resourcesApi } from "@/lib/api";
+import { useApi } from "@/hooks/use-api";
 import { usePerspective } from "@/lib/perspective";
 import { useBusinessSession } from "@/lib/session";
 import type { Resource } from "@/lib/types";
@@ -18,15 +19,10 @@ export default function MarketplacePage() {
   const router = useRouter();
   const { profile } = useBusinessSession();
   const { perspective, setPerspective } = usePerspective();
-  const [resources, setResources] = useState<Resource[]>([]);
+  const resources = useApi(() => resourcesApi.getMine());
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-
-  useEffect(() => {
-    // Load initial resources from mockStore
-    setResources(mockStore.getResources());
-  }, []);
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -43,7 +39,7 @@ export default function MarketplacePage() {
     router.push("/dashboard/smart-matches");
   };
 
-  const filteredResources = resources.filter((res) => {
+  const filteredResources = (resources.data ?? []).filter((res) => {
     // Filter out current user's own resources from the marketplace (as in HACK-CELESTIAL)
     if (profile?.userId && (res.providerId === profile.userId || res.userId === profile.userId)) {
       return false;
