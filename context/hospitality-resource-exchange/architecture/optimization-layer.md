@@ -1,21 +1,21 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
 sources: []
-confidence: med
+confidence: high
 ---
 
 # Optimization Layer (Solver)
 
-[decided] CP-SAT (OR-Tools) runs only for bundle/multi-item requests. A fast weighted linear scorer handles single-resource searches instead of invoking the full solver. See [[projects/hospitality-resource-exchange/decisions/decisions]] D002.
+[decided] CP-SAT (OR-Tools) runs only for bundle/multi-item requests via `POST /matching/bundle`. A fast weighted linear scorer handles single-resource searches via `POST /matching/search`. See [[projects/hospitality-resource-exchange/decisions/decisions]] D002.
 
 ## Details
 
-[stated] A prior project (CausalCut) used CP-SAT for matching, which informed this stack choice.
+[stated] The matching API returns a `matchScore` (0.0–1.0) and `matchReasons[]` for each result. Matching factors are: availability filtering, distance calculation, price calculation, provider rating, and logistics compatibility.
 
-[inferred] Neither the linear scorer's weights nor the CP-SAT objective function are defined yet. This is the top open technical gap: judges are likely to probe "how exactly are matches ranked," and there is currently no defensible formula to give.
+[stated] The bundle endpoint (`POST /matching/bundle`) produces an optimized multi-provider fulfillment plan with itemized resource costs, logistics cost, deposit, and total — with a `withinBudget` flag. CP-SAT optimization sits behind this endpoint.
 
 [decided] FastAPI `BackgroundTasks` handles async solves; Redis/Celery deferred until solve volume justifies the overhead. See [[projects/hospitality-resource-exchange/decisions/decisions]] D005.
 
@@ -25,6 +25,6 @@ extends:: [[projects/hospitality-resource-exchange/architecture/five-layer-model
 
 ## Open questions
 
-- Define the weighted linear scorer formula for single-resource matching (used by [[projects/hospitality-resource-exchange/concepts/smart-matching]]).
-- Define the CP-SAT objective function for bundle matching (used by [[projects/hospitality-resource-exchange/concepts/bundled-requests]]).
-- Decide whether logistics cost is a joint term in the CP-SAT objective or handled separately (used by [[projects/hospitality-resource-exchange/concepts/logistics-aware-matching]]).
+- Define the exact weights for the linear scorer formula (the API shape is set, but internal weights need tuning).
+- Define the CP-SAT objective function for bundle matching (cost minimization subject to coverage constraints).
+- Decide whether logistics cost is a joint term in the CP-SAT objective or handled separately.

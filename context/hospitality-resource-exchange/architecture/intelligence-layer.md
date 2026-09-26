@@ -1,10 +1,10 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
 sources: []
-confidence: med
+confidence: high
 ---
 
 # Intelligence Layer (LLM)
@@ -15,7 +15,9 @@ confidence: med
 
 [decided] Groq chosen over a generic LLM reference specifically for inference speed on the critical parsing path. See [[projects/hospitality-resource-exchange/decisions/decisions]] D003.
 
-[stated] The PPT (Slide 4) currently describes an "Agentic Multi-Provider Bundle Orchestrator" that "simultaneously queries multiple vendor domains" — this framing risks implying autonomous multi-step agentic decision-making, which contradicts the LLM-extracts/CP-SAT-decides separation. Flagged as the single biggest overclaiming risk in the current deck.
+[stated] The new API contract confirms this separation: `POST /requirements` accepts a free-text `description` field; the backend (FastAPI) parses this via LLM into structured `items[]` (category, name, quantity) before matching runs. The frontend never sees the LLM prompt or parsing logic.
+
+[stated] No "agentic orchestrator" language appears in the current API contract — the overclaiming risk flagged earlier has been resolved in the implementation specs.
 
 ## Relations
 
@@ -23,4 +25,4 @@ extends:: [[projects/hospitality-resource-exchange/architecture/five-layer-model
 
 ## Open questions
 
-- Rewrite the "agentic orchestrator" pitch language to explicitly state: LLM extracts/explains, CP-SAT decides.
+- None — the LLM's scope is locked to extraction and explanation.

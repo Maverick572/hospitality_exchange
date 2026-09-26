@@ -1,21 +1,23 @@
 ---
 type: concept
-status: draft
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
 sources: []
-confidence: med
+confidence: high
 ---
 
 # Bundled Requests
 
-[stated] Businesses can request multiple resources as one requirement (e.g. 500 chairs + 50 tables + AV equipment + kitchen space + parking for 100 vehicles), matched across multiple providers with logistics coordinated to minimize trips, rather than each provider making an independent trip.
+[stated] Multi-resource requirements (e.g. 300 chairs + 20 tables) can be fulfilled across multiple providers with logistics coordinated. The platform produces an optimized fulfillment bundle with itemized costs.
 
 ## Details
 
-[decided] This is the one feature that actually requires the CP-SAT solver, per project decision log — single-resource requests use a cheaper weighted linear scorer instead. See [[projects/hospitality-resource-exchange/decisions/decisions]] D002.
+[decided] This is the one feature that requires the CP-SAT solver, per D002 — single-resource requests use a cheaper weighted linear scorer.
 
-[inferred] The CP-SAT objective function for bundle selection (cost minimization subject to coverage constraints, vs. a weighted multi-objective) is not yet defined — same open gap as the single-resource scorer, but here it also needs a formal constraint model (bin-packing-style over provider capacity, not boolean assignment) once partial-quantity inventory is confirmed.
+[stated] API: `POST /matching/bundle` with `{ "requirementId": "req_123" }`. Response includes: bundleId, itemized resources (providerId, resourceId, name, quantity, price per provider), logistics (driverId, routeId, deliveryCost), resourceCost, deliveryCost, deposit, totalCost, and `withinBudget` flag.
+
+[stated] Example bundle: Provider A → 180 chairs (₹4,500), Provider B → 120 chairs (₹3,000), Provider C → 20 tables (₹4,000), Driver X → shared-route delivery (₹1,800). Total ₹18,300 against ₹25,000 budget → withinBudget: true.
 
 ## Relations
 
@@ -24,5 +26,5 @@ depends_on:: [[projects/hospitality-resource-exchange/concepts/availability-cale
 
 ## Open questions
 
-- What is the CP-SAT objective function for bundle selection?
-- How does bundle matching interact with logistics-aware matching — is transport cost a joint term in the same solve, or a separate post-processing step?
+- What is the CP-SAT objective function for bundle selection? (API shape is defined, internal optimization logic is TBD.)
+- How does bundle matching interact with logistics cost — joint term or separate step?

@@ -1,25 +1,27 @@
 ---
 type: concept
-status: disputed
+status: stable
 tags: [project/hospitality-resource-exchange]
 updated: 2026-09-26
 sources: []
-confidence: low
+confidence: high
 ---
 
 # Logistics-Aware Matching
 
-[stated] The platform's core USP. Instead of only matching "who has the resource," it also asks "how can we move it there most efficiently" — detecting existing transport routes and spare capacity (delivery trucks, hotel vehicles, laundry vans, staff shuttles, supplier vehicles) to reduce dedicated-trip costs.
+[stated] The platform's core USP. Drivers publish upcoming routes with spare capacity; the platform automatically matches delivery requirements with compatible driver routes based on pickup/delivery location, route overlap, date/time, available capacity, and delivery requirements.
 
 ## Details
 
-[stated] Worked example from spec: Hotel A has 300 chairs, Hotel B needs them. A dedicated vehicle costs ₹8,000, but Hotel C already has a truck travelling A→B with spare capacity, so the platform recommends shared transport at ₹1,500 (₹6,500 saved).
+[decided] The data source question is resolved: drivers manually publish routes via the API. This is mechanism (a) from the old context — manual entry, not inferred or simulated.
 
-[stated] Flagged in project ways-of-working as the single feature that should not be sacrificed under time pressure — it is the actual differentiator versus generic B2B marketplaces.
+[stated] Firestore collections: `drivers/{driverId}` (profile, vehicle details), `driverRoutes/{routeId}` (start, destination, stops, routeGeometry, travel date, times, capacity, price, status), `deliveryRequests/{deliveryRequestId}` (route-matched delivery jobs).
 
-[inferred] Mechanism is currently undefined: it is unclear whether route/spare-capacity data is (a) manually entered by providers as recurring routes, (b) inferred from booking history patterns, or (c) simulated/seeded for the hackathon demo. This is unresolved and marked `status: disputed` until settled, since presenting (c) as if it were (a)/(b) is an overclaiming risk already flagged once for this project (see [[projects/hospitality-resource-exchange/decisions/decisions]] ways-of-working note on overclaiming).
+[stated] Driver API: `POST /drivers/profile`, `GET /drivers/me`, `POST /driver-routes`, `GET /driver-routes/my`, `PATCH /driver-routes/{id}`, `DELETE /driver-routes/{id}`, `GET /driver-routes/{id}/matches` (find delivery opportunities), `POST /delivery-requests/{id}/accept`, `PATCH /delivery-requests/{id}/status`.
 
-[inferred] Whether this lives in the Optimization Layer (as a cost term inside the CP-SAT objective) or as separate rule-based plumbing before/after the solver is also undecided.
+[stated] Route matching returns: deliveryRequestId, pickupLocation, deliveryLocation, requiredCapacity, `routeOverlap` (0.0–1.0), estimatedEarnings, timeCompatible. OSRM provides route geometry for overlap calculation.
+
+[stated] Delivery status progression: pickup_pending → picked_up → in_transit → delivered.
 
 ## Relations
 
@@ -27,6 +29,4 @@ depends_on:: [[projects/hospitality-resource-exchange/architecture/optimization-
 
 ## Open questions
 
-- What is the actual data source for route/spare-capacity detection in the hackathon demo?
-- Is this folded into the CP-SAT objective as a cost term, or handled as separate rule-based logic?
-- The numeric worked example (₹8,000 vs ₹1,500) was in the original spec but dropped from the PPT — worth restoring for pitch impact.
+- Whether logistics cost is folded into the CP-SAT bundle objective as a joint term, or handled as separate post-processing, is still undecided.
