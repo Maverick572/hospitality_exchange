@@ -4,8 +4,11 @@ from enum import Enum
 import json
 import os
 
+from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel, Field, ValidationError, field_validator
+
+load_dotenv()
 
 
 class ResourceCategory(str, Enum):
