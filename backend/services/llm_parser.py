@@ -1,7 +1,9 @@
 """Parse natural-language hospitality requirements into validated items."""
 
 from enum import Enum
+import os
 
+from groq import Groq
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -46,3 +48,58 @@ class RequirementParseResult(BaseModel):
 
 class ParserServiceError(Exception):
     """Raised when a requirement cannot be safely parsed."""
+
+
+DEFAULT_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+SYSTEM_PROMPT = """You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
+Extract only requested hospitality resources from the user's text.
+
+Rules:
+1. Ignore location, dates, times, budgets, delivery, and transportation details.
+2. Normalize each item name to a lowercase singular noun.
+3. Convert written quantities to positive integers. If a requested resource has no quantity, default to 1.
+4. Exclude items with zero or negative intent.
+5. Use only these categories: "furniture", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other".
+6. Return an empty items list when no hospitality resource is requested.
+
+Return only valid JSON with this root object shape:
+{"items": [{"category": "furniture", "name": "chair", "quantity": 1}]}
+"""
+
+
+def _get_client() -> Groq:
+    """Create the Groq client lazily so importing this module has no side effects."""
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ParserServiceError("The requirement parser is not configured.")
+
+    try:
+        timeout = float(os.getenv("GROQ_TIMEOUT_SECONDS", "15"))
+        return Groq(api_key=api_key, timeout=timeout)
+    except Exception:
+        raise ParserServiceError("The requirement parser is not configured.") from None
+
+
+def _request_completion(description: str) -> str:
+    """Request a strict JSON extraction from Groq and return its content."""
+
+    try:
+        response = _get_client().chat.completions.create(
+            model=DEFAULT_MODEL,
+            temperature=0.0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": description},
+            ],
+        )
+        content = response.choices[0].message.content
+        if not content or not content.strip():
+            raise ValueError("empty response")
+        return content
+    except ParserServiceError:
+        raise
+    except Exception:
+        raise ParserServiceError("The requirement parser service is unavailable.") from None
