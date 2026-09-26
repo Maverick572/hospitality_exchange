@@ -3,23 +3,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PlusIcon, SparklesIcon } from "lucide-react";
+import { LockIcon, PlusIcon, ShieldAlertIcon, SparklesIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { MarketplaceCard } from "@/components/marketplace/marketplace-card";
 import { Button } from "@/components/ui/button";
 import { mockStore } from "@/lib/mock-store";
+import { usePerspective } from "@/lib/perspective";
+import { useBusinessSession } from "@/lib/session";
 import type { Resource } from "@/lib/types";
 
 export default function MarketplacePage() {
   const router = useRouter();
+  const { profile } = useBusinessSession();
+  const { perspective, setPerspective } = usePerspective();
   const [resources, setResources] = useState<Resource[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
 
   useEffect(() => {
-    // Load initial resources from mockStore or API
+    // Load initial resources from mockStore
     setResources(mockStore.getResources());
   }, []);
 
@@ -30,11 +35,20 @@ export default function MarketplacePage() {
   };
 
   const handleRequestBooking = (resource: Resource) => {
-    // Direct to negotiations / booking request
-    router.push(`/dashboard/requests?resourceId=${encodeURIComponent(resource.resourceId)}`);
+    if (perspective === "provider") {
+      toast.error("Switch to Seeker View to match with demand or book resources.");
+      return;
+    }
+    // Navigate to smart matches as in HACK-CELESTIAL
+    router.push("/dashboard/smart-matches");
   };
 
   const filteredResources = resources.filter((res) => {
+    // Filter out current user's own resources from the marketplace (as in HACK-CELESTIAL)
+    if (profile?.userId && (res.providerId === profile.userId || res.userId === profile.userId)) {
+      return false;
+    }
+
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       !q ||
@@ -70,13 +84,47 @@ export default function MarketplacePage() {
           </p>
         </div>
 
-        <Link href="/dashboard/requirements">
-          <Button className="font-bold flex items-center gap-2 shadow-xs">
-            <PlusIcon className="size-4" />
-            Post Custom Need
-          </Button>
-        </Link>
+        {perspective === "seeker" ? (
+          <Link href="/dashboard/requirements">
+            <Button className="font-bold flex items-center gap-2 shadow-xs cursor-pointer">
+              <PlusIcon className="size-4" />
+              Post Custom Need
+            </Button>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toast.error("Switch to Seeker View to post custom requirements.")}
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-2xs cursor-not-allowed hover:bg-muted"
+            title="Switch to Seeker View to post custom requirements"
+          >
+            <LockIcon className="size-3.5 text-muted-foreground" />
+            <span>Post Custom Need (Seeker Only)</span>
+          </button>
+        )}
       </div>
+
+      {/* ── Provider Mode Alert Banner ── */}
+      {perspective === "provider" && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 font-medium">
+            <ShieldAlertIcon className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Provider View Active:</strong> Sourcing and requesting equipment from the marketplace is a Seeker action. Switch to <strong>Seeker View</strong> to send booking requests or post custom needs.
+            </span>
+          </div>
+          <Button
+            size="xs"
+            onClick={() => {
+              setPerspective("seeker");
+              toast.success("Switched to Seeker View");
+            }}
+            className="shrink-0 text-xs font-semibold cursor-pointer"
+          >
+            Switch to Seeker View
+          </Button>
+        </div>
+      )}
 
       {/* ── Filter Bar ── */}
       <FilterBar
@@ -104,6 +152,7 @@ export default function MarketplacePage() {
             <MarketplaceCard
               key={res.resourceId}
               resource={res}
+              perspective={perspective}
               onRequestBooking={handleRequestBooking}
             />
           ))}

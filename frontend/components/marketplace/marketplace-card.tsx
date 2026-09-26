@@ -1,17 +1,23 @@
 "use client";
 
-import { MapPinIcon, StarIcon, TruckIcon } from "lucide-react";
+import { ArrowRightIcon, LockIcon, MapPinIcon, StarIcon, TruckIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Resource } from "@/lib/types";
 
 type MarketplaceCardProps = {
   resource: Resource;
+  perspective?: "seeker" | "provider";
   onRequestBooking: (resource: Resource) => void;
 };
 
-export function MarketplaceCard({ resource, onRequestBooking }: MarketplaceCardProps) {
+export function MarketplaceCard({
+  resource,
+  perspective,
+  onRequestBooking,
+}: MarketplaceCardProps) {
   const imageUrl =
     resource.images && resource.images.length > 0
       ? resource.images[0]
@@ -78,13 +84,26 @@ export function MarketplaceCard({ resource, onRequestBooking }: MarketplaceCardP
           </div>
         </div>
 
-        <Button
-          size="sm"
-          className="font-bold shadow-xs text-xs"
-          onClick={() => onRequestBooking(resource)}
-        >
-          Request Booking
-        </Button>
+        {perspective === "provider" ? (
+          <button
+            type="button"
+            onClick={() => toast.error("Switch to Seeker View to match with demand or book resources.")}
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-2xs cursor-not-allowed hover:bg-muted"
+            title="Switch to Seeker View to match resources"
+          >
+            <LockIcon className="size-3.5 text-muted-foreground" />
+            <span>Match Demand (Seeker Only)</span>
+          </button>
+        ) : (
+          <Button
+            size="sm"
+            className="font-bold shadow-xs text-xs cursor-pointer flex items-center gap-1"
+            onClick={() => onRequestBooking(resource)}
+          >
+            <span>Match With Demand</span>
+            <ArrowRightIcon className="size-3.5" />
+          </Button>
+        )}
       </div>
     </div>
   );

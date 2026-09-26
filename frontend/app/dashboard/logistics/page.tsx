@@ -2,16 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TrendingDownIcon, TruckIcon } from "lucide-react";
+import { ShieldAlertIcon, TrendingDownIcon, TruckIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { CostComparison } from "@/components/logistics/cost-comparison";
 import { RouteVisualizer } from "@/components/logistics/route-visualizer";
+import { Button } from "@/components/ui/button";
+import { usePerspective } from "@/lib/perspective";
 
 export default function LogisticsPage() {
   const router = useRouter();
+  const { perspective, setPerspective } = usePerspective();
   const [confirmed, setConfirmed] = useState(false);
 
   const handleConfirm = () => {
+    if (perspective === "provider") {
+      toast.error("Switch to Seeker View to confirm logistics dispatch.");
+      return;
+    }
     setConfirmed(true);
     setTimeout(() => {
       router.push("/dashboard/requests");
@@ -33,6 +41,28 @@ export default function LogisticsPage() {
           We found an existing vehicle route that can transport your resources without requiring a dedicated trip, cutting your logistics costs by up to 81%.
         </p>
       </div>
+
+      {/* ── Provider Mode Alert Banner ── */}
+      {perspective === "provider" && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 font-medium">
+            <ShieldAlertIcon className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Provider View Active:</strong> Logistics routing and carrier dispatch is reserved for event sourcing. Switch to <strong>Seeker View</strong> to dispatch transport.
+            </span>
+          </div>
+          <Button
+            size="xs"
+            onClick={() => {
+              setPerspective("seeker");
+              toast.success("Switched to Seeker View");
+            }}
+            className="shrink-0 text-xs font-semibold cursor-pointer"
+          >
+            Switch to Seeker View
+          </Button>
+        </div>
+      )}
 
       {/* ── Route Visualization Card ── */}
       <RouteVisualizer />
@@ -61,7 +91,7 @@ export default function LogisticsPage() {
       </div>
 
       {/* ── Cost Comparison & Summary ── */}
-      <CostComparison onConfirm={handleConfirm} />
+      <CostComparison perspective={perspective} onConfirm={handleConfirm} />
 
       {confirmed && (
         <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-foreground p-4 text-xs font-semibold text-background shadow-lg">

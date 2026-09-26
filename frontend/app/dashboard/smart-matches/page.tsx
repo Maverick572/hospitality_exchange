@@ -3,12 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRightIcon, SparklesIcon, StarIcon, TruckIcon, CheckCircle2Icon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CheckCircle2Icon,
+  LockIcon,
+  ShieldAlertIcon,
+  SparklesIcon,
+  StarIcon,
+  TruckIcon,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { RadialScore } from "@/components/matching/radial-score";
 import { ScoreBreakdown } from "@/components/matching/score-breakdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { usePerspective } from "@/lib/perspective";
 
 const SCENARIOS = [
   {
@@ -86,12 +96,17 @@ const SCENARIOS = [
 
 export default function SmartMatchesPage() {
   const router = useRouter();
+  const { perspective, setPerspective } = usePerspective();
   const [selectedScenarioId, setSelectedScenarioId] = useState(SCENARIOS[0].id);
   const scenario = SCENARIOS.find((s) => s.id === selectedScenarioId) || SCENARIOS[0];
   const { topMatch } = scenario;
 
   const handleSendRequest = () => {
-    router.push("/dashboard/requests");
+    if (perspective === "provider") {
+      toast.error("Switch to Seeker View to book resources or dispatch requests.");
+      return;
+    }
+    router.push("/dashboard/logistics");
   };
 
   return (
@@ -109,6 +124,28 @@ export default function SmartMatchesPage() {
           Algorithmic multi-factor compatibility scoring pairing event requirements with surplus 5-star venue inventory.
         </p>
       </div>
+
+      {/* ── Provider Mode Alert Banner ── */}
+      {perspective === "provider" && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 font-medium">
+            <ShieldAlertIcon className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Provider View Active:</strong> Algorithmic pairing and demand booking is a Seeker operation. Switch to <strong>Seeker View</strong> to route and book delivery.
+            </span>
+          </div>
+          <Button
+            size="xs"
+            onClick={() => {
+              setPerspective("seeker");
+              toast.success("Switched to Seeker View");
+            }}
+            className="shrink-0 text-xs font-semibold cursor-pointer"
+          >
+            Switch to Seeker View
+          </Button>
+        </div>
+      )}
 
       {/* ── Scenario Tabs ── */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
@@ -200,9 +237,21 @@ export default function SmartMatchesPage() {
             </div>
 
             <div className="space-y-2">
-              <Button onClick={handleSendRequest} className="w-full font-bold shadow-xs">
-                Send Booking Request
-              </Button>
+              {perspective === "provider" ? (
+                <button
+                  type="button"
+                  onClick={() => toast.error("Switch to Seeker View to route and book delivery.")}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/60 px-4 py-2.5 text-xs font-semibold text-muted-foreground shadow-2xs cursor-not-allowed hover:bg-muted"
+                  title="Switch to Seeker View to book resources"
+                >
+                  <LockIcon className="size-3.5 text-muted-foreground" />
+                  <span>Book Delivery (Seeker Only)</span>
+                </button>
+              ) : (
+                <Button onClick={handleSendRequest} className="w-full font-bold shadow-xs cursor-pointer">
+                  Route & Book Delivery
+                </Button>
+              )}
               <Link href="/dashboard/logistics" className="block">
                 <Button variant="outline" className="w-full text-xs font-semibold">
                   Inspect Co-Loading Route
