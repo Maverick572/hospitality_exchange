@@ -526,41 +526,8 @@
       "why": "bridges separate communities"
     }
   ],
-  "questions": [
-    {
-      "type": "bridge_node",
-      "question": "Why does `ParsedItem` connect `ParsedItem` to `search_seeker_products`, `llm_parser.py`?",
-      "why": "High betweenness centrality (0.067) - this node is a cross-community bridge."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `parse_requirement()` connect `llm_parser.py` to `search_seeker_products`, `ParsedItem`?",
-      "why": "High betweenness centrality (0.059) - this node is a cross-community bridge."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `search_seeker_products()` connect `search_seeker_products` to `standard_response`, `llm_parser.py`, `ParsedItem`?",
-      "why": "High betweenness centrality (0.055) - this node is a cross-community bridge."
-    },
-    {
-      "type": "verify_inferred",
-      "question": "Are the 19 inferred relationships involving `standard_response()` (e.g. with `confirm_receipt()` and `get_booking_detail()`) actually correct?",
-      "why": "`standard_response()` has 19 INFERRED edges - model-reasoned connections that need verification."
-    },
-    {
-      "type": "verify_inferred",
-      "question": "Are the 3 inferred relationships involving `ParsedItem` (e.g. with `test_invalid_items_are_rejected()` and `test_seeker_router_endpoint()`) actually correct?",
-      "why": "`ParsedItem` has 3 INFERRED edges - model-reasoned connections that need verification."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `standard_response` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.05824561403508772 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `search_seeker_products` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07610993657505286 - nodes in this community are weakly interconnected."
-    }
-  ]
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
 }
