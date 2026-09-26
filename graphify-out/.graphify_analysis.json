@@ -1,0 +1,397 @@
+{
+  "communities": {
+    "0": [
+      "backend_tests_test_bookings",
+      "backend_tests_test_bookings_create_test_app",
+      "backend_tests_test_bookings_mock_firebase",
+      "backend_tests_test_bookings_py_fixture",
+      "backend_tests_test_bookings_test_confirm_receipt",
+      "backend_tests_test_bookings_test_get_booking_detail_and_authorization",
+      "backend_tests_test_bookings_test_get_my_bookings",
+      "backend_tests_test_escrow",
+      "backend_tests_test_escrow_create_test_app",
+      "backend_tests_test_escrow_mock_firebase",
+      "backend_tests_test_escrow_py_fixture",
+      "backend_tests_test_escrow_test_create_and_fund_escrow",
+      "backend_tests_test_escrow_test_release_escrow_split_and_penalty_overflow",
+      "backend_tests_test_evidence",
+      "backend_tests_test_evidence_create_test_app",
+      "backend_tests_test_evidence_mock_firebase",
+      "backend_tests_test_evidence_py_fixture",
+      "backend_tests_test_evidence_test_condition_evidence_validation",
+      "backend_tests_test_evidence_test_record_condition_evidence",
+      "backend_tests_test_requests",
+      "backend_tests_test_requests_create_test_app",
+      "backend_tests_test_requests_mock_firebase",
+      "backend_tests_test_requests_py_fixture",
+      "backend_tests_test_requests_test_accept_request_creates_booking_and_escrow",
+      "backend_tests_test_requests_test_counter_request_both_parties_and_revival",
+      "backend_tests_test_requests_test_create_request",
+      "backend_tests_test_reviews",
+      "backend_tests_test_reviews_create_test_app",
+      "backend_tests_test_reviews_mock_firebase",
+      "backend_tests_test_reviews_py_fixture",
+      "backend_tests_test_reviews_test_duplicate_review_prevention",
+      "backend_tests_test_reviews_test_get_provider_reviews",
+      "backend_tests_test_reviews_test_submit_review_and_update_aggregate_rating",
+      "patch"
+    ],
+    "1": [
+      "backend_services_llm_parser",
+      "backend_services_llm_parser_get_client",
+      "backend_services_llm_parser_parse_requirement",
+      "backend_services_llm_parser_parserserviceerror",
+      "backend_services_llm_parser_rationale_1",
+      "backend_services_llm_parser_rationale_110",
+      "backend_services_llm_parser_rationale_51",
+      "backend_services_llm_parser_rationale_73",
+      "backend_services_llm_parser_rationale_87",
+      "backend_services_llm_parser_request_completion",
+      "backend_tests_test_llm_parser_client",
+      "backend_tests_test_llm_parser_client_fakeclient",
+      "backend_tests_test_llm_parser_client_fakeclient_init",
+      "backend_tests_test_llm_parser_client_fakecompletions",
+      "backend_tests_test_llm_parser_client_fakecompletions_create",
+      "backend_tests_test_llm_parser_client_fakecompletions_init",
+      "backend_tests_test_llm_parser_client_test_client_failure_is_wrapped_without_exposing_credentials",
+      "backend_tests_test_llm_parser_client_test_groq_call_uses_strict_json_mode_and_deterministic_temperature",
+      "backend_tests_test_llm_parser_client_test_system_prompt_contains_extraction_guardrails",
+      "backend_tests_test_llm_parser_integration_contract",
+      "backend_tests_test_llm_parser_integration_contract_test_parser_output_is_firestore_compatible",
+      "backend_tests_test_llm_parser_service",
+      "backend_tests_test_llm_parser_service_py_parametrize",
+      "backend_tests_test_llm_parser_service_test_empty_description_returns_without_calling_groq",
+      "backend_tests_test_llm_parser_service_test_parse_requirement_rejects_invalid_model_output",
+      "backend_tests_test_llm_parser_service_test_parse_requirement_returns_empty_list_for_no_resources",
+      "backend_tests_test_llm_parser_service_test_parse_requirement_returns_validated_items",
+      "backend_tests_test_llm_parser_service_test_parser_service_failure_is_preserved",
+      "exception",
+      "groq"
+    ],
+    "2": [
+      "backend_tests_test_drivers",
+      "backend_tests_test_drivers_mock_db",
+      "backend_tests_test_drivers_mockcollection",
+      "backend_tests_test_drivers_mockcollection_document",
+      "backend_tests_test_drivers_mockcollection_init",
+      "backend_tests_test_drivers_mockdocumentreference",
+      "backend_tests_test_drivers_mockdocumentreference_get",
+      "backend_tests_test_drivers_mockdocumentreference_init",
+      "backend_tests_test_drivers_mockdocumentreference_set",
+      "backend_tests_test_drivers_mockdocumentsnapshot",
+      "backend_tests_test_drivers_mockdocumentsnapshot_exists",
+      "backend_tests_test_drivers_mockdocumentsnapshot_init",
+      "backend_tests_test_drivers_mockdocumentsnapshot_to_dict",
+      "backend_tests_test_drivers_mockfirestoreclient",
+      "backend_tests_test_drivers_mockfirestoreclient_collection",
+      "backend_tests_test_drivers_mockfirestoreclient_init",
+      "backend_tests_test_drivers_override_auth",
+      "backend_tests_test_drivers_py_fixture",
+      "backend_tests_test_drivers_test_create_driver_profile_duplicate_conflict",
+      "backend_tests_test_drivers_test_create_driver_profile_sets_firebase_custom_claim",
+      "backend_tests_test_drivers_test_create_driver_profile_success",
+      "backend_tests_test_drivers_test_create_driver_profile_validation_rejects_invalid_data",
+      "backend_tests_test_drivers_test_get_current_driver_profile_not_found",
+      "backend_tests_test_drivers_test_get_current_driver_profile_success",
+      "backend_tests_test_drivers_test_get_driver_auth_status_existing_driver",
+      "backend_tests_test_drivers_test_get_driver_auth_status_new_user"
+    ],
+    "3": [
+      "backend_drivers",
+      "backend_drivers_create_driver_profile",
+      "backend_drivers_driverauthstatusdata",
+      "backend_drivers_driverauthstatusresponse",
+      "backend_drivers_driverprofilecreate",
+      "backend_drivers_driverprofiledata",
+      "backend_drivers_driverprofileresponse",
+      "backend_drivers_get_current_driver_profile",
+      "backend_drivers_get_db",
+      "backend_drivers_get_driver_auth_status",
+      "backend_drivers_py_get",
+      "backend_drivers_py_post",
+      "backend_drivers_rationale_103",
+      "backend_drivers_rationale_152",
+      "backend_drivers_rationale_222",
+      "basemodel"
+    ],
+    "4": [
+      "backend_services_llm_parser_parseditem",
+      "backend_services_llm_parser_parseditem_normalize_category",
+      "backend_services_llm_parser_parseditem_normalize_name",
+      "backend_services_llm_parser_rationale_12",
+      "backend_services_llm_parser_rationale_23",
+      "backend_services_llm_parser_rationale_45",
+      "backend_services_llm_parser_requirementparseresult",
+      "backend_services_llm_parser_resourcecategory",
+      "backend_tests_test_llm_parser_contract",
+      "backend_tests_test_llm_parser_contract_py_parametrize",
+      "backend_tests_test_llm_parser_contract_test_empty_item_result_is_valid",
+      "backend_tests_test_llm_parser_contract_test_invalid_items_are_rejected",
+      "backend_tests_test_llm_parser_contract_test_valid_requirement_items_are_typed_and_normalized",
+      "enum",
+      "field_validator",
+      "str"
+    ],
+    "5": [
+      "backend_main",
+      "backend_main_health_check",
+      "backend_main_py_get",
+      "backend_main_root",
+      "backend_users",
+      "backend_users_create_user_profile",
+      "backend_users_get_current_user_profile",
+      "backend_users_get_user_document",
+      "backend_users_py_get",
+      "backend_users_py_post",
+      "backend_users_rationale_104",
+      "backend_users_rationale_136",
+      "backend_users_rationale_20",
+      "backend_users_rationale_40",
+      "backend_users_update_current_user_profile"
+    ],
+    "6": [
+      "backend_core_auth",
+      "backend_core_auth_get_current_user",
+      "backend_core_auth_rationale_10",
+      "backend_core_firebase",
+      "backend_transactions_bookings",
+      "backend_transactions_escrow",
+      "backend_transactions_evidence",
+      "backend_transactions_helpers",
+      "backend_transactions_init",
+      "backend_transactions_init_rationale_1",
+      "backend_transactions_notifications",
+      "backend_transactions_requests",
+      "backend_transactions_reviews"
+    ],
+    "7": [
+      "backend_tests_test_helpers_notifications",
+      "backend_tests_test_helpers_notifications_test_emit_notification",
+      "backend_tests_test_helpers_notifications_test_serialize_firestore_doc",
+      "backend_transactions_helpers_rationale_7",
+      "backend_transactions_helpers_serialize_firestore_doc",
+      "backend_transactions_requests_get_provider_requests",
+      "backend_transactions_requests_py_get",
+      "backend_transactions_requests_rationale_114",
+      "backend_transactions_reviews_get_user_reviews",
+      "backend_transactions_reviews_py_get",
+      "backend_transactions_reviews_rationale_147"
+    ],
+    "8": [
+      "any",
+      "backend_transactions_helpers_get_doc_or_404",
+      "backend_transactions_helpers_rationale_54",
+      "backend_transactions_requests_accept_request",
+      "backend_transactions_requests_counter_request",
+      "backend_transactions_requests_py_post",
+      "backend_transactions_requests_rationale_143",
+      "backend_transactions_requests_rationale_223",
+      "backend_transactions_requests_rationale_351",
+      "backend_transactions_requests_reject_request"
+    ],
+    "9": [
+      "backend_tests_test_helpers_notifications_test_standard_response",
+      "backend_transactions_escrow_create_escrow",
+      "backend_transactions_escrow_fund_escrow",
+      "backend_transactions_escrow_py_post",
+      "backend_transactions_escrow_rationale_119",
+      "backend_transactions_escrow_rationale_185",
+      "backend_transactions_escrow_rationale_33",
+      "backend_transactions_escrow_release_escrow",
+      "backend_transactions_helpers_rationale_37",
+      "backend_transactions_helpers_standard_response"
+    ],
+    "10": [
+      "backend_transactions_bookings_confirm_receipt",
+      "backend_transactions_bookings_py_post",
+      "backend_transactions_bookings_rationale_125",
+      "backend_transactions_notifications_emit_notification",
+      "backend_transactions_notifications_rationale_19",
+      "backend_transactions_requests_create_request",
+      "backend_transactions_requests_rationale_33",
+      "backend_transactions_reviews_create_review",
+      "backend_transactions_reviews_py_post",
+      "backend_transactions_reviews_rationale_32"
+    ],
+    "11": [
+      "backend_test",
+      "backend_test_get_id_token",
+      "backend_test_rationale_25",
+      "backend_test_rationale_73",
+      "backend_test_request",
+      "backend_test_test_driver",
+      "backend_test_test_user"
+    ],
+    "12": [
+      "backend_transactions_bookings_get_booking_detail",
+      "backend_transactions_bookings_get_my_bookings",
+      "backend_transactions_bookings_py_get",
+      "backend_transactions_bookings_rationale_33",
+      "backend_transactions_bookings_rationale_81"
+    ],
+    "13": [
+      "backend_test_transactions",
+      "backend_test_transactions_mock_firebase_full",
+      "backend_test_transactions_py_fixture",
+      "backend_test_transactions_test_full_transaction_lifecycle_end_to_end"
+    ],
+    "14": [
+      "backend_transactions_escrow_get_escrow_detail",
+      "backend_transactions_escrow_py_get",
+      "backend_transactions_escrow_rationale_287"
+    ],
+    "15": [
+      "backend_transactions_evidence_py_post",
+      "backend_transactions_evidence_rationale_32",
+      "backend_transactions_evidence_record_condition_evidence"
+    ],
+    "16": [
+      "backend_services_init",
+      "backend_services_init_rationale_1"
+    ],
+    "17": [
+      "backend_core_init"
+    ],
+    "18": [
+      "backend_tests_conftest"
+    ],
+    "19": [
+      "backend_tests_init"
+    ]
+  },
+  "cohesion": {
+    "0": 0.0962566844919786,
+    "1": 0.10344827586206896,
+    "2": 0.09230769230769231,
+    "3": 0.2,
+    "4": 0.175,
+    "5": 0.1523809523809524,
+    "6": 0.4358974358974359,
+    "7": 0.2,
+    "8": 0.24444444444444444,
+    "9": 0.24444444444444444,
+    "10": 0.2,
+    "11": 0.38095238095238093,
+    "12": 0.4,
+    "13": 0.5,
+    "14": 0.6666666666666666,
+    "15": 0.6666666666666666,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0
+  },
+  "gods": [
+    {
+      "id": "backend_transactions_helpers_standard_response",
+      "label": "standard_response()",
+      "degree": 25
+    },
+    {
+      "id": "backend_transactions_helpers_get_doc_or_404",
+      "label": "get_doc_or_404()",
+      "degree": 16
+    },
+    {
+      "id": "backend_core_auth_get_current_user",
+      "label": "get_current_user()",
+      "degree": 16
+    },
+    {
+      "id": "backend_transactions_helpers_serialize_firestore_doc",
+      "label": "serialize_firestore_doc()",
+      "degree": 16
+    },
+    {
+      "id": "backend_transactions_notifications_emit_notification",
+      "label": "emit_notification()",
+      "degree": 14
+    },
+    {
+      "id": "backend_services_llm_parser_parse_requirement",
+      "label": "parse_requirement()",
+      "degree": 11
+    },
+    {
+      "id": "backend_services_llm_parser_parseditem",
+      "label": "ParsedItem",
+      "degree": 9
+    },
+    {
+      "id": "backend_services_llm_parser_request_completion",
+      "label": "_request_completion()",
+      "degree": 7
+    },
+    {
+      "id": "backend_transactions_bookings_confirm_receipt",
+      "label": "confirm_receipt()",
+      "degree": 6
+    },
+    {
+      "id": "backend_transactions_escrow_fund_escrow",
+      "label": "fund_escrow()",
+      "degree": 6
+    }
+  ],
+  "surprises": [
+    {
+      "source": "test_serialize_firestore_doc()",
+      "target": "serialize_firestore_doc()",
+      "source_files": [
+        "backend/tests/test_helpers_notifications.py",
+        "backend/transactions/helpers.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `test_serialize_firestore_doc()` unexpectedly reaches hub `serialize_firestore_doc()`"
+    },
+    {
+      "source": "test_standard_response()",
+      "target": "standard_response()",
+      "source_files": [
+        "backend/tests/test_helpers_notifications.py",
+        "backend/transactions/helpers.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `test_standard_response()` unexpectedly reaches hub `standard_response()`"
+    },
+    {
+      "source": "confirm_receipt()",
+      "target": "get_doc_or_404()",
+      "source_files": [
+        "backend/transactions/bookings.py",
+        "backend/transactions/helpers.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "confirm_receipt()",
+      "target": "standard_response()",
+      "source_files": [
+        "backend/transactions/bookings.py",
+        "backend/transactions/helpers.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "create_escrow()",
+      "target": "get_doc_or_404()",
+      "source_files": [
+        "backend/transactions/escrow.py",
+        "backend/transactions/helpers.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

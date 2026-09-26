@@ -14,10 +14,43 @@ try:
 except Exception:
     db = None
 
+try:
+    from services.category_registry import EVIDENCE_TYPE_BY_CATEGORY
+except ImportError:
+    EVIDENCE_TYPE_BY_CATEGORY = {}
+
 router = APIRouter(
     prefix="/condition-evidence",
     tags=["Condition Evidence"]
 )
+
+
+# Evidence type compatibility map
+_EVIDENCE_COMPAT = {
+    "photo": {"photo"},
+    "video": {"video"},
+    "photo_video": {"photo", "video"},
+}
+
+
+def _validate_media_type(category: str, media_type: str) -> None:
+    """Validate that the uploaded media type matches the category's requirement.
+
+    Raises HTTPException if the media type is incompatible.
+    """
+    required = EVIDENCE_TYPE_BY_CATEGORY.get(category)
+    if not required:
+        return  # Unknown category — skip validation
+
+    allowed = _EVIDENCE_COMPAT.get(required, {"photo", "video"})
+    if media_type not in allowed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Category '{category}' requires {required} evidence, "
+                f"but received '{media_type}'."
+            ),
+        )
 
 
 # ============================================================
@@ -30,17 +63,9 @@ def record_condition_evidence(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Record condition evidence metadata (image URL from Firebase Storage + description).
+    Record condition evidence metadata (image/video URL from Firebase Storage + description).
     Stages allowed: 'PICKUP', 'DELIVERY'.
-    Firestore Schema (schema.txt):
-      - evidenceId
-      - bookingId
-      - uploadedBy
-      - type
-      - imageUrl
-      - timestamp
-      - description
-      - stage
+    Optional 'mediaType' field: 'photo' or 'video' — validated against the resource category.
     """
     user_id = current_user["uid"]
     booking_id = payload.get("bookingId")
@@ -48,6 +73,7 @@ def record_condition_evidence(
     image_url = payload.get("imageUrl")
     evidence_type = payload.get("type", "resource_condition")
     description = payload.get("description", "")
+    media_type = payload.get("mediaType")  # Optional: "photo" or "video"
 
     if not booking_id:
         raise HTTPException(
@@ -67,6 +93,17 @@ def record_condition_evidence(
             detail="Stage must be either 'PICKUP' or 'DELIVERY'."
         )
 
+    # If mediaType is provided, validate against the resource's category
+    if media_type and db is not None:
+        booking_doc = db.collection("bookings").document(booking_id).get()
+        if booking_doc.exists:
+            resource_id = booking_doc.to_dict().get("resourceId")
+            if resource_id:
+                resource_doc = db.collection("resources").document(resource_id).get()
+                if resource_doc.exists:
+                    category = resource_doc.to_dict().get("category", "")
+                    _validate_media_type(category, media_type)
+
     evidence_id = f"evidence_{uuid.uuid4().hex[:12]}"
     now = datetime.now(timezone.utc)
 
@@ -80,6 +117,9 @@ def record_condition_evidence(
         "description": description,
         "timestamp": now
     }
+
+    if media_type:
+        evidence_data["mediaType"] = media_type
 
     if db is not None:
         db.collection("conditionEvidence").document(evidence_id).set(evidence_data)

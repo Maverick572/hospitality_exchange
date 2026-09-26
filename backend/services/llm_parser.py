@@ -1,6 +1,5 @@
 """Parse natural-language hospitality requirements into validated items."""
 
-from enum import Enum
 import json
 import os
 from typing import Union
@@ -9,19 +8,13 @@ from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from services.category_registry import (
+    ResourceCategory,
+    build_category_prompt_block,
+    get_category_ids,
+)
+
 load_dotenv()
-
-
-class ResourceCategory(str, Enum):
-    """Categories supported by the matching pipeline."""
-
-    FURNITURE = "furniture"
-    AUDIO_VISUAL = "audio_visual"
-    ELECTRONICS = "electronics"
-    KITCHEN_EQUIPMENT = "kitchen_equipment"
-    EVENT_EQUIPMENT = "event_equipment"
-    SPACE = "space"
-    OTHER = "other"
 
 
 class ParsedItem(BaseModel):
@@ -62,7 +55,18 @@ class ParsedItem(BaseModel):
     def normalize_metric(cls, value: object) -> object:
         if not isinstance(value, str) or not value.strip():
             return "units"
-        return value.strip().lower()
+        val = value.strip().lower()
+        if val in ("kilogram", "kilograms", "kgs", "kilo", "kilos"):
+            return "kg"
+        if val in ("liter", "litre", "liters", "litres", "ltr", "ltrs", "l"):
+            return "liters"
+        if val in ("meter", "meters", "metre", "metres"):
+            return "m"
+        if val in ("sq meter", "sq meters", "sqm", "sq_m", "square meter", "square meters"):
+            return "sqm"
+        if val in ("unit", "units", "pieces", "piece", "pcs", "nos"):
+            return "units"
+        return val
 
 
 class RequirementParseResult(BaseModel):
@@ -77,7 +81,13 @@ class ParserServiceError(Exception):
 
 DEFAULT_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-SYSTEM_PROMPT = """You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
+# ---------------------------------------------------------------------------
+# System prompt — category list is auto-generated from categories.json
+# ---------------------------------------------------------------------------
+
+_CATEGORY_BLOCK = build_category_prompt_block()
+
+SYSTEM_PROMPT = f"""You are a strict data extraction pipeline for a B2B hospitality resource marketplace.
 Extract only requested hospitality resources, supplies, equipment, and ingredients from the user's text.
 
 Rules:
@@ -85,18 +95,24 @@ Rules:
 2. Normalize each item name to a lowercase singular noun.
 3. Convert written quantities to positive numbers. If a requested resource has no quantity, default to 1.
 4. Use ONLY standard SI / metric units for the "metric" field:
-   - "kg" for mass and weight (convert non-SI or smaller units like grams, pounds, ounces to kg, e.g. 500g -> 0.5 kg).
-   - "liters" for volume and liquids (convert gallons, ml, etc. to liters).
+   - "kg" for mass, weight, produce, solid raw ingredients, and bulk commodities (e.g. onions, tomatoes, potatoes, rice, vegetables, spices, flour, sugar, pulses).
+     * Robustly recognize bulk/agricultural units and common typos/phonetic spellings:
+       - 1 quintal (including typos: quitntal, quitnal, quental, quintle, qtl) = 100 kg (e.g. "100 quitntal onion" -> quantity: 10000, metric: "kg"; "20000 quitnal tomato" -> quantity: 2000000, metric: "kg").
+       - 1 ton / metric tonne (or tons, tonnes, mt) = 1000 kg.
+       - Grams (g), mg, lbs, pounds, ounces -> convert to kg (e.g. 500g -> 0.5 kg).
+   - "liters" for volume and liquids (e.g. cooking oil, milk, water, juice, syrups; convert gallons, ml, etc. to liters).
    - "m" for length or distance.
-   - "sqm" for area and space (convert sq ft, acres, etc. to sqm).
-   - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, plates).
-   Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units or "units". Default to "units" if no unit is specified.
-5. Exclude items with zero or negative intent.
-6. Use only these categories: "furniture", "electronics", "audio_visual", "kitchen_equipment", "event_equipment", "space", "other". (Use "other" for raw ingredients, food, and supplies).
+   - "sqm" for area and space (convert sq ft, sq yards, acres, etc. to sqm).
+   - "units" for countable discrete items (e.g. chairs, tables, microphones, devices, appliances, cookware, utensils).
+   Never output non-SI or informal packaging metrics like "boxes", "plates", "packets", "bundles", "lbs", or "gallons"; convert them to standard SI units.
+   Items in "raw_ingredients" must use "kg" for solids/produce and "liters" for liquids; NEVER use "units" for bulk produce or raw ingredients. Default to "units" only for countable equipment, furniture, and physical articles.
+5. Exclude items with zero or negative intent, or items that are not hospitality equipment, resources, or supplies.
+6. Use only these categories:
+{_CATEGORY_BLOCK}
 7. Return an empty items list when no hospitality resource or supply is requested.
 
 Return only valid JSON with this root object shape:
-{"items": [{"category": "furniture", "name": "chair", "quantity": 1, "metric": "units"}]}
+{{"items": [{{"category": "banquet_seating", "name": "chair", "quantity": 1, "metric": "units"}}]}}
 """
 
 

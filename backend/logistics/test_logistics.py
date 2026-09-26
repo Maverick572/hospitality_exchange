@@ -27,10 +27,9 @@ load_dotenv()
 
 # Add backend directory to path
 backend_dir = os.path.abspath(os.path.dirname(__file__))
-if os.path.basename(backend_dir) == "logistics":
-    backend_dir = os.path.dirname(backend_dir)
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
+__test__ = False  # Tell pytest this is an interactive integration test script
 
 from core.firebase import db
 from logistics.matcher import find_best_routes
