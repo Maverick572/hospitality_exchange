@@ -14,12 +14,14 @@ try:
     from drivers import router as drivers_router
     from transactions import router as transactions_router
     from seeker import router as seeker_router
+    from logistics import routes_router as logistics_router
     from services.llm_parser import parse_requirement, ParserServiceError
 except ImportError:
     from backend.users import router as users_router
     from backend.drivers import router as drivers_router
     from backend.transactions import router as transactions_router
     from backend.seeker import router as seeker_router
+    from backend.logistics import routes_router as logistics_router
     from backend.services.llm_parser import parse_requirement, ParserServiceError
 
 
@@ -74,6 +76,12 @@ app.include_router(
 # Seeker search endpoints
 app.include_router(
     seeker_router,
+    prefix="/api/v1"
+)
+
+# Logistics: driver routes & matching
+app.include_router(
+    logistics_router,
     prefix="/api/v1"
 )
 
