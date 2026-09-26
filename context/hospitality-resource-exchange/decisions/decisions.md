@@ -82,6 +82,15 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** accepted
 - **Supersedes:** —
 
+## D009 — Modular Transaction Layer Architecture & Negotiation Revival
+- **Date:** 2026-09-26
+- **Decision:** The Transaction Layer (owned by Roh) is structured as a modular package (`backend/transactions/`) with sub-routers for requests, bookings, escrow, condition evidence, and reviews without editing existing backend files. Negotiation supports bi-directional counter-offers even after rejection (reviving rejected offers until accepted). Escrow releases enforce safety by clamping damage penalties to `min(penaltyAmount, depositAmount)` and guarding against double-release. Reviews atomically update provider average ratings in `users/{providerId}` via running average. Integration with `backend/main.py` is documented in `backend/transactions/__init__.py`.
+- **Alternatives considered:** Single monolithic router file (`backend/transactions.py`) or locking rejected offers permanently.
+- **Rejected because:** Monolithic file creates tight coupling and high merge-conflict risk; locking rejected offers permanently restricts real-world negotiation.
+- **Accepted because:** High isolation, zero merge conflicts with teammates, realistic multi-round negotiation flow, robust financial and rating integrity.
+- **Status:** implemented
+- **Supersedes:** —
+
 ### Agent assessments
 
 **Claude — 2026-09-26**
@@ -89,3 +98,4 @@ Append-only decision log for this project. See R14 for format.
 
 **Antigravity — 2026-09-26**
 - Position: D007 and D008 resolve 6 of the 8 original open questions. The remaining technical gaps are internal implementation details (scorer weights, CP-SAT objective function) rather than architectural questions.
+- Position (D009): Transaction Layer is fully implemented and tested (17 unit and E2E tests passing). Ready for main.py mounting by Ash upon integration.

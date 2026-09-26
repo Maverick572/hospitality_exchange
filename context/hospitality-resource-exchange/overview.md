@@ -35,6 +35,7 @@ See [[projects/hospitality-resource-exchange/decisions/decisions]] for the full 
 - D006: Truck-pooling cut as standalone; logistics-aware matching via driver-published routes retained.
 - D007: Supabase → Firebase migration; single-backend FastAPI architecture.
 - D008: Unified User model (Provider + Seeker as one account); Drivers separate.
+- D009: Modular transaction layer architecture (15 endpoints under `backend/transactions/`); negotiation revival; escrow damage penalty capping.
 
 ## Open conflicts
 
