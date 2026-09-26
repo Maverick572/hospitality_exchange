@@ -4,8 +4,8 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 351 nodes · 605 edges · 21 communities (18 shown, 3 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 55 edges (avg confidence: 0.85)
+- 350 nodes · 609 edges · 19 communities (17 shown, 2 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 50 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -23,52 +23,50 @@
 - routes.py
 - ParsedItem
 - drivers.py
-- test_logistics.py
 - users.py
 - test_bookings.py
 - test_dashboard_notifications_endpoints.py
 - record_condition_evidence
 - clear_firebase.py
 - services/__init__.py
-- fixture
 - str
 
 ## God Nodes (most connected - your core abstractions)
 1. `standard_response()` - 24 edges
-2. `ParsedItem` - 16 edges
-3. `search_seeker_products()` - 16 edges
+2. `ParsedItem` - 17 edges
+3. `search_seeker_products()` - 17 edges
 4. `parse_requirement()` - 15 edges
 5. `emit_notification()` - 14 edges
 6. `get_doc_or_404()` - 13 edges
 7. `serialize_firestore_doc()` - 12 edges
-8. `find_best_routes()` - 10 edges
-9. `extract_coordinates()` - 10 edges
-10. `get_current_user()` - 9 edges
+8. `extract_coordinates()` - 11 edges
+9. `find_best_routes()` - 10 edges
+10. `haversine_distance()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `test_seeker_router_endpoint()` --calls--> `ParsedItem`  [INFERRED]
-  backend/tests/test_seeker_search.py → backend/services/llm_parser.py
-- `test_seeker_search_ranking_order()` --calls--> `ParsedItem`  [INFERRED]
-  backend/tests/test_seeker_search.py → backend/services/llm_parser.py
 - `record_condition_evidence()` --calls--> `standard_response()`  [INFERRED]
   backend/transactions/evidence.py → backend/transactions/helpers.py
 - `parse_requirement_endpoint()` --uses--> `ParserServiceError`  [INFERRED]
   backend/main.py → backend/services/llm_parser.py
 - `search_seeker_products()` --calls--> `ParsedItem`  [EXTRACTED]
   backend/seeker/search.py → backend/services/llm_parser.py
+- `test_invalid_items_are_rejected()` --uses--> `ParsedItem`  [INFERRED]
+  backend/tests/test_llm_parser_contract.py → backend/services/llm_parser.py
+- `test_metric_normalization_and_default()` --calls--> `ParsedItem`  [EXTRACTED]
+  backend/tests/test_llm_parser_contract.py → backend/services/llm_parser.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (21 total, 3 thin omitted)
+## Communities (19 total, 2 thin omitted)
 
 ### Community 0 - "standard_response"
 Cohesion: 0.06
-Nodes (62): Any, generate_random_users_and_products(), Randomly generates business users/providers and attaches realistic product…, test_serialize_firestore_doc(), test_standard_response(), confirm_receipt(), get_booking_detail(), get_my_bookings() (+54 more)
+Nodes (59): Any, test_serialize_firestore_doc(), test_standard_response(), confirm_receipt(), get_booking_detail(), get_my_bookings(), get, post (+51 more)
 
 ### Community 1 - "search_seeker_products"
-Cohesion: 0.08
-Nodes (37): Logistics Module Driver route registration, route matching with CP-SAT…, _cpsat_rank_routes(), _fetch_candidate_routes(), find_best_routes(), _min_distance_to_waypoints(), Logistics - Route Matcher with CP-SAT Optimization…, Use CP-SAT to rank candidate routes by minimizing a weighted composite cost.…, Main entry point: finds and ranks driver routes for a delivery need. Parameters… (+29 more)
+Cohesion: 0.06
+Nodes (51): Logistics Module Driver route registration, route matching with CP-SAT…, _cpsat_rank_routes(), _fetch_candidate_routes(), find_best_routes(), _min_distance_to_waypoints(), Logistics - Route Matcher with CP-SAT Optimization…, Use CP-SAT to rank candidate routes by minimizing a weighted composite cost.…, Main entry point: finds and ranks driver routes for a delivery need. Parameters… (+43 more)
 
 ### Community 2 - "llm_parser.py"
 Cohesion: 0.08
@@ -98,32 +96,28 @@ Nodes (14): ParsedItem, BaseModel, One hospitality resource extracted from a req
 Cohesion: 0.20
 Nodes (15): create_driver_profile(), DriverAuthStatusData, DriverAuthStatusResponse, DriverProfileCreate, DriverProfileData, DriverProfileResponse, get_current_driver_profile(), get_db() (+7 more)
 
-### Community 9 - "test_logistics.py"
-Cohesion: 0.17
-Nodes (11): cleanup_test_data(), create_test_routes(), get_two_random_users(), Logistics Module - Integration Test Script…, Create test driver profiles directly in Firestore drivers collection., Create driverRoute documents for the registered test drivers., Pick two random users from Firestore to act as provider & seeker., Run the matcher with different capacity requirements and display results. (+3 more)
-
-### Community 10 - "users.py"
+### Community 9 - "users.py"
 Cohesion: 0.20
 Nodes (10): create_user_profile(), get_current_user_profile(), get_user_document(), get, post, Return the application profile of the authenticated user., Update the authenticated user's application profile., Get a user document from Firestore. (+2 more)
 
-### Community 11 - "test_bookings.py"
+### Community 10 - "test_bookings.py"
 Cohesion: 0.43
 Nodes (6): create_test_app(), mock_firebase(), fixture, test_confirm_receipt(), test_get_booking_detail_and_authorization(), test_get_my_bookings()
 
-### Community 12 - "test_dashboard_notifications_endpoints.py"
+### Community 11 - "test_dashboard_notifications_endpoints.py"
 Cohesion: 0.43
 Nodes (6): create_test_app(), mock_firebase(), fixture, test_dashboard_driver_endpoint(), test_dashboard_user_endpoint(), test_notifications_endpoints()
 
-### Community 13 - "record_condition_evidence"
+### Community 12 - "record_condition_evidence"
 Cohesion: 0.40
 Nodes (5): post, Validate that the uploaded media type matches the category's requirement.…, Record condition evidence metadata (image/video URL from Firebase Storage +…, record_condition_evidence(), _validate_media_type()
 
-### Community 14 - "clear_firebase.py"
+### Community 13 - "clear_firebase.py"
 Cohesion: 0.67
 Nodes (3): delete_collection(), main(), Deletes all documents in a Firestore collection.
 
 ## Knowledge Gaps
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -132,13 +126,13 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Why does `parse_requirement()` connect `llm_parser.py` to `search_seeker_products`, `ParsedItem`?**
   _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does `search_seeker_products()` connect `search_seeker_products` to `standard_response`, `llm_parser.py`, `ParsedItem`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+- **Why does `search_seeker_products()` connect `search_seeker_products` to `llm_parser.py`, `ParsedItem`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Are the 19 inferred relationships involving `standard_response()` (e.g. with `confirm_receipt()` and `get_booking_detail()`) actually correct?**
   _`standard_response()` has 19 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `ParsedItem` (e.g. with `test_invalid_items_are_rejected()` and `test_seeker_router_endpoint()`) actually correct?**
-  _`ParsedItem` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **Should `standard_response` be split into smaller, more focused modules?**
-  _Cohesion score 0.05824561403508772 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06025039123630673 - nodes in this community are weakly interconnected._
 - **Should `search_seeker_products` be split into smaller, more focused modules?**
-  _Cohesion score 0.07610993657505286 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05649717514124294 - nodes in this community are weakly interconnected._
+- **Should `llm_parser.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.07682926829268293 - nodes in this community are weakly interconnected._
