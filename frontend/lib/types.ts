@@ -508,7 +508,6 @@ export type RouteMatch = {
   detourDistanceKm?: number;
   estimatedCost?: number;
   matchScore?: number;
-  weatherDelay?: Record<string, unknown> | null;
   pooledSolution?: {
 
     poolId: string;
