@@ -11,45 +11,6 @@ import { useAuth } from "@/lib/auth";
 import { BusinessSessionContext, DriverSessionContext } from "@/lib/session";
 import type { DriverProfile, UserProfile } from "@/lib/types";
 
-type Kind = "business" | "driver";
-
-const ROUTES: Record<Kind, { login: string; onboarding: string }> = {
-  business: { login: "/login", onboarding: "/onboarding" },
-  driver: { login: "/driver/login", onboarding: "/driver/onboarding" },
-};
-
-/**
- * Guards an app area: signed-out visitors go to login, signed-in people
- * without a profile go to onboarding, and everyone else gets their profile
- * through context.
- */
-function useProfileGate<T>(kind: Kind, load: () => Promise<T>) {
-  const router = useRouter();
-  const { status } = useAuth();
-  const [profile, setProfile] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchProfile = useCallback(async () => {
-    setError(null);
-    try {
-      setProfile(await load());
-    } catch (err) {
-      if (err instanceof ApiError && (err.status === 404 || err.status === 401)) {
-        router.replace(ROUTES[kind].login);
-        return;
-      }
-      setError(err instanceof Error ? err : new Error(String(err)));
-    }
-  }, [kind, load, router]);
-
-  useEffect(() => {
-    if (status === "signedOut") router.replace(ROUTES[kind].login);
-    if (status === "signedIn") void fetchProfile();
-  }, [status, kind, router, fetchProfile]);
-
-  return { profile, error, reload: fetchProfile };
-}
-
 function GateError({ error, onRetry }: { error: Error; onRetry: () => void }) {
   const { signOut } = useAuth();
   return (
@@ -77,19 +38,98 @@ function GateError({ error, onRetry }: { error: Error; onRetry: () => void }) {
 }
 
 export function BusinessGate({ children }: { children: ReactNode }) {
-  const { profile, error, reload } = useProfileGate<UserProfile>("business", usersApi.getMe);
-  if (error) return <GateError error={error} onRetry={() => void reload()} />;
+  const router = useRouter();
+  const { status } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchProfile = useCallback(async () => {
+    setError(null);
+    try {
+      const p = await usersApi.getMe();
+      setProfile(p);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.replace("/login");
+        return;
+      }
+      if (err instanceof ApiError && err.status === 404) {
+        // Check if this account is actually a driver
+        try {
+          const driverProf = await driversApi.getMe();
+          if (driverProf) {
+            router.replace("/driver");
+            return;
+          }
+        } catch {
+          // Not a driver either -> onboarding
+        }
+        router.replace("/onboarding");
+        return;
+      }
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (status === "signedOut") router.replace("/login");
+    if (status === "signedIn") void fetchProfile();
+  }, [status, router, fetchProfile]);
+
+  if (error) return <GateError error={error} onRetry={() => void fetchProfile()} />;
   if (!profile) return <LoadingState className="min-h-svh" label="Loading your workspace…" />;
   return (
-    <BusinessSessionContext.Provider value={{ profile, reload }}>{children}</BusinessSessionContext.Provider>
+    <BusinessSessionContext.Provider value={{ profile, reload: fetchProfile }}>
+      {children}
+    </BusinessSessionContext.Provider>
   );
 }
 
 export function DriverGate({ children }: { children: ReactNode }) {
-  const { profile, error, reload } = useProfileGate<DriverProfile>("driver", driversApi.getMe);
-  if (error) return <GateError error={error} onRetry={() => void reload()} />;
+  const router = useRouter();
+  const { status } = useAuth();
+  const [profile, setProfile] = useState<DriverProfile | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchProfile = useCallback(async () => {
+    setError(null);
+    try {
+      const p = await driversApi.getMe();
+      setProfile(p);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.replace("/driver/login");
+        return;
+      }
+      if (err instanceof ApiError && err.status === 404) {
+        // Check if this account is actually a business user
+        try {
+          const userProf = await usersApi.getMe();
+          if (userProf) {
+            router.replace("/dashboard");
+            return;
+          }
+        } catch {
+          // Not a business user either -> driver onboarding
+        }
+        router.replace("/driver/onboarding");
+        return;
+      }
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (status === "signedOut") router.replace("/driver/login");
+    if (status === "signedIn") void fetchProfile();
+  }, [status, router, fetchProfile]);
+
+  if (error) return <GateError error={error} onRetry={() => void fetchProfile()} />;
   if (!profile) return <LoadingState className="min-h-svh" label="Loading your driver workspace…" />;
   return (
-    <DriverSessionContext.Provider value={{ profile, reload }}>{children}</DriverSessionContext.Provider>
+    <DriverSessionContext.Provider value={{ profile, reload: fetchProfile }}>
+      {children}
+    </DriverSessionContext.Provider>
   );
 }
+

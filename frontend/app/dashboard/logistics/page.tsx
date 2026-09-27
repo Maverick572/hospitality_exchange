@@ -278,11 +278,12 @@ function LogisticsContent() {
               : (data as unknown as { pooledSolution?: PooledSolution })?.pooledSolution) ?? null;
 
           // Extract weather delay from first route or pooled solution
-          const routeWeather = rawList[0]?.weatherDelay ?? poolData?.weatherDelay ?? null;
-          setWeatherDelay(routeWeather ?? null);
+          const routeWeather = (rawList[0]?.weatherDelay ?? poolData?.weatherDelay ?? null) as WeatherDelay | null;
+          setWeatherDelay(routeWeather);
 
-          setRoutes(rawList);
+          setRoutes(rawList as unknown as RouteMatch[]);
           setPool(poolData);
+
           if (poolData && poolData.vehicleCount > 1) {
             setActiveTab("pooled");
           } else {

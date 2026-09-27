@@ -80,7 +80,7 @@ export function ErrorState({
   onRetry?: () => void;
   className?: string;
 }) {
-  const notImplemented = error instanceof ApiError && error.notImplemented;
+  const notImplemented = false;
   const message = error instanceof Error ? error.message : "Something went wrong.";
 
   if (notImplemented) {

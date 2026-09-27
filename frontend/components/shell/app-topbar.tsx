@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BoxesIcon,
   ChevronRightIcon,
@@ -13,17 +12,8 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import { NotificationsMenu } from "@/components/shell/notifications-menu";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePerspective } from "@/lib/perspective";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { API_BASE_URL } from "@/lib/api/client";
-import { mockStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 
 import { pageMeta, type ShellConfig } from "./nav-config";
@@ -38,33 +28,9 @@ type AppTopbarProps = {
 
 export function AppTopbar({ config, user: _user }: AppTopbarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const meta = pageMeta(config, pathname);
   const { theme, setTheme } = useTheme();
   const { perspective, setPerspective } = usePerspective();
-
-  const [isLive, setIsLive] = useState(!mockStore.forceDemo);
-  const [forceDemo, setForceDemo] = useState(mockStore.forceDemo);
-
-  useEffect(() => {
-    const handleStatus = (e: Event) => {
-      const ce = e as CustomEvent<{ live?: boolean }>;
-      if (ce.detail && typeof ce.detail.live === "boolean") {
-        setIsLive(ce.detail.live && !mockStore.forceDemo);
-      }
-    };
-    const handleDemoChange = () => {
-      setForceDemo(mockStore.forceDemo);
-      setIsLive(!mockStore.forceDemo);
-    };
-
-    window.addEventListener("hrex_backend_status", handleStatus);
-    window.addEventListener("hrex_demo_mode_changed", handleDemoChange);
-    return () => {
-      window.removeEventListener("hrex_backend_status", handleStatus);
-      window.removeEventListener("hrex_demo_mode_changed", handleDemoChange);
-    };
-  }, []);
 
   return (
     <>
@@ -82,7 +48,7 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
             <span className="font-semibold text-foreground">{meta.title}</span>
           </div>
 
-          {/* Perspective Toggle (HACK-CELESTIAL layout) */}
+          {/* Perspective Toggle (Seeker / Provider) */}
           {config.kind === "business" && (
             <div className="hidden sm:flex items-center rounded-xl bg-muted/60 p-0.5 border border-border shadow-2xs">
               <button
@@ -122,54 +88,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
 
         {/* ── Right Actions ── */}
         <div className="flex items-center gap-2.5">
-          {/* Connection Pill */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all hover:opacity-90 focus-visible:outline-none",
-                  isLive
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                )}
-              >
-                <span
-                  className={cn(
-                    "size-1.5 rounded-full animate-pulse",
-                    isLive ? "bg-emerald-500" : "bg-amber-500",
-                  )}
-                />
-                <span>{isLive ? "Live Backend" : "Demo Mode"}</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-3.5 text-xs">
-              <div className="flex flex-col gap-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">API Connection</span>
-                  <Badge variant={isLive ? "default" : "secondary"}>
-                    {isLive ? "Live API" : "Offline / Demo"}
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {isLive
-                    ? `Connected to live FastAPI backend at ${API_BASE_URL}.`
-                    : "Using high-fidelity Mumbai hospitality demo dataset. All actions, searches, and bookings work seamlessly offline."}
-                </p>
-                <div className="flex items-center justify-between border-t pt-2.5">
-                  <span className="text-xs font-medium text-foreground">Always Use Demo Data</span>
-                  <Switch
-                    checked={forceDemo}
-                    onCheckedChange={(checked) => {
-                      mockStore.setForceDemo(checked);
-                      setForceDemo(checked);
-                      setIsLive(!checked);
-                    }}
-                  />
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
           {/* Notifications Dropdown */}
           <NotificationsMenu kind={config.kind} />
 
@@ -190,3 +108,4 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
     </>
   );
 }
+

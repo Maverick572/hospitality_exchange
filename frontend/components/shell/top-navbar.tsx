@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeftRightIcon,
   LogOutIcon,
   MoonIcon,
   PlusIcon,
-  SparklesIcon,
   StarIcon,
   SunIcon,
   UserRoundIcon,
@@ -25,7 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { initials } from "@/lib/format";
 
@@ -52,7 +48,7 @@ export function TopNavbar({
   totalRatings,
 }: TopNavbarProps) {
   const router = useRouter();
-  const { signOut, demoMode } = useAuth();
+  const { signOut } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
   const driver = kind === "driver";
   const profileHref = driver ? "/driver/profile" : "/dashboard/profile";
@@ -104,9 +100,9 @@ export function TopNavbar({
             {BRAND_NAME}
           </p>
           <DropdownMenuItem asChild>
-            <Link href={driver ? "/dashboard" : "/driver"}>
-              <ArrowLeftRightIcon />
-              {driver ? "Switch to business app" : "Switch to driver app"}
+            <Link href={profileHref}>
+              <UserRoundIcon />
+              Profile settings
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -122,29 +118,19 @@ export function TopNavbar({
 
       {/* ── Right: actions ── */}
       <div className="flex shrink-0 items-center gap-1">
-        {demoMode && (
-          <span className="hidden rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 lg:inline">
-            Demo mode
-          </span>
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden h-7 gap-1.5 rounded-lg border-border/60 px-2.5 text-xs font-medium sm:flex"
-          asChild
-        >
-          {driver ? (
+        {driver && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-7 gap-1.5 rounded-lg border-border/60 px-2.5 text-xs font-medium sm:flex"
+            asChild
+          >
             <Link href="/driver/routes?new=1">
               <PlusIcon className="size-3" />
               Publish route
             </Link>
-          ) : (
-            <Link href="/dashboard/search">
-              <SparklesIcon className="size-3" />
-              New search
-            </Link>
-          )}
-        </Button>
+          </Button>
+        )}
 
         <NotificationsMenu kind={kind} />
 
@@ -204,3 +190,4 @@ export function TopNavbar({
     </header>
   );
 }
+
