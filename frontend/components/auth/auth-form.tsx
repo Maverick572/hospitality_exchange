@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { ApiError, driversApi, usersApi } from "@/lib/api";
 import { authErrorMessage, useAuth } from "@/lib/auth";
 
 type Mode = "login" | "signup";
@@ -51,7 +52,7 @@ const COPY: Record<Audience, Record<Mode, { title: string; description: string; 
 
 export function AuthForm({ mode, audience }: { mode: Mode; audience: Audience }) {
   const router = useRouter();
-  const { signIn, signUp, signInWithGoogle, demoMode } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signOut, demoMode } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +63,6 @@ export function AuthForm({ mode, audience }: { mode: Mode; audience: Audience })
   const copy = COPY[audience][mode];
   const home = driver ? "/driver" : "/dashboard";
   const onboarding = driver ? "/driver/onboarding" : "/onboarding";
-  const next = mode === "signup" ? onboarding : home;
   const base = driver ? "/driver" : "";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -70,9 +70,26 @@ export function AuthForm({ mode, audience }: { mode: Mode; audience: Audience })
     setError(null);
     setLoading(true);
     try {
-      if (mode === "signup") await signUp(email, password, name, { driver });
-      else await signIn(email, password, { driver });
-      router.push(next);
+      if (mode === "signup") {
+        await signUp(email, password, name, { driver });
+        router.push(onboarding);
+      } else {
+        await signIn(email, password, { driver });
+        // In login mode, verify account exists in the database
+        try {
+          if (driver) await driversApi.getMe();
+          else await usersApi.getMe();
+          router.push(home);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 404) {
+            await signOut();
+            setError("No account found for this email. Please sign up to create an account.");
+            setLoading(false);
+            return;
+          }
+          throw err;
+        }
+      }
     } catch (err) {
       setError(authErrorMessage(err));
       setLoading(false);
@@ -81,12 +98,29 @@ export function AuthForm({ mode, audience }: { mode: Mode; audience: Audience })
 
   async function handleGoogle() {
     setError(null);
+    setLoading(true);
     try {
       await signInWithGoogle();
-      // The app shell sends people without a profile to onboarding.
-      router.push(home);
+      if (mode === "signup") {
+        router.push(onboarding);
+      } else {
+        try {
+          if (driver) await driversApi.getMe();
+          else await usersApi.getMe();
+          router.push(home);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 404) {
+            await signOut();
+            setError("No account found for this Google account. Please create an account via Sign up.");
+            setLoading(false);
+            return;
+          }
+          throw err;
+        }
+      }
     } catch (err) {
       setError(authErrorMessage(err));
+      setLoading(false);
     }
   }
 

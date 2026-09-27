@@ -292,8 +292,11 @@ export function ResourceFormSheet({ open, onOpenChange, resource, defaultLocatio
               </div>
             </Field>
             <Field>
-              <FieldLabel>Photos</FieldLabel>
-              <MediaInput value={draft.images} onChange={(value) => update("images", value)} folder="resources" />
+              <FieldLabel>Product Photos</FieldLabel>
+              <FieldDescription>
+                Upload photos of your product, equipment, or venue. The first photo will be used as the cover photo. Stored directly with your listing in Firestore.
+              </FieldDescription>
+              <MediaInput value={draft.images} onChange={(value) => update("images", value)} folder="resources" max={6} />
             </Field>
             {error && (
               <Alert variant="destructive">

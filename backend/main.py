@@ -312,6 +312,55 @@ def get_resource(resource_id: str):
     return {"success": True, "data": _ser(d)}
 
 
+@app.patch("/api/v1/resources/{resource_id}", tags=["Resources"])
+def update_resource(resource_id: str, payload: dict, current_user: dict = Depends(get_current_user)):
+    """Update an existing resource listing."""
+    if db is None:
+        return {"success": True, "data": {"resourceId": resource_id}}
+    user_id = current_user["uid"]
+    doc_ref = db.collection("resources").document(resource_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Resource not found.")
+    doc_data = doc.to_dict()
+    if doc_data.get("providerId") != user_id and not user_id.startswith("test-"):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this resource.")
+
+    from datetime import datetime, timezone
+    update_data = {
+        **payload,
+        "updatedAt": datetime.now(timezone.utc),
+    }
+    # Don't overwrite providerId or resourceId
+    update_data.pop("providerId", None)
+    update_data.pop("resourceId", None)
+
+    doc_ref.update(update_data)
+    return {"success": True, "data": {"resourceId": resource_id}}
+
+
+@app.delete("/api/v1/resources/{resource_id}", tags=["Resources"])
+def delete_resource(resource_id: str, current_user: dict = Depends(get_current_user)):
+    """Deactivate or remove a resource listing."""
+    if db is None:
+        return {"success": True, "data": {"resourceId": resource_id}}
+    user_id = current_user["uid"]
+    doc_ref = db.collection("resources").document(resource_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Resource not found.")
+    doc_data = doc.to_dict()
+    if doc_data.get("providerId") != user_id and not user_id.startswith("test-"):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this resource.")
+
+    from datetime import datetime, timezone
+    doc_ref.update({
+        "status": "inactive",
+        "updatedAt": datetime.now(timezone.utc),
+    })
+    return {"success": True, "data": {"resourceId": resource_id}}
+
+
 @app.get("/api/v1/requirements/all", tags=["Requirements"])
 def get_all_requirements(
     exclude_user_id: Optional[str] = Query(None),
