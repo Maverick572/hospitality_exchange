@@ -2,6 +2,13 @@
   "communities": {
     "0": [
       "frontend_app_auth_onboarding_page",
+      "frontend_app_dashboard_negotiation_page",
+      "frontend_app_dashboard_negotiation_page_category_rules",
+      "frontend_app_dashboard_negotiation_page_chatmessage",
+      "frontend_app_dashboard_negotiation_page_evidenceitem",
+      "frontend_app_dashboard_negotiation_page_evidencerule",
+      "frontend_app_dashboard_negotiation_page_negotiationcontent",
+      "frontend_app_dashboard_negotiation_page_negotiationpage",
       "frontend_app_dashboard_profile_page",
       "frontend_app_driver_auth_onboarding_page",
       "frontend_components_auth_auth_form",
@@ -41,7 +48,6 @@
       "frontend_components_search_product_sheet_row",
       "frontend_components_search_request_dialog",
       "frontend_components_search_request_dialog_props",
-      "frontend_components_search_request_dialog_requesttarget",
       "frontend_components_ui_alert",
       "frontend_components_ui_alert_alert",
       "frontend_components_ui_alert_alertdescription",
@@ -49,14 +55,8 @@
       "frontend_components_ui_button",
       "frontend_components_ui_button_button",
       "frontend_components_ui_button_buttonvariants",
-      "frontend_components_ui_card",
-      "frontend_components_ui_card_card",
-      "frontend_components_ui_card_cardcontent",
       "frontend_components_ui_card_carddescription",
-      "frontend_components_ui_card_cardheader",
       "frontend_components_ui_card_cardtitle",
-      "frontend_components_ui_chart_card",
-      "frontend_components_ui_chart_card_chartcardprops",
       "frontend_components_ui_dialog",
       "frontend_components_ui_dialog_dialog",
       "frontend_components_ui_dialog_dialogclose",
@@ -76,10 +76,6 @@
       "frontend_components_ui_field_fieldvariants",
       "frontend_components_ui_input",
       "frontend_components_ui_input_input",
-      "frontend_components_ui_native_select",
-      "frontend_components_ui_native_select_nativeselect",
-      "frontend_components_ui_native_select_nativeselectoption",
-      "frontend_components_ui_native_select_nativeselectprops",
       "frontend_components_ui_sheet",
       "frontend_components_ui_sheet_sheet",
       "frontend_components_ui_sheet_sheetclose",
@@ -87,7 +83,6 @@
       "frontend_components_ui_sheet_sheetdescription",
       "frontend_components_ui_sheet_sheetfooter",
       "frontend_components_ui_sheet_sheetheader",
-      "frontend_components_ui_sheet_sheetoverlay",
       "frontend_components_ui_sheet_sheetportal",
       "frontend_components_ui_sheet_sheettitle",
       "frontend_components_ui_sheet_sheettrigger",
@@ -95,6 +90,8 @@
       "frontend_components_ui_spinner_spinner",
       "frontend_components_ui_textarea",
       "frontend_components_ui_textarea_textarea",
+      "frontend_lib_api_index_evidenceapi",
+      "frontend_lib_api_index_requestsapi",
       "frontend_lib_api_index_usersapi",
       "frontend_lib_constants",
       "frontend_lib_constants_booking_steps",
@@ -105,64 +102,6 @@
       "frontend_lib_types_geolocation"
     ],
     "1": [
-      "frontend_app_auth_onboarding_page_businessonboardingpage",
-      "frontend_app_auth_onboarding_page_businessonboardingpage_handlesubmit",
-      "frontend_app_dashboard_layout",
-      "frontend_app_driver_app_layout",
-      "frontend_app_driver_auth_onboarding_page_driveronboardingpage",
-      "frontend_app_driver_auth_onboarding_page_driveronboardingpage_handlesubmit",
-      "frontend_components_auth_auth_form_authform",
-      "frontend_components_auth_auth_form_authform_handlegoogle",
-      "frontend_components_auth_auth_form_authform_handlesubmit",
-      "frontend_components_media_input_mediainput_handlefiles",
-      "frontend_components_shell_app_shell",
-      "frontend_components_shell_app_shell_appshell",
-      "frontend_components_shell_app_shell_appshellprops",
-      "frontend_components_shell_layouts",
-      "frontend_components_shell_layouts_businessframe",
-      "frontend_components_shell_layouts_businesslayout",
-      "frontend_components_shell_layouts_driverframe",
-      "frontend_components_shell_layouts_driverlayout",
-      "frontend_components_shell_nav_config",
-      "frontend_components_shell_nav_config_business_shell",
-      "frontend_components_shell_nav_config_driver_shell",
-      "frontend_components_shell_nav_config_navgroup",
-      "frontend_components_shell_nav_config_shellconfig",
-      "frontend_components_shell_session_gate",
-      "frontend_components_shell_session_gate_businessgate",
-      "frontend_components_shell_session_gate_drivergate",
-      "frontend_components_shell_session_gate_gateerror",
-      "frontend_components_shell_session_gate_kind",
-      "frontend_components_shell_session_gate_routes",
-      "frontend_components_shell_session_gate_useprofilegate",
-      "frontend_components_shell_top_navbar_topnavbar",
-      "frontend_components_shell_top_navbar_topnavbar_handlesearch",
-      "frontend_components_shell_top_navbar_topnavbar_handlesignout",
-      "frontend_lib_api_index_driversapi",
-      "frontend_lib_auth",
-      "frontend_lib_auth_authcontext",
-      "frontend_lib_auth_authcontextvalue",
-      "frontend_lib_auth_autherrormessage",
-      "frontend_lib_auth_authprovider",
-      "frontend_lib_auth_authstatus",
-      "frontend_lib_auth_authuser",
-      "frontend_lib_auth_demotoken",
-      "frontend_lib_auth_demouserfromtoken",
-      "frontend_lib_auth_getidtoken",
-      "frontend_lib_auth_readstorage",
-      "frontend_lib_auth_useauth",
-      "frontend_lib_auth_writestorage",
-      "frontend_lib_firebase",
-      "frontend_lib_firebase_config",
-      "frontend_lib_firebase_firebaseapp",
-      "frontend_lib_firebase_firebaseauth",
-      "frontend_lib_firebase_firebaseenabled",
-      "frontend_lib_firebase_storageenabled",
-      "frontend_lib_firebase_uploadfile",
-      "frontend_lib_session_businesssessioncontext",
-      "frontend_lib_session_driversessioncontext"
-    ],
-    "2": [
       "backend_tests_test_drivers",
       "backend_tests_test_drivers_mock_db",
       "backend_tests_test_drivers_mockcollection",
@@ -219,7 +158,7 @@
       "backend_users_update_current_user_profile",
       "patch"
     ],
-    "3": [
+    "2": [
       "frontend_app_page",
       "frontend_app_page_home",
       "frontend_app_page_satoshi",
@@ -272,53 +211,10 @@
       "frontend_components_landing_primitives_spotlight",
       "frontend_components_landing_primitives_wrapper"
     ],
-    "4": [
-      "backend_core_auth",
-      "backend_core_auth_get_current_user",
-      "backend_core_auth_rationale_10",
-      "backend_core_firebase",
-      "backend_create_auth_users",
-      "backend_create_auth_users_main",
-      "backend_transactions_bookings",
-      "backend_transactions_bookings_confirm_receipt",
-      "backend_transactions_bookings_py_post",
-      "backend_transactions_bookings_rationale_148",
-      "backend_transactions_dashboard",
-      "backend_transactions_escrow",
-      "backend_transactions_escrow_create_escrow",
-      "backend_transactions_escrow_fund_escrow",
-      "backend_transactions_escrow_py_post",
-      "backend_transactions_escrow_rationale_134",
-      "backend_transactions_escrow_rationale_203",
-      "backend_transactions_escrow_rationale_33",
-      "backend_transactions_escrow_release_escrow",
-      "backend_transactions_evidence",
-      "backend_transactions_helpers",
-      "backend_transactions_init",
-      "backend_transactions_init_rationale_1",
-      "backend_transactions_notifications",
-      "backend_transactions_notifications_emit_notification",
-      "backend_transactions_notifications_rationale_30",
-      "backend_transactions_requests",
-      "backend_transactions_requests_accept_request",
-      "backend_transactions_requests_counter_request",
-      "backend_transactions_requests_create_request",
-      "backend_transactions_requests_py_post",
-      "backend_transactions_requests_rationale_177",
-      "backend_transactions_requests_rationale_260",
-      "backend_transactions_requests_rationale_33",
-      "backend_transactions_requests_rationale_421",
-      "backend_transactions_requests_reject_request",
-      "backend_transactions_reviews",
-      "backend_transactions_reviews_create_review",
-      "backend_transactions_reviews_py_post",
-      "backend_transactions_reviews_rationale_32",
-      "backend_users",
-      "datetime"
-    ],
-    "5": [
+    "3": [
       "frontend_app_dashboard_providers_id_page_stars",
       "frontend_components_bookings_booking_dialogs_starpicker",
+      "frontend_components_shell_icon_rail_railbutton",
       "frontend_components_ui_alert_alertaction",
       "frontend_components_ui_alert_alerttitle",
       "frontend_components_ui_avatar",
@@ -328,10 +224,6 @@
       "frontend_components_ui_avatar_avatargroup",
       "frontend_components_ui_avatar_avatargroupcount",
       "frontend_components_ui_avatar_avatarimage",
-      "frontend_components_ui_card_cardaction",
-      "frontend_components_ui_card_cardfooter",
-      "frontend_components_ui_checkbox",
-      "frontend_components_ui_checkbox_checkbox",
       "frontend_components_ui_dialog_dialogoverlay",
       "frontend_components_ui_empty",
       "frontend_components_ui_empty_empty",
@@ -348,18 +240,23 @@
       "frontend_components_ui_field_fieldtitle",
       "frontend_components_ui_label",
       "frontend_components_ui_label_label",
+      "frontend_components_ui_native_select",
+      "frontend_components_ui_native_select_nativeselect",
       "frontend_components_ui_native_select_nativeselectoptgroup",
+      "frontend_components_ui_native_select_nativeselectoption",
+      "frontend_components_ui_native_select_nativeselectprops",
       "frontend_components_ui_progress",
       "frontend_components_ui_progress_progress",
       "frontend_components_ui_scroll_area",
       "frontend_components_ui_scroll_area_scrollarea",
       "frontend_components_ui_scroll_area_scrollbar",
+      "frontend_components_ui_sheet_sheetoverlay",
       "frontend_components_ui_table_tablecaption",
       "frontend_components_ui_table_tablefooter",
       "frontend_components_ui_tabs_tabscontent",
       "frontend_lib_utils_cn"
     ],
-    "6": [
+    "4": [
       "backend_logistics_matcher_min_distance_to_waypoints",
       "backend_logistics_matcher_rationale_69",
       "backend_seeker_distance",
@@ -396,7 +293,7 @@
       "backend_tests_test_seeker_search_test_distance_calculation",
       "backend_tests_test_seeker_search_test_seeker_search_ranking_order"
     ],
-    "7": [
+    "5": [
       "backend_logistics_init",
       "backend_logistics_init_rationale_1",
       "backend_logistics_matcher",
@@ -432,7 +329,137 @@
       "backend_services_osrm_rationale_57",
       "backend_services_osrm_rationale_89"
     ],
+    "6": [
+      "any",
+      "backend_tests_test_helpers_notifications",
+      "backend_tests_test_helpers_notifications_test_emit_notification",
+      "backend_tests_test_helpers_notifications_test_serialize_firestore_doc",
+      "backend_tests_test_helpers_notifications_test_standard_response",
+      "backend_transactions_evidence_get_condition_evidence",
+      "backend_transactions_evidence_py_get",
+      "backend_transactions_evidence_rationale_145",
+      "backend_transactions_helpers_get_doc_or_404",
+      "backend_transactions_helpers_rationale_37",
+      "backend_transactions_helpers_rationale_54",
+      "backend_transactions_helpers_rationale_7",
+      "backend_transactions_helpers_serialize_firestore_doc",
+      "backend_transactions_helpers_standard_response",
+      "backend_transactions_notifications_emit_notification",
+      "backend_transactions_notifications_rationale_30",
+      "backend_transactions_requests",
+      "backend_transactions_requests_accept_request",
+      "backend_transactions_requests_counter_request",
+      "backend_transactions_requests_create_request",
+      "backend_transactions_requests_get_provider_requests",
+      "backend_transactions_requests_get_request_details",
+      "backend_transactions_requests_post_negotiation_message",
+      "backend_transactions_requests_py_get",
+      "backend_transactions_requests_py_post",
+      "backend_transactions_requests_rationale_119",
+      "backend_transactions_requests_rationale_177",
+      "backend_transactions_requests_rationale_260",
+      "backend_transactions_requests_rationale_33",
+      "backend_transactions_requests_rationale_423",
+      "backend_transactions_requests_rationale_481",
+      "backend_transactions_requests_rationale_572",
+      "backend_transactions_requests_reject_request"
+    ],
+    "7": [
+      "frontend_app_dashboard_requirements_page",
+      "frontend_app_dashboard_requirements_page_requirementspage",
+      "frontend_app_dashboard_requirements_page_searchhref",
+      "frontend_app_dashboard_resources_page_resourcespageinner",
+      "frontend_app_dashboard_search_page",
+      "frontend_app_dashboard_search_page_examples",
+      "frontend_app_dashboard_search_page_searchpage",
+      "frontend_app_dashboard_search_page_sortkey",
+      "frontend_components_confirm_dialog_confirmdialog",
+      "frontend_components_requirements_requirement_form_sheet_requirementformsheet",
+      "frontend_components_requirements_requirement_form_sheet_requirementformsheet_runpreview",
+      "frontend_components_requirements_requirement_form_sheet_requirementformsheet_save",
+      "frontend_components_search_product_card",
+      "frontend_components_search_product_card_productcard",
+      "frontend_components_search_product_card_props",
+      "frontend_components_search_product_sheet_productsheet",
+      "frontend_components_search_request_dialog_requestdialog",
+      "frontend_components_search_request_dialog_requestdialog_send",
+      "frontend_components_search_request_dialog_requesttarget",
+      "frontend_lib_format",
+      "frontend_lib_format_humanize",
+      "frontend_lib_format_inr",
+      "frontend_lib_format_inrformatter",
+      "frontend_lib_format_pricingunitlabel",
+      "frontend_lib_pricing",
+      "frontend_lib_pricing_estimatecost",
+      "frontend_lib_pricing_localinputtoiso",
+      "frontend_lib_pricing_rentaldays",
+      "frontend_lib_pricing_rentalhours",
+      "frontend_lib_pricing_rentalwindow",
+      "frontend_lib_pricing_tolocalinput"
+    ],
     "8": [
+      "backend_core_auth",
+      "backend_core_auth_get_current_user",
+      "backend_core_auth_rationale_10",
+      "backend_core_firebase",
+      "backend_create_auth_users",
+      "backend_create_auth_users_main",
+      "backend_transactions_bookings",
+      "backend_transactions_dashboard",
+      "backend_transactions_escrow",
+      "backend_transactions_escrow_get_escrow_detail",
+      "backend_transactions_escrow_py_get",
+      "backend_transactions_escrow_rationale_305",
+      "backend_transactions_evidence",
+      "backend_transactions_helpers",
+      "backend_transactions_init",
+      "backend_transactions_init_rationale_1",
+      "backend_transactions_notifications",
+      "backend_transactions_notifications_get_user_notifications",
+      "backend_transactions_notifications_mark_notification_as_read",
+      "backend_transactions_notifications_py_get",
+      "backend_transactions_notifications_py_patch",
+      "backend_transactions_notifications_rationale_109",
+      "backend_transactions_notifications_rationale_74",
+      "backend_transactions_reviews",
+      "backend_transactions_reviews_get_user_reviews",
+      "backend_transactions_reviews_py_get",
+      "backend_transactions_reviews_rationale_156",
+      "backend_users",
+      "datetime"
+    ],
+    "9": [
+      "frontend_app_dashboard_bookings_page",
+      "frontend_app_dashboard_bookings_page_bookingspage",
+      "frontend_app_dashboard_bookings_page_filter",
+      "frontend_app_dashboard_bookings_page_role",
+      "frontend_app_dashboard_bookings_page_upcoming",
+      "frontend_app_dashboard_page",
+      "frontend_app_dashboard_page_dashboardhome",
+      "frontend_app_dashboard_page_quick_actions",
+      "frontend_app_dashboard_resources_page",
+      "frontend_app_dashboard_resources_page_resourcespage",
+      "frontend_components_status_badge",
+      "frontend_components_status_badge_status_tone",
+      "frontend_components_status_badge_statusbadge",
+      "frontend_components_status_badge_tone",
+      "frontend_components_status_badge_tones",
+      "frontend_components_ui_badge",
+      "frontend_components_ui_badge_badge",
+      "frontend_components_ui_badge_badgevariants",
+      "frontend_components_ui_table",
+      "frontend_components_ui_table_table",
+      "frontend_components_ui_table_tablebody",
+      "frontend_components_ui_table_tablecell",
+      "frontend_components_ui_table_tablehead",
+      "frontend_components_ui_table_tableheader",
+      "frontend_components_ui_table_tablerow",
+      "frontend_lib_api_index_bookingsapi",
+      "frontend_lib_session",
+      "frontend_lib_session_sessionvalue",
+      "frontend_lib_session_usebusinesssession"
+    ],
+    "10": [
       "frontend_tsconfig",
       "frontend_tsconfig_compileroptions",
       "frontend_tsconfig_compileroptions_allowjs",
@@ -463,7 +490,7 @@
       "ref_ts",
       "ref_tsx"
     ],
-    "9": [
+    "11": [
       "backend_main",
       "backend_main_create_requirement",
       "backend_main_create_resource",
@@ -493,37 +520,65 @@
       "get",
       "post"
     ],
-    "10": [
+    "12": [
+      "frontend_app_driver_app_page",
+      "frontend_app_driver_app_page_driverdashboard",
+      "frontend_app_driver_app_routes_page",
+      "frontend_app_driver_app_routes_page_driverroutespage",
+      "frontend_app_driver_app_routes_page_filter",
+      "frontend_app_driver_app_routes_page_routespageinner",
+      "frontend_components_driver_route_card",
+      "frontend_components_driver_route_card_routemeta",
+      "frontend_components_driver_route_card_routepath",
+      "frontend_components_driver_route_form_sheet_routeformsheet",
+      "frontend_components_driver_route_form_sheet_routeformsheet_save",
+      "frontend_components_driver_route_matches_sheet",
+      "frontend_components_driver_route_matches_sheet_routematchessheet",
+      "frontend_components_driver_route_matches_sheet_routematchessheet_accept",
+      "frontend_components_panel_link",
+      "frontend_components_panel_link_panellink",
+      "frontend_components_ui_chart_card_chartcard",
+      "frontend_components_ui_skeleton",
+      "frontend_components_ui_skeleton_skeleton",
+      "frontend_hooks_use_api",
+      "frontend_hooks_use_api_apistate",
+      "frontend_hooks_use_api_errortext",
+      "frontend_lib_api_index_dashboardapi",
+      "frontend_lib_api_index_deliveriesapi",
+      "frontend_lib_api_index_routesapi",
+      "frontend_lib_format_firstname",
+      "frontend_lib_format_isodate",
+      "frontend_lib_session_usedriversession"
+    ],
+    "13": [
       "frontend_lib_mock_store_mockstore",
       "frontend_lib_mock_store_mockstore_acceptrequest",
       "frontend_lib_mock_store_mockstore_confirmreceipt",
       "frontend_lib_mock_store_mockstore_constructor",
-      "frontend_lib_mock_store_mockstore_createrequest",
-      "frontend_lib_mock_store_mockstore_createresource",
       "frontend_lib_mock_store_mockstore_deleteresource",
+      "frontend_lib_mock_store_mockstore_fundescrow",
       "frontend_lib_mock_store_mockstore_getbookingbyid",
       "frontend_lib_mock_store_mockstore_getbookings",
+      "frontend_lib_mock_store_mockstore_getcategories",
       "frontend_lib_mock_store_mockstore_getdriver",
+      "frontend_lib_mock_store_mockstore_getescrow",
       "frontend_lib_mock_store_mockstore_getnotifications",
-      "frontend_lib_mock_store_mockstore_getrequests",
-      "frontend_lib_mock_store_mockstore_getresourcebyid",
-      "frontend_lib_mock_store_mockstore_getresources",
+      "frontend_lib_mock_store_mockstore_getrequirements",
       "frontend_lib_mock_store_mockstore_getuser",
       "frontend_lib_mock_store_mockstore_marknotificationread",
       "frontend_lib_mock_store_mockstore_matchroutes",
       "frontend_lib_mock_store_mockstore_rejectrequest",
-      "frontend_lib_mock_store_mockstore_updateresource",
+      "frontend_lib_mock_store_mockstore_releaseescrow",
+      "frontend_lib_mock_store_mockstore_setforcedemo",
       "frontend_lib_mock_store_mockstore_updateuser",
       "frontend_lib_types_appnotification",
       "frontend_lib_types_booking",
-      "frontend_lib_types_createrequestinput",
       "frontend_lib_types_driverprofile",
-      "frontend_lib_types_resource",
-      "frontend_lib_types_resourceinput",
-      "frontend_lib_types_resourcerequest",
+      "frontend_lib_types_escrow",
+      "frontend_lib_types_requirement",
       "frontend_lib_types_userprofile"
     ],
-    "11": [
+    "14": [
       "frontend_app_dashboard_requests_page",
       "frontend_app_dashboard_requests_page_filter",
       "frontend_app_dashboard_requests_page_open",
@@ -548,9 +603,9 @@
       "frontend_components_ui_tabs_tabslistvariants",
       "frontend_components_ui_tabs_tabstrigger",
       "frontend_lib_api_index_notificationsapi",
-      "frontend_lib_api_index_requestsapi"
+      "frontend_lib_format_relativetime"
     ],
-    "12": [
+    "15": [
       "backend_services_category_registry",
       "backend_services_category_registry_build_category_prompt_block",
       "backend_services_category_registry_get_category_ids",
@@ -576,7 +631,33 @@
       "backend_tests_test_category_registry_test_video_evidence_categories",
       "enum"
     ],
-    "13": [
+    "16": [
+      "frontend_lib_api_index",
+      "frontend_lib_api_index_categoriesapi",
+      "frontend_lib_api_index_escrowapi",
+      "frontend_lib_api_index_reviewsapi",
+      "frontend_lib_mock_store_mockstore_counterrequest",
+      "frontend_lib_mock_store_mockstore_search",
+      "frontend_lib_types",
+      "frontend_lib_types_availabilityslot",
+      "frontend_lib_types_bookingstatus",
+      "frontend_lib_types_counterinput",
+      "frontend_lib_types_deliverystatus",
+      "frontend_lib_types_driverprofileinput",
+      "frontend_lib_types_evidenceinput",
+      "frontend_lib_types_negotiationmessage",
+      "frontend_lib_types_parseditem",
+      "frontend_lib_types_providersummary",
+      "frontend_lib_types_requeststatus",
+      "frontend_lib_types_requirementinput",
+      "frontend_lib_types_review",
+      "frontend_lib_types_reviewsummary",
+      "frontend_lib_types_routematch",
+      "frontend_lib_types_searchinput",
+      "frontend_lib_types_searchresult",
+      "frontend_lib_types_userprofileinput"
+    ],
+    "17": [
       "frontend_lib_mock_data",
       "frontend_lib_mock_data_mock_bookings",
       "frontend_lib_mock_data_mock_categories",
@@ -591,7 +672,6 @@
       "frontend_lib_mock_data_mock_user",
       "frontend_lib_mock_data_mock_user_dashboard",
       "frontend_lib_mock_store",
-      "frontend_lib_mock_store_mockstore_getcategories",
       "frontend_lib_mock_store_mockstore_getdriverdashboard",
       "frontend_lib_mock_store_mockstore_getdrivermatches",
       "frontend_lib_mock_store_mockstore_getuserdashboard",
@@ -602,32 +682,7 @@
       "frontend_lib_types_searchproduct",
       "frontend_lib_types_userdashboard"
     ],
-    "14": [
-      "frontend_app_dashboard_providers_id_page",
-      "frontend_app_dashboard_providers_id_page_providerpage",
-      "frontend_app_dashboard_requirements_page",
-      "frontend_app_dashboard_requirements_page_requirementspage",
-      "frontend_app_dashboard_requirements_page_searchhref",
-      "frontend_app_driver_app_page_driverdashboard",
-      "frontend_app_driver_app_profile_page",
-      "frontend_app_driver_app_profile_page_driverprofilepage",
-      "frontend_app_driver_app_profile_page_row",
-      "frontend_components_page_header",
-      "frontend_components_page_header_page",
-      "frontend_components_page_header_pageheader",
-      "frontend_components_ui_chart_card_chartcard",
-      "frontend_lib_format",
-      "frontend_lib_format_firstname",
-      "frontend_lib_format_initials",
-      "frontend_lib_format_inrformatter",
-      "frontend_lib_format_relativetime",
-      "frontend_lib_format_shortdate",
-      "frontend_lib_pricing_tolocalinput",
-      "frontend_lib_session",
-      "frontend_lib_session_sessionvalue",
-      "frontend_lib_session_usedriversession"
-    ],
-    "15": [
+    "18": [
       "frontend_components",
       "frontend_components_aliases",
       "frontend_components_aliases_components",
@@ -651,7 +706,31 @@
       "frontend_components_tailwind_prefix",
       "frontend_components_tsx"
     ],
-    "16": [
+    "19": [
+      "frontend_components_shell_app_shell",
+      "frontend_components_shell_app_shell_appshellprops",
+      "frontend_components_shell_app_sidebar",
+      "frontend_components_shell_app_sidebar_appsidebar",
+      "frontend_components_shell_app_sidebar_appsidebarprops",
+      "frontend_components_shell_app_topbar_apptopbar",
+      "frontend_components_shell_icon_rail",
+      "frontend_components_shell_icon_rail_iconrail",
+      "frontend_components_shell_icon_rail_mobilenav",
+      "frontend_components_shell_nav_config",
+      "frontend_components_shell_nav_config_isactive",
+      "frontend_components_shell_nav_config_navgroup",
+      "frontend_components_shell_nav_config_navitem",
+      "frontend_components_shell_nav_config_pagemeta",
+      "frontend_components_shell_nav_config_shellconfig",
+      "frontend_components_ui_separator",
+      "frontend_components_ui_separator_separator",
+      "frontend_components_ui_tooltip",
+      "frontend_components_ui_tooltip_tooltip",
+      "frontend_components_ui_tooltip_tooltipcontent",
+      "frontend_components_ui_tooltip_tooltiptrigger",
+      "frontend_lib_perspective_useperspective"
+    ],
+    "20": [
       "frontend_components_shell_notifications_menu",
       "frontend_components_shell_notifications_menu_notificationhref",
       "frontend_components_shell_notifications_menu_notificationsmenu",
@@ -675,76 +754,7 @@
       "frontend_components_ui_dropdown_menu_dropdownmenusubtrigger",
       "frontend_components_ui_dropdown_menu_dropdownmenutrigger"
     ],
-    "17": [
-      "frontend_app_dashboard_bookings_page",
-      "frontend_app_dashboard_bookings_page_bookingspage",
-      "frontend_app_dashboard_bookings_page_filter",
-      "frontend_app_dashboard_bookings_page_role",
-      "frontend_app_dashboard_bookings_page_upcoming",
-      "frontend_app_dashboard_page",
-      "frontend_app_dashboard_page_dashboardhome",
-      "frontend_app_dashboard_page_quick_actions",
-      "frontend_app_dashboard_resources_page",
-      "frontend_app_dashboard_resources_page_resourcespage",
-      "frontend_components_ui_table",
-      "frontend_components_ui_table_table",
-      "frontend_components_ui_table_tablebody",
-      "frontend_components_ui_table_tablecell",
-      "frontend_components_ui_table_tablehead",
-      "frontend_components_ui_table_tableheader",
-      "frontend_components_ui_table_tablerow",
-      "frontend_hooks_use_api",
-      "frontend_hooks_use_api_apistate",
-      "frontend_hooks_use_api_errortext",
-      "frontend_lib_api_index_bookingsapi"
-    ],
-    "18": [
-      "frontend_app_dashboard_resources_page_resourcespageinner",
-      "frontend_app_dashboard_search_page",
-      "frontend_app_dashboard_search_page_examples",
-      "frontend_app_dashboard_search_page_searchpage",
-      "frontend_app_dashboard_search_page_sortkey",
-      "frontend_components_search_delivery_dialog_deliveryquery",
-      "frontend_components_search_product_card",
-      "frontend_components_search_product_card_productcard",
-      "frontend_components_search_product_card_props",
-      "frontend_components_search_product_sheet_productsheet",
-      "frontend_components_search_request_dialog_requestdialog",
-      "frontend_components_search_request_dialog_requestdialog_send",
-      "frontend_components_states_loadingstate",
-      "frontend_lib_format_humanize",
-      "frontend_lib_format_pricingunitlabel",
-      "frontend_lib_pricing",
-      "frontend_lib_pricing_estimatecost",
-      "frontend_lib_pricing_localinputtoiso",
-      "frontend_lib_pricing_rentaldays",
-      "frontend_lib_pricing_rentalhours",
-      "frontend_lib_pricing_rentalwindow"
-    ],
-    "19": [
-      "frontend_app_driver_app_routes_page",
-      "frontend_app_driver_app_routes_page_driverroutespage",
-      "frontend_app_driver_app_routes_page_filter",
-      "frontend_app_driver_app_routes_page_routespageinner",
-      "frontend_components_confirm_dialog_confirmdialog",
-      "frontend_components_driver_route_form_sheet_routeformsheet",
-      "frontend_components_driver_route_form_sheet_routeformsheet_save",
-      "frontend_components_driver_route_matches_sheet",
-      "frontend_components_driver_route_matches_sheet_routematchessheet",
-      "frontend_components_driver_route_matches_sheet_routematchessheet_accept",
-      "frontend_components_requirements_requirement_form_sheet_requirementformsheet",
-      "frontend_components_requirements_requirement_form_sheet_requirementformsheet_runpreview",
-      "frontend_components_requirements_requirement_form_sheet_requirementformsheet_save",
-      "frontend_components_states",
-      "frontend_components_states_errorstate",
-      "frontend_components_states_listskeleton",
-      "frontend_components_ui_skeleton",
-      "frontend_components_ui_skeleton_skeleton",
-      "frontend_lib_api_index_deliveriesapi",
-      "frontend_lib_api_index_routesapi",
-      "frontend_lib_format_isodate"
-    ],
-    "20": [
+    "21": [
       "backend_logistics_routes",
       "backend_logistics_routes_create_route",
       "backend_logistics_routes_createrouterequest",
@@ -766,7 +776,7 @@
       "backend_logistics_routes_updaterouterequest",
       "delete"
     ],
-    "21": [
+    "22": [
       "backend_services_llm_parser_parseditem",
       "backend_services_llm_parser_parseditem_normalize_category",
       "backend_services_llm_parser_parseditem_normalize_metric",
@@ -787,54 +797,32 @@
       "backend_tests_test_seeker_search_test_seeker_router_endpoint",
       "field_validator"
     ],
-    "22": [
-      "frontend_app_dashboard_smart_matches_page",
-      "frontend_app_dashboard_smart_matches_page_computescore",
-      "frontend_app_dashboard_smart_matches_page_computescorebreakdown",
-      "frontend_app_dashboard_smart_matches_page_demandmatch",
-      "frontend_app_dashboard_smart_matches_page_getimage",
-      "frontend_app_dashboard_smart_matches_page_haversinekm",
-      "frontend_app_dashboard_smart_matches_page_matchresult",
-      "frontend_app_dashboard_smart_matches_page_placeholder_images",
-      "frontend_app_dashboard_smart_matches_page_shortlocation",
-      "frontend_app_dashboard_smart_matches_page_smartmatchescontent",
-      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_fetchseekermatches",
-      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_loadproviderdemands",
-      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_loadseekerdata",
-      "frontend_app_dashboard_smart_matches_page_smartmatchespage",
-      "frontend_components_matching_radial_score",
-      "frontend_components_matching_radial_score_radialscore",
-      "frontend_components_matching_radial_score_radialscoreprops",
-      "frontend_lib_api_index_requirementsapi",
-      "frontend_lib_api_index_seekerapi"
-    ],
     "23": [
-      "frontend_lib_mock_store_mockstore_getrequirements",
-      "frontend_lib_mock_store_mockstore_search",
-      "frontend_lib_types",
-      "frontend_lib_types_availabilityslot",
-      "frontend_lib_types_bookingstatus",
-      "frontend_lib_types_deliverystatus",
-      "frontend_lib_types_driverprofileinput",
-      "frontend_lib_types_evidenceinput",
-      "frontend_lib_types_parseditem",
-      "frontend_lib_types_providersummary",
-      "frontend_lib_types_requeststatus",
-      "frontend_lib_types_requirement",
-      "frontend_lib_types_requirementinput",
-      "frontend_lib_types_review",
-      "frontend_lib_types_reviewsummary",
-      "frontend_lib_types_routematch",
-      "frontend_lib_types_searchinput",
-      "frontend_lib_types_searchresult",
-      "frontend_lib_types_userprofileinput"
+      "frontend_app_auth_onboarding_page_businessonboardingpage",
+      "frontend_app_auth_onboarding_page_businessonboardingpage_handlesubmit",
+      "frontend_app_dashboard_layout",
+      "frontend_app_driver_app_layout",
+      "frontend_app_driver_auth_onboarding_page_driveronboardingpage",
+      "frontend_app_driver_auth_onboarding_page_driveronboardingpage_handlesubmit",
+      "frontend_components_shell_app_shell_appshell",
+      "frontend_components_shell_layouts",
+      "frontend_components_shell_layouts_businessframe",
+      "frontend_components_shell_layouts_businesslayout",
+      "frontend_components_shell_layouts_driverframe",
+      "frontend_components_shell_layouts_driverlayout",
+      "frontend_components_shell_nav_config_business_shell",
+      "frontend_components_shell_nav_config_driver_shell",
+      "frontend_components_shell_session_gate_gateerror",
+      "frontend_components_shell_top_navbar_topnavbar",
+      "frontend_components_shell_top_navbar_topnavbar_handlesearch",
+      "frontend_components_shell_top_navbar_topnavbar_handlesignout",
+      "frontend_lib_auth_useauth"
     ],
     "24": [
       "frontend_app_dashboard_bookings_id_page",
       "frontend_app_dashboard_bookings_id_page_bookingdetailpage",
       "frontend_app_dashboard_bookings_id_page_detail",
-      "frontend_app_dashboard_profile_page_profilepage",
-      "frontend_app_dashboard_profile_page_profilepage_save",
+      "frontend_app_dashboard_marketplace_page_marketplacepage",
       "frontend_app_dashboard_requirements_page_requirementspageinner",
       "frontend_components_bookings_booking_timeline",
       "frontend_components_bookings_booking_timeline_statustimeline",
@@ -844,32 +832,14 @@
       "frontend_components_bookings_evidence_section_evidencegallery",
       "frontend_components_search_delivery_dialog",
       "frontend_components_search_delivery_dialog_deliverydialog",
+      "frontend_components_search_delivery_dialog_deliveryquery",
+      "frontend_components_states",
+      "frontend_components_states_errorstate",
+      "frontend_components_states_listskeleton",
       "frontend_hooks_use_api_useapi",
-      "frontend_lib_format_datetime",
-      "frontend_lib_format_inr",
-      "frontend_lib_session_usebusinesssession"
+      "frontend_lib_format_datetime"
     ],
     "25": [
-      "frontend_app_driver_app_page",
-      "frontend_components_driver_route_card",
-      "frontend_components_driver_route_card_routemeta",
-      "frontend_components_driver_route_card_routepath",
-      "frontend_components_panel_link",
-      "frontend_components_panel_link_panellink",
-      "frontend_components_status_badge",
-      "frontend_components_status_badge_status_tone",
-      "frontend_components_status_badge_statusbadge",
-      "frontend_components_status_badge_tone",
-      "frontend_components_status_badge_tones",
-      "frontend_components_ui_badge",
-      "frontend_components_ui_badge_badge",
-      "frontend_components_ui_badge_badgevariants",
-      "frontend_components_ui_stat_frame_card",
-      "frontend_components_ui_stat_frame_card_statframecard",
-      "frontend_components_ui_stat_frame_card_statframecardprops",
-      "frontend_lib_api_index_dashboardapi"
-    ],
-    "26": [
       "base_ui_react",
       "class_variance_authority",
       "firebase",
@@ -888,7 +858,7 @@
       "react",
       "tw_animate_css"
     ],
-    "27": [
+    "26": [
       "eslint",
       "eslint_config_next",
       "frontend_package_devdependencies",
@@ -907,26 +877,7 @@
       "types_react_dom",
       "typescript"
     ],
-    "28": [
-      "frontend_lib_api_client",
-      "frontend_lib_api_client_api",
-      "frontend_lib_api_client_api_base_url",
-      "frontend_lib_api_client_apierror",
-      "frontend_lib_api_client_apierror_constructor",
-      "frontend_lib_api_client_errormessage",
-      "frontend_lib_api_client_json",
-      "frontend_lib_api_client_request",
-      "frontend_lib_api_client_requestoptions",
-      "frontend_lib_api_client_resolvemockfallback",
-      "frontend_lib_api_index",
-      "frontend_lib_api_index_categoriesapi",
-      "frontend_lib_api_index_escrowapi",
-      "frontend_lib_api_index_evidenceapi",
-      "frontend_lib_api_index_reviewsapi",
-      "frontend_lib_mock_store_mockstore_counterrequest",
-      "frontend_lib_types_counterinput"
-    ],
-    "29": [
+    "27": [
       "backend_drivers",
       "backend_drivers_create_driver_profile",
       "backend_drivers_driverauthstatusdata",
@@ -944,25 +895,25 @@
       "backend_drivers_rationale_222",
       "basemodel"
     ],
-    "30": [
-      "frontend_components_shell_app_sidebar",
-      "frontend_components_shell_app_sidebar_appsidebar",
-      "frontend_components_shell_app_sidebar_appsidebarprops",
-      "frontend_components_shell_icon_rail",
-      "frontend_components_shell_icon_rail_iconrail",
-      "frontend_components_shell_icon_rail_mobilenav",
-      "frontend_components_shell_icon_rail_railbutton",
-      "frontend_components_shell_nav_config_isactive",
-      "frontend_components_shell_nav_config_navitem",
-      "frontend_components_ui_separator",
-      "frontend_components_ui_separator_separator",
-      "frontend_components_ui_tooltip",
-      "frontend_components_ui_tooltip_tooltip",
-      "frontend_components_ui_tooltip_tooltipcontent",
-      "frontend_components_ui_tooltip_tooltiptrigger",
-      "frontend_lib_utils"
+    "28": [
+      "frontend_app_dashboard_smart_matches_page",
+      "frontend_app_dashboard_smart_matches_page_computescore",
+      "frontend_app_dashboard_smart_matches_page_computescorebreakdown",
+      "frontend_app_dashboard_smart_matches_page_demandmatch",
+      "frontend_app_dashboard_smart_matches_page_getimage",
+      "frontend_app_dashboard_smart_matches_page_haversinekm",
+      "frontend_app_dashboard_smart_matches_page_matchresult",
+      "frontend_app_dashboard_smart_matches_page_placeholder_images",
+      "frontend_app_dashboard_smart_matches_page_shortlocation",
+      "frontend_app_dashboard_smart_matches_page_smartmatchescontent",
+      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_fetchseekermatches",
+      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_loadproviderdemands",
+      "frontend_app_dashboard_smart_matches_page_smartmatchescontent_loadseekerdata",
+      "frontend_app_dashboard_smart_matches_page_smartmatchespage",
+      "frontend_lib_api_index_requirementsapi",
+      "frontend_lib_api_index_seekerapi"
     ],
-    "31": [
+    "29": [
       "frontend_components_confirm_dialog",
       "frontend_components_confirm_dialog_props",
       "frontend_components_ui_alert_dialog",
@@ -979,24 +930,39 @@
       "frontend_components_ui_alert_dialog_alertdialogtitle",
       "frontend_components_ui_alert_dialog_alertdialogtrigger"
     ],
-    "32": [
-      "frontend_components_shell_app_topbar",
-      "frontend_components_shell_app_topbar_apptopbar",
-      "frontend_components_shell_app_topbar_apptopbarprops",
-      "frontend_components_shell_nav_config_pagemeta",
-      "frontend_components_ui_popover",
-      "frontend_components_ui_popover_popover",
-      "frontend_components_ui_popover_popoveranchor",
-      "frontend_components_ui_popover_popovercontent",
-      "frontend_components_ui_popover_popoverdescription",
-      "frontend_components_ui_popover_popoverheader",
-      "frontend_components_ui_popover_popovertitle",
-      "frontend_components_ui_popover_popovertrigger",
-      "frontend_components_ui_switch",
-      "frontend_components_ui_switch_switch",
-      "frontend_lib_mock_store_mockstore_setforcedemo"
+    "30": [
+      "frontend_app_dashboard_marketplace_page",
+      "frontend_components_marketplace_filter_bar",
+      "frontend_components_marketplace_filter_bar_filterbar",
+      "frontend_components_marketplace_filter_bar_filterbarprops",
+      "frontend_components_marketplace_filter_bar_mumbai_hubs",
+      "frontend_components_marketplace_marketplace_card",
+      "frontend_components_marketplace_marketplace_card_marketplacecard",
+      "frontend_components_marketplace_marketplace_card_marketplacecardprops",
+      "frontend_lib_api_index_resourcesapi",
+      "frontend_lib_mock_store_mockstore_createresource",
+      "frontend_lib_mock_store_mockstore_getresources",
+      "frontend_lib_mock_store_mockstore_updateresource",
+      "frontend_lib_types_resource",
+      "frontend_lib_types_resourceinput"
     ],
-    "33": [
+    "31": [
+      "frontend_components_ui_card",
+      "frontend_components_ui_card_card",
+      "frontend_components_ui_card_cardaction",
+      "frontend_components_ui_card_cardcontent",
+      "frontend_components_ui_card_cardfooter",
+      "frontend_components_ui_card_cardheader",
+      "frontend_components_ui_chart_card",
+      "frontend_components_ui_chart_card_chartcardprops",
+      "frontend_components_ui_checkbox",
+      "frontend_components_ui_checkbox_checkbox",
+      "frontend_components_ui_stat_frame_card",
+      "frontend_components_ui_stat_frame_card_statframecard",
+      "frontend_components_ui_stat_frame_card_statframecardprops",
+      "frontend_lib_utils"
+    ],
+    "32": [
       "frontend_app_dashboard_logistics_page",
       "frontend_app_dashboard_logistics_page_getvehicleimage",
       "frontend_app_dashboard_logistics_page_logisticscontent",
@@ -1011,18 +977,33 @@
       "frontend_components_logistics_cost_comparison_costcomparisonprops",
       "frontend_lib_api_index_logisticsapi"
     ],
+    "33": [
+      "frontend_app_dashboard_profile_page_profilepage",
+      "frontend_app_dashboard_profile_page_profilepage_save",
+      "frontend_app_dashboard_providers_id_page",
+      "frontend_app_dashboard_providers_id_page_providerpage",
+      "frontend_app_driver_app_profile_page",
+      "frontend_app_driver_app_profile_page_driverprofilepage",
+      "frontend_app_driver_app_profile_page_row",
+      "frontend_components_page_header",
+      "frontend_components_page_header_page",
+      "frontend_components_page_header_pageheader",
+      "frontend_lib_format_initials",
+      "frontend_lib_format_shortdate"
+    ],
     "34": [
-      "any",
-      "backend_tests_test_helpers_notifications",
-      "backend_tests_test_helpers_notifications_test_emit_notification",
-      "backend_tests_test_helpers_notifications_test_serialize_firestore_doc",
-      "backend_tests_test_helpers_notifications_test_standard_response",
-      "backend_transactions_helpers_get_doc_or_404",
-      "backend_transactions_helpers_rationale_37",
-      "backend_transactions_helpers_rationale_54",
-      "backend_transactions_helpers_rationale_7",
-      "backend_transactions_helpers_serialize_firestore_doc",
-      "backend_transactions_helpers_standard_response"
+      "frontend_components_shell_app_topbar",
+      "frontend_components_shell_app_topbar_apptopbarprops",
+      "frontend_components_ui_popover",
+      "frontend_components_ui_popover_popover",
+      "frontend_components_ui_popover_popoveranchor",
+      "frontend_components_ui_popover_popovercontent",
+      "frontend_components_ui_popover_popoverdescription",
+      "frontend_components_ui_popover_popoverheader",
+      "frontend_components_ui_popover_popovertitle",
+      "frontend_components_ui_popover_popovertrigger",
+      "frontend_components_ui_switch",
+      "frontend_components_ui_switch_switch"
     ],
     "35": [
       "backend_services_llm_parser_parse_requirement",
@@ -1038,19 +1019,32 @@
       "backend_tests_test_llm_parser_service_test_parser_service_failure_is_preserved"
     ],
     "36": [
-      "frontend_app_dashboard_marketplace_page",
-      "frontend_app_dashboard_marketplace_page_marketplacepage",
-      "frontend_components_marketplace_filter_bar",
-      "frontend_components_marketplace_filter_bar_filterbar",
-      "frontend_components_marketplace_filter_bar_filterbarprops",
-      "frontend_components_marketplace_filter_bar_mumbai_hubs",
-      "frontend_components_marketplace_marketplace_card",
-      "frontend_components_marketplace_marketplace_card_marketplacecard",
-      "frontend_components_marketplace_marketplace_card_marketplacecardprops",
-      "frontend_lib_api_index_resourcesapi",
-      "frontend_lib_perspective_useperspective"
+      "frontend_app_layout",
+      "frontend_app_layout_geistmono",
+      "frontend_app_layout_geistsans",
+      "frontend_app_layout_inter",
+      "frontend_app_layout_metadata",
+      "frontend_app_layout_rootlayout",
+      "frontend_app_providers",
+      "frontend_app_providers_providers",
+      "frontend_components_theme_provider",
+      "frontend_components_theme_provider_themeprovider",
+      "frontend_components_ui_tooltip_tooltipprovider"
     ],
     "37": [
+      "frontend_lib_api_client",
+      "frontend_lib_api_client_api",
+      "frontend_lib_api_client_api_base_url",
+      "frontend_lib_api_client_apierror",
+      "frontend_lib_api_client_apierror_constructor",
+      "frontend_lib_api_client_errormessage",
+      "frontend_lib_api_client_json",
+      "frontend_lib_api_client_request",
+      "frontend_lib_api_client_requestoptions",
+      "frontend_lib_api_client_resolvemockfallback",
+      "frontend_lib_auth_getidtoken"
+    ],
+    "38": [
       "backend_services_llm_parser",
       "backend_services_llm_parser_get_client",
       "backend_services_llm_parser_parserserviceerror",
@@ -1062,7 +1056,7 @@
       "exception",
       "groq"
     ],
-    "38": [
+    "39": [
       "frontend_app_dashboard_notifications_page",
       "frontend_app_dashboard_notifications_page_page",
       "frontend_app_driver_app_notifications_page",
@@ -1074,7 +1068,31 @@
       "frontend_components_notifications_page_notificationspage_negotiationtarget",
       "frontend_components_notifications_page_notificationspage_open"
     ],
-    "39": [
+    "40": [
+      "frontend_components_shell_session_gate",
+      "frontend_components_shell_session_gate_businessgate",
+      "frontend_components_shell_session_gate_drivergate",
+      "frontend_components_shell_session_gate_kind",
+      "frontend_components_shell_session_gate_routes",
+      "frontend_components_shell_session_gate_useprofilegate",
+      "frontend_components_states_loadingstate",
+      "frontend_lib_api_index_driversapi",
+      "frontend_lib_session_businesssessioncontext",
+      "frontend_lib_session_driversessioncontext"
+    ],
+    "41": [
+      "frontend_lib_auth",
+      "frontend_lib_auth_authcontext",
+      "frontend_lib_auth_authcontextvalue",
+      "frontend_lib_auth_authprovider",
+      "frontend_lib_auth_authstatus",
+      "frontend_lib_auth_authuser",
+      "frontend_lib_auth_demotoken",
+      "frontend_lib_auth_demouserfromtoken",
+      "frontend_lib_auth_readstorage",
+      "frontend_lib_auth_writestorage"
+    ],
+    "42": [
       "backend_tests_test_llm_parser_client",
       "backend_tests_test_llm_parser_client_fakeclient",
       "backend_tests_test_llm_parser_client_fakeclient_init",
@@ -1085,7 +1103,7 @@
       "backend_tests_test_llm_parser_client_test_groq_call_uses_strict_json_mode_and_deterministic_temperature",
       "backend_tests_test_llm_parser_client_test_system_prompt_contains_extraction_guardrails"
     ],
-    "40": [
+    "43": [
       "frontend_app_auth_login_page",
       "frontend_app_auth_signup_page",
       "frontend_app_driver_auth_login_page",
@@ -1096,18 +1114,7 @@
       "frontend_components_auth_auth_pages_driverloginpage",
       "frontend_components_auth_auth_pages_driversignuppage"
     ],
-    "41": [
-      "frontend_app_providers",
-      "frontend_components_theme_provider",
-      "frontend_components_theme_provider_themeprovider",
-      "frontend_components_ui_tooltip_tooltipprovider",
-      "frontend_lib_perspective",
-      "frontend_lib_perspective_perspective",
-      "frontend_lib_perspective_perspectivecontext",
-      "frontend_lib_perspective_perspectivecontexttype",
-      "frontend_lib_perspective_perspectiveprovider"
-    ],
-    "42": [
+    "44": [
       "frontend_package",
       "frontend_package_name",
       "frontend_package_private",
@@ -1118,7 +1125,7 @@
       "frontend_package_scripts_start",
       "frontend_package_version"
     ],
-    "43": [
+    "45": [
       "backend_seed_firebase",
       "backend_seed_firebase_clear_stale_logistics",
       "backend_seed_firebase_main",
@@ -1128,7 +1135,17 @@
       "backend_seed_firebase_seed_collection",
       "backend_seed_firebase_uid"
     ],
-    "44": [
+    "46": [
+      "frontend_components_media_input_mediainput_handlefiles",
+      "frontend_lib_firebase",
+      "frontend_lib_firebase_config",
+      "frontend_lib_firebase_firebaseapp",
+      "frontend_lib_firebase_firebaseauth",
+      "frontend_lib_firebase_firebaseenabled",
+      "frontend_lib_firebase_storageenabled",
+      "frontend_lib_firebase_uploadfile"
+    ],
+    "47": [
       "backend_tests_test_bookings",
       "backend_tests_test_bookings_create_test_app",
       "backend_tests_test_bookings_mock_firebase",
@@ -1137,7 +1154,7 @@
       "backend_tests_test_bookings_test_get_booking_detail_and_authorization",
       "backend_tests_test_bookings_test_get_my_bookings"
     ],
-    "45": [
+    "48": [
       "backend_tests_test_dashboard_notifications_endpoints",
       "backend_tests_test_dashboard_notifications_endpoints_create_test_app",
       "backend_tests_test_dashboard_notifications_endpoints_mock_firebase",
@@ -1146,7 +1163,16 @@
       "backend_tests_test_dashboard_notifications_endpoints_test_dashboard_user_endpoint",
       "backend_tests_test_dashboard_notifications_endpoints_test_notifications_endpoints"
     ],
-    "46": [
+    "49": [
+      "backend_transactions_escrow_create_escrow",
+      "backend_transactions_escrow_fund_escrow",
+      "backend_transactions_escrow_py_post",
+      "backend_transactions_escrow_rationale_134",
+      "backend_transactions_escrow_rationale_203",
+      "backend_transactions_escrow_rationale_33",
+      "backend_transactions_escrow_release_escrow"
+    ],
+    "50": [
       "frontend_app_dashboard_search_page_defaultwindow",
       "frontend_app_dashboard_search_page_searchpageinner",
       "frontend_app_dashboard_search_page_searchpageinner_bundleqty",
@@ -1155,16 +1181,7 @@
       "frontend_app_dashboard_search_page_searchpageinner_totarget",
       "frontend_app_dashboard_search_page_sortproducts"
     ],
-    "47": [
-      "frontend_app_layout",
-      "frontend_app_layout_geistmono",
-      "frontend_app_layout_geistsans",
-      "frontend_app_layout_inter",
-      "frontend_app_layout_metadata",
-      "frontend_app_layout_rootlayout",
-      "frontend_app_providers_providers"
-    ],
-    "48": [
+    "51": [
       "frontend_components_auth_auth_split",
       "frontend_components_auth_auth_split_step",
       "frontend_components_brand_logo",
@@ -1173,251 +1190,255 @@
       "frontend_components_landing_navbar",
       "frontend_components_landing_navbar_navbar"
     ],
-    "49": [
+    "52": [
       "backend_transactions_bookings_get_booking_detail",
       "backend_transactions_bookings_get_my_bookings",
       "backend_transactions_bookings_py_get",
       "backend_transactions_bookings_rationale_102",
       "backend_transactions_bookings_rationale_33"
     ],
-    "50": [
+    "53": [
       "backend_transactions_dashboard_get_driver_dashboard",
       "backend_transactions_dashboard_get_user_dashboard",
       "backend_transactions_dashboard_py_get",
       "backend_transactions_dashboard_rationale_116",
       "backend_transactions_dashboard_rationale_26"
     ],
-    "51": [
+    "54": [
       "backend_transactions_evidence_py_post",
       "backend_transactions_evidence_rationale_37",
       "backend_transactions_evidence_rationale_65",
       "backend_transactions_evidence_record_condition_evidence",
       "backend_transactions_evidence_validate_media_type"
     ],
-    "52": [
+    "55": [
       "backend_users_get_current_user_profile",
       "backend_users_get_user_document",
       "backend_users_py_get",
       "backend_users_rationale_104",
       "backend_users_rationale_20"
     ],
-    "53": [
+    "56": [
       "frontend_components_resources_resource_form_sheet_resourceformsheet",
       "frontend_components_resources_resource_form_sheet_resourceformsheet_save",
       "frontend_components_resources_resource_form_sheet_resourceformsheet_update",
       "frontend_components_resources_resource_form_sheet_resourceformsheet_updateslot",
       "frontend_components_resources_resource_form_sheet_todraft"
     ],
-    "54": [
+    "57": [
+      "frontend_lib_mock_store_mockstore_createrequest",
+      "frontend_lib_mock_store_mockstore_getrequests",
+      "frontend_lib_mock_store_mockstore_getresourcebyid",
+      "frontend_lib_types_createrequestinput",
+      "frontend_lib_types_resourcerequest"
+    ],
+    "58": [
+      "frontend_lib_perspective",
+      "frontend_lib_perspective_perspective",
+      "frontend_lib_perspective_perspectivecontext",
+      "frontend_lib_perspective_perspectivecontexttype",
+      "frontend_lib_perspective_perspectiveprovider"
+    ],
+    "59": [
       "backend_clear_firebase",
       "backend_clear_firebase_delete_collection",
       "backend_clear_firebase_main",
       "backend_clear_firebase_rationale_21"
     ],
-    "55": [
+    "60": [
+      "frontend_components_auth_auth_form_authform",
+      "frontend_components_auth_auth_form_authform_handlegoogle",
+      "frontend_components_auth_auth_form_authform_handlesubmit",
+      "frontend_lib_auth_autherrormessage"
+    ],
+    "61": [
       "frontend_components_matching_score_breakdown",
       "frontend_components_matching_score_breakdown_scorebreakdown",
       "frontend_components_matching_score_breakdown_scorebreakdownprops",
       "frontend_components_matching_score_breakdown_scoreitem"
     ],
-    "56": [
+    "62": [
       "frontend_lib_mock_store_mockstore_createdriverroute",
       "frontend_lib_mock_store_mockstore_getdriverroutes",
       "frontend_lib_types_driverroute",
       "frontend_lib_types_driverrouteinput"
     ],
-    "57": [
-      "frontend_lib_mock_store_mockstore_fundescrow",
-      "frontend_lib_mock_store_mockstore_getescrow",
-      "frontend_lib_mock_store_mockstore_releaseescrow",
-      "frontend_lib_types_escrow"
-    ],
-    "58": [
+    "63": [
       "backend_services_category_registry_load_categories",
       "backend_services_category_registry_py_any",
       "backend_services_category_registry_rationale_20"
     ],
-    "59": [
-      "backend_transactions_escrow_get_escrow_detail",
-      "backend_transactions_escrow_py_get",
-      "backend_transactions_escrow_rationale_305"
-    ],
-    "60": [
-      "backend_transactions_notifications_get_user_notifications",
-      "backend_transactions_notifications_py_get",
-      "backend_transactions_notifications_rationale_74"
-    ],
-    "61": [
-      "backend_transactions_notifications_mark_notification_as_read",
-      "backend_transactions_notifications_py_patch",
-      "backend_transactions_notifications_rationale_109"
-    ],
-    "62": [
-      "backend_transactions_requests_get_provider_requests",
-      "backend_transactions_requests_py_get",
-      "backend_transactions_requests_rationale_119"
-    ],
-    "63": [
-      "backend_transactions_reviews_get_user_reviews",
-      "backend_transactions_reviews_py_get",
-      "backend_transactions_reviews_rationale_156"
-    ],
     "64": [
+      "backend_transactions_bookings_confirm_receipt",
+      "backend_transactions_bookings_py_post",
+      "backend_transactions_bookings_rationale_148"
+    ],
+    "65": [
+      "backend_transactions_reviews_create_review",
+      "backend_transactions_reviews_py_post",
+      "backend_transactions_reviews_rationale_32"
+    ],
+    "66": [
       "backend_users_create_user_profile",
       "backend_users_py_post",
       "backend_users_rationale_40"
     ],
-    "65": [
+    "67": [
+      "frontend_components_matching_radial_score",
+      "frontend_components_matching_radial_score_radialscore",
+      "frontend_components_matching_radial_score_radialscoreprops"
+    ],
+    "68": [
       "backend_services_init",
       "backend_services_init_rationale_1"
     ],
-    "66": [
+    "69": [
       "clsx",
       "frontend_package_dependencies_clsx"
     ],
-    "67": [
+    "70": [
       "cn",
       "frontend_package_dependencies_cn"
     ],
-    "68": [
+    "71": [
       "date_fns",
       "frontend_package_dependencies_date_fns"
     ],
-    "69": [
+    "72": [
       "frontend_components_logistics_route_visualizer",
       "frontend_components_logistics_route_visualizer_routevisualizer"
     ],
-    "70": [
+    "73": [
       "frontend_eslint_config",
       "frontend_eslint_config_eslintconfig"
     ],
-    "71": [
+    "74": [
       "frontend_next_config",
       "frontend_next_config_nextconfig"
     ],
-    "72": [
+    "75": [
       "frontend_package_dependencies_hugeicons_react",
       "hugeicons_react"
     ],
-    "73": [
+    "76": [
       "frontend_package_dependencies_next_themes",
       "next_themes"
     ],
-    "74": [
+    "77": [
       "frontend_package_dependencies_radix_ui",
       "radix_ui"
     ],
-    "75": [
+    "78": [
       "frontend_package_dependencies_react_dom",
       "react_dom"
     ],
-    "76": [
+    "79": [
       "frontend_package_dependencies_shadcn",
       "shadcn"
     ],
-    "77": [
+    "80": [
       "frontend_package_dependencies_sonner",
       "sonner"
     ],
-    "78": [
+    "81": [
       "frontend_package_dependencies_tailwind_merge",
       "tailwind_merge"
     ],
-    "79": [
+    "82": [
       "frontend_postcss_config",
       "frontend_postcss_config_config"
     ],
-    "80": [
+    "83": [
       "backend_core_init"
     ],
-    "81": [
+    "84": [
       "backend_main_py_basemodel"
     ],
-    "82": [
+    "85": [
       "backend_main_py_get"
     ],
-    "83": [
+    "86": [
       "backend_main_py_post"
     ],
-    "84": [
+    "87": [
       "backend_tests_conftest"
     ],
-    "85": [
+    "88": [
       "backend_tests_init"
     ],
-    "86": [
+    "89": [
       "str"
     ]
   },
   "cohesion": {
-    "0": 0.0735779460298971,
-    "1": 0.05649350649350649,
-    "2": 0.05117845117845118,
-    "3": 0.06901960784313725,
-    "4": 0.10336817653890824,
-    "5": 0.07073170731707316,
-    "6": 0.09915966386554621,
-    "7": 0.08021390374331551,
-    "8": 0.06896551724137931,
-    "9": 0.10317460317460317,
-    "10": 0.10846560846560846,
-    "11": 0.14,
-    "12": 0.10507246376811594,
-    "13": 0.14855072463768115,
-    "14": 0.18181818181818182,
-    "15": 0.09090909090909091,
-    "16": 0.1471861471861472,
-    "17": 0.19523809523809524,
-    "18": 0.1523809523809524,
-    "19": 0.1380952380952381,
-    "20": 0.1631578947368421,
-    "21": 0.15789473684210525,
-    "22": 0.14035087719298245,
-    "23": 0.1111111111111111,
-    "24": 0.20915032679738563,
-    "25": 0.1830065359477124,
+    "0": 0.07503607503607504,
+    "1": 0.05117845117845118,
+    "2": 0.06901960784313725,
+    "3": 0.06866002214839424,
+    "4": 0.09915966386554621,
+    "5": 0.08021390374331551,
+    "6": 0.11174242424242424,
+    "7": 0.12258064516129032,
+    "8": 0.1330049261083744,
+    "9": 0.16009852216748768,
+    "10": 0.06896551724137931,
+    "11": 0.10317460317460317,
+    "12": 0.1164021164021164,
+    "13": 0.11384615384615385,
+    "14": 0.14333333333333334,
+    "15": 0.10507246376811594,
+    "16": 0.12681159420289856,
+    "17": 0.15810276679841898,
+    "18": 0.09090909090909091,
+    "19": 0.19913419913419914,
+    "20": 0.1471861471861472,
+    "21": 0.1631578947368421,
+    "22": 0.15789473684210525,
+    "23": 0.13450292397660818,
+    "24": 0.1871345029239766,
+    "25": 0.11764705882352941,
     "26": 0.11764705882352941,
-    "27": 0.11764705882352941,
-    "28": 0.15441176470588236,
-    "29": 0.2,
-    "30": 0.25,
-    "31": 0.20952380952380953,
-    "32": 0.18095238095238095,
-    "33": 0.19230769230769232,
-    "34": 0.23636363636363636,
+    "27": 0.2,
+    "28": 0.16666666666666666,
+    "29": 0.20952380952380953,
+    "30": 0.18681318681318682,
+    "31": 0.2087912087912088,
+    "32": 0.19230769230769232,
+    "33": 0.3333333333333333,
+    "34": 0.22727272727272727,
     "35": 0.2545454545454545,
-    "36": 0.23636363636363636,
-    "37": 0.28888888888888886,
-    "38": 0.26666666666666666,
-    "39": 0.2777777777777778,
-    "40": 0.3333333333333333,
-    "41": 0.2777777777777778,
-    "42": 0.2222222222222222,
-    "43": 0.32142857142857145,
-    "44": 0.42857142857142855,
-    "45": 0.42857142857142855,
-    "46": 0.3333333333333333,
-    "47": 0.2857142857142857,
-    "48": 0.47619047619047616,
-    "49": 0.4,
-    "50": 0.4,
-    "51": 0.4,
+    "36": 0.21818181818181817,
+    "37": 0.23636363636363636,
+    "38": 0.28888888888888886,
+    "39": 0.26666666666666666,
+    "40": 0.24444444444444444,
+    "41": 0.28888888888888886,
+    "42": 0.2777777777777778,
+    "43": 0.3333333333333333,
+    "44": 0.2222222222222222,
+    "45": 0.32142857142857145,
+    "46": 0.32142857142857145,
+    "47": 0.42857142857142855,
+    "48": 0.42857142857142855,
+    "49": 0.2857142857142857,
+    "50": 0.3333333333333333,
+    "51": 0.47619047619047616,
     "52": 0.4,
-    "53": 0.6,
-    "54": 0.6666666666666666,
-    "55": 0.5,
-    "56": 0.5,
-    "57": 0.8333333333333334,
-    "58": 0.6666666666666666,
+    "53": 0.4,
+    "54": 0.4,
+    "55": 0.4,
+    "56": 0.6,
+    "57": 0.4,
+    "58": 0.4,
     "59": 0.6666666666666666,
     "60": 0.6666666666666666,
-    "61": 0.6666666666666666,
-    "62": 0.6666666666666666,
+    "61": 0.5,
+    "62": 0.5,
     "63": 0.6666666666666666,
     "64": 0.6666666666666666,
-    "65": 1.0,
-    "66": 1.0,
-    "67": 1.0,
+    "65": 0.6666666666666666,
+    "66": 0.6666666666666666,
+    "67": 0.6666666666666666,
     "68": 1.0,
     "69": 1.0,
     "70": 1.0,
@@ -1436,7 +1457,10 @@
     "83": 1.0,
     "84": 1.0,
     "85": 1.0,
-    "86": 1.0
+    "86": 1.0,
+    "87": 1.0,
+    "88": 1.0,
+    "89": 1.0
   },
   "gods": [
     {
@@ -1447,7 +1471,7 @@
     {
       "id": "frontend_components_ui_button_button",
       "label": "Button()",
-      "degree": 49
+      "degree": 50
     },
     {
       "id": "frontend_lib_mock_store_mockstore",
@@ -1455,24 +1479,24 @@
       "degree": 44
     },
     {
-      "id": "frontend_hooks_use_api_useapi",
-      "label": "useApi()",
-      "degree": 28
-    },
-    {
       "id": "frontend_lib_format_inr",
       "label": "inr()",
-      "degree": 27
+      "degree": 30
+    },
+    {
+      "id": "frontend_hooks_use_api_useapi",
+      "label": "useApi()",
+      "degree": 29
     },
     {
       "id": "frontend_components_ui_spinner_spinner",
       "label": "Spinner()",
-      "degree": 23
+      "degree": 24
     },
     {
       "id": "frontend_components_ui_badge_badge",
       "label": "Badge()",
-      "degree": 22
+      "degree": 23
     },
     {
       "id": "frontend_lib_format_shortdate",
@@ -1485,23 +1509,12 @@
       "degree": 19
     },
     {
-      "id": "frontend_lib_session_usebusinesssession",
-      "label": "useBusinessSession()",
+      "id": "frontend_lib_format_humanize",
+      "label": "humanize()",
       "degree": 18
     }
   ],
   "surprises": [
-    {
-      "source": "RoleCard()",
-      "target": "cn()",
-      "source_files": [
-        "frontend/components/landing/closing.tsx",
-        "frontend/lib/utils.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities; peripheral node `RoleCard()` unexpectedly reaches hub `cn()`"
-    },
     {
       "source": "DropdownMenuCheckboxItem()",
       "target": "cn()",
@@ -1545,6 +1558,17 @@
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "bridges separate communities; peripheral node `DropdownMenuSubContent()` unexpectedly reaches hub `cn()`"
+    },
+    {
+      "source": "DropdownMenuSubTrigger()",
+      "target": "cn()",
+      "source_files": [
+        "frontend/components/ui/dropdown-menu.tsx",
+        "frontend/lib/utils.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `DropdownMenuSubTrigger()` unexpectedly reaches hub `cn()`"
     }
   ],
   "tokens": {

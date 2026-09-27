@@ -82,11 +82,22 @@ export const logisticsApi = {
 
 export const requestsApi = {
   create: (data: CreateRequestInput) => api.post<ResourceRequest>("/requests", data),
+  getById: (id: string) => api.get<ResourceRequest>(`/requests/${id}`),
   getProviderRequests: (status?: string) =>
     api.get<ResourceRequest[]>("/requests/provider", { status }),
   counter: (id: string, data: CounterInput) => api.post<unknown>(`/requests/${id}/counter`, data),
-  accept: (id: string) =>
-    api.post<{ requestId: string; status: string; bookingId: string }>(`/requests/${id}/accept`),
+  sendMessage: (
+    id: string,
+    data: {
+      message: string;
+      amount?: number;
+      departureTime?: string;
+      arrivalTime?: string;
+      type?: string;
+    },
+  ) => api.post<unknown>(`/requests/${id}/messages`, data),
+  accept: (id: string, data?: { deliveryAmount?: number; depositAmount?: number }) =>
+    api.post<{ requestId: string; status: string; bookingId: string }>(`/requests/${id}/accept`, data ?? {}),
   reject: (id: string, reason?: string) => api.post<unknown>(`/requests/${id}/reject`, { reason }),
 };
 
@@ -111,6 +122,7 @@ export const escrowApi = {
 
 export const evidenceApi = {
   create: (data: EvidenceInput) => api.post<ConditionEvidence>("/condition-evidence", data),
+  getByBooking: (bookingId: string) => api.get<ConditionEvidence[]>(`/condition-evidence/${bookingId}`),
 };
 
 export const reviewsApi = {

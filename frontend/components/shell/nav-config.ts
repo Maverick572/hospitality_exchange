@@ -87,6 +87,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     "/dashboard/smart-matches": { title: "Smart Matches", icon: SparklesIcon },
     "/dashboard/search": { title: "Natural Language Search", icon: SearchIcon },
     "/dashboard/providers": { title: "Provider Profile", icon: UserRoundIcon },
+    "/dashboard/negotiation": { title: "Offer Negotiation & Handover", icon: HandshakeIcon },
     "/dashboard/bookings/": { title: "Booking Details & Escrow", icon: CalendarCheckIcon },
   },
 };

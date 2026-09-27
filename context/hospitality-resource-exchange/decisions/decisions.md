@@ -179,5 +179,17 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D018 — Two-Phase Category-Coupled Handover & Mandatory Return Evidence Verification Protocol
+- **Date:** 2026-09-27
+- **Decision:** Implemented an end-to-end B2B chat negotiation and two-phase visual condition verification system (`frontend/app/dashboard/negotiation/page.tsx`, `backend/transactions/evidence.py`, `backend/transactions/requests.py`). After confirming a booking/logistics match, the buyer and seller enter an active negotiation channel to lock rate, quantity, and scheduled transit window (departure & arrival times computed from OSRM). Upon offer acceptance, the workflow enforces a strict two-phase condition evidence lifecycle:
+  1. **Sender Pre-Transit Handover (Export/Dispatch Phase):** The seller must log visual evidence conforming to the resource category rule in `shared/categories.json` (photo for physical goods, video for powered equipment, photo+video for spatial/structural assets). Convoy dispatch is locked until valid pre-transit evidence is saved.
+  2. **Receiver Mandatory Return Handover (Return/Check-In Phase):** When the rental period concludes, the receiver is mandatorily required to submit return condition media (photo or video as dictated by category) and confirm undamaged return. The side-by-side verification inspector compares departure vs return state, and return sign-off atomically triggers the release of the escrow damage deposit (₹2,000).
+- **Alternatives considered:** Relying on informal off-platform chat without structured offer locking, or allowing unverified returns without mandatory condition media.
+- **Rejected because:** Unstructured negotiation causes transit timing misalignment, and absence of mandatory return evidence makes damage disputes unarbitrable.
+- **Accepted because:** Enforces cryptographic/media accountability at both export and return, couples evidence formats to physical asset requirements, and establishes a seamless bridge from fleet pooling to escrow release.
+- **Status:** implemented
+- **Supersedes:** —
+
+
 
 

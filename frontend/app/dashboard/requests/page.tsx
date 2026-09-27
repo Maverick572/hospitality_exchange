@@ -205,6 +205,20 @@ export default function RequestsPage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        asChild
+                        className="text-xs"
+                      >
+                        <Link
+                          href={`/dashboard/negotiation?resource=${encodeURIComponent(request.resource?.name ?? "Resource")}&qty=${request.requestedQuantity}&amount=${request.counterPrice ?? request.offeredPrice}&provider=${encodeURIComponent("Taj Lands End, Bandra West")}&seeker=${encodeURIComponent(request.seeker?.businessName ?? "Buyer")}&dep=08:15&arr=08:42`}
+                        >
+                          <MessageSquareIcon className="size-3 mr-1" />
+                          Chat
+                        </Link>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => setCountering(target)}
                         className="text-xs"
                       >

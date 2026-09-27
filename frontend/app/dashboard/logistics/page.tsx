@@ -203,9 +203,22 @@ function LogisticsContent() {
       return;
     }
     setConfirmed(true);
+    toast.success("Booking proposal initiated! Opening negotiation chat...", { icon: "🤝" });
+    const params = new URLSearchParams({
+      resource: `${requiredQty} × Cushioned Banquet Chairs (Co-loaded Route)`,
+      qty: String(requiredQty),
+      amount: String(activeTab === "pooled" && pool ? pool.totalPrice : (topRoute?.price ?? 4250)),
+      provider: pickupParam ?? "Taj Lands End, Bandra West, Mumbai",
+      seeker: deliveryParam ?? "Jio World Centre, G Block, BKC, Mumbai",
+      dep: pool?.drivers?.[0]?.departureTime ?? topRoute?.departureTime ?? "08:15",
+      arr: pool?.drivers?.[0]?.arrivalTime ?? topRoute?.arrivalTime ?? "08:42",
+      category: "banquet_seating",
+      evidenceType: "photo",
+      vehicles: String(pool?.vehicleCount ?? 3),
+    });
     setTimeout(() => {
-      router.push("/dashboard/requests");
-    }, 1200);
+      router.push(`/dashboard/negotiation?${params.toString()}`);
+    }, 900);
   };
 
   const dedicatedCost = pool?.dedicatedTripCost ?? 8000;

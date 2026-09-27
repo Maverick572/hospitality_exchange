@@ -211,6 +211,18 @@ export type SearchInput = {
 
 export type RequestStatus = "pending" | "countered" | "accepted" | "rejected" | string;
 
+export type NegotiationMessage = {
+  id: string;
+  senderId: string;
+  senderName: string;
+  type: "request" | "counter" | "accept" | "message" | string;
+  content: string;
+  amount?: number;
+  departureTime?: string;
+  arrivalTime?: string;
+  timestamp: string;
+};
+
 export type ResourceRequest = {
   requestId: string;
   requirementId?: string | null;
@@ -225,8 +237,12 @@ export type ResourceRequest = {
   message: string;
   status: RequestStatus;
   bookingId?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  messages?: NegotiationMessage[];
   seeker?: { userId: string; businessName: string; contactName?: string; phone?: string; rating?: number };
-  resource?: { resourceId: string; name: string };
+  provider?: { userId: string; businessName: string; contactName?: string; phone?: string; rating?: number };
+  resource?: { resourceId: string; name: string; category?: string; price?: number; location?: GeoLocation | null };
   createdAt: string;
   updatedAt: string;
 };
@@ -238,6 +254,8 @@ export type CreateRequestInput = {
   requestedQuantity: number;
   offeredPrice: number;
   message: string;
+  departureTime?: string;
+  arrivalTime?: string;
 };
 
 export type CounterInput = {
@@ -246,14 +264,19 @@ export type CounterInput = {
   quantity?: number;
   message?: string;
   notes?: string;
+  departureTime?: string;
+  arrivalTime?: string;
 };
 
 export type BookingStatus =
   | "confirmed"
   | "driver_assigned"
+  | "pre_transit_inspected"
   | "picked_up"
   | "in_transit"
   | "delivered"
+  | "return_initiated"
+  | "return_inspected"
   | "completed"
   | "cancelled"
   | string;
@@ -261,13 +284,14 @@ export type BookingStatus =
 export type ConditionEvidence = {
   evidenceId: string;
   bookingId: string;
-  stage: "PICKUP" | "DELIVERY" | string;
+  stage: "PICKUP" | "DELIVERY" | "RETURN" | string;
   type: string;
   imageUrl: string;
-  mediaType?: string;
+  mediaType?: "photo" | "video" | string;
   description?: string;
   uploadedBy?: string;
   createdAt?: string;
+  timestamp?: string;
 };
 
 export type Booking = {
@@ -288,6 +312,8 @@ export type Booking = {
   deliveryLocation?: Partial<GeoLocation> | null;
   pickupDate?: string | null;
   deliveryDate?: string | null;
+  departureTime?: string | null;
+  arrivalTime?: string | null;
   status: BookingStatus;
   escrowStatus?: string;
   escrowId?: string;
