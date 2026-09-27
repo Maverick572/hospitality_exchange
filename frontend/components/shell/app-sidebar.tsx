@@ -14,6 +14,7 @@ import {
   HandshakeIcon,
   HotelIcon,
   LogOutIcon,
+  MessageSquareIcon,
   PackageIcon,
   SearchIcon,
   SparklesIcon,
@@ -229,6 +230,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   {
                     label: "TRANSACTIONS",
                     items: [
+                      { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
                       { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
                       { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
                     ],
@@ -252,6 +254,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   {
                     label: "TRANSACTIONS",
                     items: [
+                      { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
                       { href: "/dashboard/requests", icon: HandshakeIcon, label: "Incoming Requests" },
                       { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Payouts" },
                     ],

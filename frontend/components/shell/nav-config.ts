@@ -64,7 +64,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     {
       label: "TRANSACTIONS",
       items: [
-        { href: "/dashboard/negotiation", icon: MessageSquareIcon, label: "Negotiation Chat", badge: "LIVE" },
+        { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
         { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
         { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
       ],
@@ -76,7 +76,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },
     { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
     { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
-    { href: "/dashboard/negotiation", icon: MessageSquareIcon, label: "Negotiation Chat" },
+    { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations" },
     { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
     { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
   ],
@@ -90,6 +90,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     "/dashboard/smart-matches": { title: "Smart Matches", icon: SparklesIcon },
     "/dashboard/search": { title: "Natural Language Search", icon: SearchIcon },
     "/dashboard/providers": { title: "Provider Profile", icon: UserRoundIcon },
+    "/dashboard/conversations": { title: "Encrypted B2B Conversations", icon: MessageSquareIcon },
     "/dashboard/negotiation": { title: "Offer Negotiation & Handover", icon: HandshakeIcon },
     "/dashboard/bookings/": { title: "Booking Details & Escrow", icon: CalendarCheckIcon },
   },

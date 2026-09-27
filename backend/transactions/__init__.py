@@ -29,6 +29,7 @@ from transactions.evidence import router as evidence_router
 from transactions.reviews import router as reviews_router
 from transactions.notifications import router as notifications_router
 from transactions.dashboard import router as dashboard_router
+from transactions.conversations import router as conversations_router
 
 router = APIRouter()
 
@@ -40,5 +41,6 @@ router.include_router(evidence_router)
 router.include_router(reviews_router)
 router.include_router(notifications_router)
 router.include_router(dashboard_router)
+router.include_router(conversations_router)
 
 __all__ = ["router"]

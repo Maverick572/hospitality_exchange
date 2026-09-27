@@ -171,3 +171,71 @@ export const deliveriesApi = {
   updateStatus: (id: string, status: DeliveryStatus) =>
     api.patch<unknown>(`/delivery-requests/${id}/status`, { status }),
 };
+
+export type EncryptedConversation = {
+  conversationId: string;
+  participants: string[];
+  participantNames?: Record<string, string>;
+  partnerName: string;
+  partnerAddress?: string;
+  tradeRole: "buyer" | "seller";
+  resourceTitle: string;
+  category?: string;
+  evidenceType?: "photo" | "video" | "photo_video";
+  status: "negotiating" | "accepted" | "in_transit" | "completed" | "cancelled";
+  currentAmount?: number;
+  departureTime?: string;
+  arrivalTime?: string;
+  lastMessageCiphertext?: string;
+  lastMessage?: string;
+  lastTimestamp: string;
+  unreadCount?: number;
+  encryptionStandard?: string;
+  isEncrypted?: boolean;
+  messages?: EncryptedMessage[];
+};
+
+export type EncryptedMessage = {
+  id: string;
+  conversationId?: string;
+  senderId: string;
+  senderName: string;
+  type: "message" | "request" | "counter" | "accept" | "dispatch" | "return";
+  text: string;
+  ciphertextSample?: string;
+  amount?: number;
+  depTime?: string;
+  arrTime?: string;
+  timestamp: string;
+  isEncrypted?: boolean;
+};
+
+export const conversationsApi = {
+  list: (role?: string) =>
+    api.get<EncryptedConversation[]>(role ? `/conversations?role=${role}` : "/conversations"),
+  getById: (id: string) =>
+    api.get<EncryptedConversation>(`/conversations/${id}`),
+  sendMessage: (
+    id: string,
+    data: {
+      text: string;
+      type?: string;
+      amount?: number;
+      depTime?: string;
+      arrTime?: string;
+    },
+  ) => api.post<EncryptedMessage>(`/conversations/${id}/messages`, data),
+  create: (data: {
+    partnerId: string;
+    partnerName: string;
+    resourceTitle: string;
+    category?: string;
+    evidenceType?: string;
+    initialMessage?: string;
+    amount?: number;
+    depTime?: string;
+    arrTime?: string;
+    tradeRole?: string;
+  }) => api.post<EncryptedConversation>("/conversations", data),
+};
+
