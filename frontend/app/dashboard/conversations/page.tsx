@@ -93,7 +93,7 @@ function ConversationsContent() {
   const { perspective, togglePerspective } = usePerspective();
   const { profile } = useBusinessSession();
 
-  const currentBusinessName = profile?.businessName || profile?.name || "Taj Lands End";
+  const currentBusinessName = profile?.businessName || profile?.name || "My Business";
   const currentUserId = profile?.userId || resolveBusinessUid(currentBusinessName);
 
   // States
@@ -102,6 +102,7 @@ function ConversationsContent() {
   const [activeConv, setActiveConv] = useState<EncryptedConversation | null>(null);
   const [messages, setMessages] = useState<EncryptedMessage[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<"all" | "buyer" | "seller">("all");
@@ -110,12 +111,13 @@ function ConversationsContent() {
 
   // Modals & Drawers
   const [showCounterModal, setShowCounterModal] = useState(false);
-  const [counterPrice, setCounterPrice] = useState(4100);
-  const [counterDepTime, setCounterDepTime] = useState("08:15");
-  const [counterArrTime, setCounterArrTime] = useState("08:45");
+  const [counterPrice, setCounterPrice] = useState<number>(0);
+  const [counterDepTime, setCounterDepTime] = useState("");
+  const [counterArrTime, setCounterArrTime] = useState("");
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
   const [evidenceStage, setEvidenceStage] = useState<"PICKUP" | "DELIVERY">("PICKUP");
   const [evidenceNotes, setEvidenceNotes] = useState("");
+  const [customEvidenceUrl, setCustomEvidenceUrl] = useState("");
   const [showCiphertextModal, setShowCiphertextModal] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -140,6 +142,7 @@ function ConversationsContent() {
   const loadConversations = async (selectFirst = false) => {
     try {
       setLoadingList(true);
+      setListError(null);
       const data = await conversationsApi.list();
       let list = data || [];
 
@@ -167,8 +170,8 @@ function ConversationsContent() {
               partnerId: partnerIdParam || resolveBusinessUid(partnerNameParam || "Provider"),
               partnerName: partnerNameParam || "Provider",
               resourceTitle: resourceParam || "Requested Hospitality Resource",
-              amount: amountParam ? Number(amountParam) : 4100,
-              category: categoryParam || "banquet_seating",
+              amount: amountParam ? Number(amountParam) : 0,
+              category: categoryParam || "general",
               tradeRole: perspective === "seeker" ? "seller" : "buyer",
               initialMessage: `Booking inquiry initiated for ${resourceParam || "hospitality inventory"}. Terms encrypted with AES-128.`,
             });
@@ -194,9 +197,11 @@ function ConversationsContent() {
           if (match) setActiveConv(match);
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to load conversations:", err);
-      toast.error("Could not load encrypted conversations");
+      const msg = err instanceof Error ? err.message : "Could not load encrypted conversations";
+      setListError(msg);
+      toast.error(msg);
     } finally {
       setLoadingList(false);
     }
@@ -354,7 +359,7 @@ function ConversationsContent() {
           ? SAMPLE_MEDIA.photo.sender
           : SAMPLE_MEDIA.photo.receiver;
 
-    const uploaderRole = evidenceStage === "PICKUP" ? "Sender (Taj Lands End)" : "Receiver (Counterpart)";
+    const uploaderRole = evidenceStage === "PICKUP" ? `Sender (${currentBusinessName})` : `Receiver (${activeConv?.partnerName || "Counterpart"})`;
     const evidenceText = `[Condition Evidence] Stage: ${evidenceStage === "PICKUP" ? "Pickup / Pre-transit" : "Return / Delivery Inspection"} | Category: ${cat.label} (${mediaType.toUpperCase()}) | Uploader: ${uploaderRole} | File: ${sampleUrl} | Notes: ${evidenceNotes || "Verified compliant with category standard"}`;
 
     try {
@@ -521,6 +526,23 @@ function ConversationsContent() {
               <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                 <RefreshCwIcon className="size-6 animate-spin text-primary mb-2" />
                 <p className="text-xs">Decrypting conversations...</p>
+              </div>
+            ) : listError ? (
+              <div className="flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+                <ShieldAlertIcon className="size-8 text-destructive/80 mb-2" />
+                <p className="text-xs font-semibold text-foreground">Failed to connect to backend</p>
+                <p className="text-[11px] text-muted-foreground mt-1 max-w-[240px] break-words">
+                  {listError}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadConversations(true)}
+                  className="mt-3 text-xs gap-1.5"
+                >
+                  <RefreshCwIcon className="size-3.5" />
+                  Retry Connection
+                </Button>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">

@@ -90,12 +90,18 @@ function demoUserFromToken(token: string, email: string, name?: string): AuthUse
 /** Current ID token for API calls, or null when signed out. */
 export async function getIdToken(): Promise<string | null> {
   if (firebaseEnabled) {
-    const auth = firebaseAuth();
-    if (typeof auth.authStateReady === "function") {
-      await auth.authStateReady();
+    try {
+      const auth = firebaseAuth();
+      if (typeof auth.authStateReady === "function") {
+        await auth.authStateReady();
+      }
+      const current = auth.currentUser;
+      if (current) {
+        return await current.getIdToken();
+      }
+    } catch {
+      // Fall through to stored token
     }
-    const current = auth.currentUser;
-    return current ? current.getIdToken() : null;
   }
   return readStorage(DEMO_TOKEN_KEY);
 }
