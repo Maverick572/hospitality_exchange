@@ -211,7 +211,7 @@ export default function RequestsPage() {
                         className="text-xs"
                       >
                         <Link
-                          href={`/dashboard/negotiation?requestId=${request.requestId}&resource=${encodeURIComponent(request.resource?.name ?? "Resource")}&qty=${request.requestedQuantity}&amount=${request.counterPrice ?? request.offeredPrice}&provider=${encodeURIComponent(request.provider?.businessName ?? "Provider")}&seeker=${encodeURIComponent(request.seeker?.businessName ?? "Seeker")}`}
+                          href={`/dashboard/conversations?id=${request.requestId}&resource=${encodeURIComponent(request.resource?.name ?? "Resource")}&amount=${request.counterPrice ?? request.offeredPrice}&partnerName=${encodeURIComponent(request.seeker?.businessName ?? "Seeker")}&partnerId=${encodeURIComponent(request.seeker?.userId ?? request.seeker?.businessName ?? "Seeker")}&category=${encodeURIComponent(request.resource?.category ?? "general")}`}
                         >
                           <MessageSquareIcon className="size-3 mr-1" />
                           Chat & Negotiate

@@ -4,30 +4,21 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
   BadgeCheckIcon,
   Building2Icon,
   CameraIcon,
   CheckCheckIcon,
   CheckCircle2Icon,
-  ClockIcon,
-  EyeIcon,
   HandshakeIcon,
-  InfoIcon,
-  KeyIcon,
   LockIcon,
-  MapPinIcon,
   MessageSquareIcon,
   PaperclipIcon,
   RefreshCwIcon,
   SendIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   TruckIcon,
   UploadCloudIcon,
-  UserCheckIcon,
   VideoIcon,
   XIcon,
 } from "lucide-react";
@@ -60,16 +51,7 @@ type CategoryDef = {
   keywords: string[];
 };
 
-const SAMPLE_MEDIA = {
-  photo: {
-    sender: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80",
-    receiver: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80",
-  },
-  video: {
-    sender: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    receiver: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-  },
-};
+
 
 function resolveCategory(catParam?: string, resourceTitle?: string): CategoryDef {
   const categories: CategoryDef[] = categoriesData.categories as CategoryDef[];
@@ -172,7 +154,8 @@ function ConversationsContent() {
               resourceTitle: resourceParam || "Requested Hospitality Resource",
               amount: amountParam ? Number(amountParam) : 0,
               category: categoryParam || "general",
-              tradeRole: perspective === "seeker" ? "seller" : "buyer",
+              tradeRole: perspective === "seeker" ? "buyer" : "seller",
+              senderName: currentBusinessName,
               initialMessage: `Booking inquiry initiated for ${resourceParam || "hospitality inventory"}. Terms encrypted with AES-128.`,
             });
             list = [created, ...list];
@@ -209,16 +192,29 @@ function ConversationsContent() {
 
   useEffect(() => {
     loadConversations(true);
+
+    // Periodically sync conversation list in background every 6 seconds
+    const listInterval = setInterval(() => {
+      conversationsApi.list().then((freshList) => {
+        if (freshList && Array.isArray(freshList)) {
+          setConversations(freshList);
+        }
+      }).catch(() => {});
+    }, 6000);
+
+    return () => {
+      clearInterval(listInterval);
+    };
   }, [partnerNameParam, resourceParam]);
 
-  // Fetch active conversation details and decrypted messages
+  // Fetch active conversation details and decrypted messages with live polling
   useEffect(() => {
     if (!activeConvId) return;
 
     let isMounted = true;
-    const fetchActiveDetails = async () => {
+    const fetchActiveDetails = async (showSpinner = false) => {
       try {
-        setLoadingMessages(true);
+        if (showSpinner) setLoadingMessages(true);
         const data = await conversationsApi.getById(activeConvId);
         if (!isMounted) return;
 
@@ -228,17 +224,37 @@ function ConversationsContent() {
         if (data.departureTime) setCounterDepTime(data.departureTime);
         if (data.arrivalTime) setCounterArrTime(data.arrivalTime);
       } catch (err) {
-        console.error("Failed to load conversation details:", err);
-        toast.error("Access restricted: Chats are strictly between participants.");
+        if (showSpinner) {
+          console.error("Failed to load conversation details:", err);
+          toast.error("Access restricted: Chats are strictly between participants.");
+        }
       } finally {
-        if (isMounted) setLoadingMessages(false);
+        if (isMounted && showSpinner) setLoadingMessages(false);
       }
     };
 
-    fetchActiveDetails();
+    fetchActiveDetails(true);
+
+    // Polling every 2.5s for incoming counterpart messages
+    const pollInterval = setInterval(() => {
+      fetchActiveDetails(false);
+    }, 2500);
+
+    // Cross-tab real-time event sync via BroadcastChannel
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("hrex_b2b_chat");
+      bc.onmessage = (event) => {
+        if (event.data?.convId === activeConvId) {
+          fetchActiveDetails(false);
+        }
+      };
+    } catch {}
 
     return () => {
       isMounted = false;
+      clearInterval(pollInterval);
+      if (bc) bc.close();
     };
   }, [activeConvId]);
 
@@ -255,6 +271,7 @@ function ConversationsContent() {
       const newMsg = await conversationsApi.sendMessage(activeConvId, {
         text: textToSend,
         type: "message",
+        senderName: currentBusinessName,
       });
 
       setMessages((prev) => [...prev, newMsg]);
@@ -267,6 +284,14 @@ function ConversationsContent() {
             : c,
         ),
       );
+
+      // Broadcast to other tabs/windows
+      try {
+        const bc = new BroadcastChannel("hrex_b2b_chat");
+        bc.postMessage({ convId: activeConvId });
+        bc.close();
+      } catch {}
+
       toast.success("Message encrypted with AES-128 & stored in DB");
     } catch (err) {
       console.error("Failed to send message:", err);
@@ -291,6 +316,7 @@ function ConversationsContent() {
         amount: counterPrice,
         depTime: counterDepTime,
         arrTime: counterArrTime,
+        senderName: currentBusinessName,
       });
 
       setMessages((prev) => [...prev, newMsg]);
@@ -305,6 +331,13 @@ function ConversationsContent() {
             }
           : null,
       );
+
+      // Broadcast to other tabs/windows
+      try {
+        const bc = new BroadcastChannel("hrex_b2b_chat");
+        bc.postMessage({ convId: activeConvId });
+        bc.close();
+      } catch {}
 
       setShowCounterModal(false);
       toast.success("Counter-offer encrypted & proposed!");
@@ -330,10 +363,19 @@ function ConversationsContent() {
         amount: activeConv?.currentAmount || counterPrice,
         depTime: activeConv?.departureTime || counterDepTime,
         arrTime: activeConv?.arrivalTime || counterArrTime,
+        senderName: currentBusinessName,
       });
 
       setMessages((prev) => [...prev, newMsg]);
       setActiveConv((prev) => (prev ? { ...prev, status: "accepted" } : null));
+
+      // Broadcast to other tabs/windows
+      try {
+        const bc = new BroadcastChannel("hrex_b2b_chat");
+        bc.postMessage({ convId: activeConvId });
+        bc.close();
+      } catch {}
+
       toast.success("Offer accepted! Escrow and delivery schedule locked.");
     } catch (err) {
       console.error("Accept failed:", err);
@@ -350,27 +392,29 @@ function ConversationsContent() {
 
     const cat = resolveCategory(activeConv.category, activeConv.resourceTitle);
     const mediaType = cat.evidenceType === "video" ? "video" : "photo";
-    const sampleUrl =
-      mediaType === "video"
-        ? evidenceStage === "PICKUP"
-          ? SAMPLE_MEDIA.video.sender
-          : SAMPLE_MEDIA.video.receiver
-        : evidenceStage === "PICKUP"
-          ? SAMPLE_MEDIA.photo.sender
-          : SAMPLE_MEDIA.photo.receiver;
+    const fileRef = customEvidenceUrl.trim() || `[${mediaType} uploaded by user]`;
 
     const uploaderRole = evidenceStage === "PICKUP" ? `Sender (${currentBusinessName})` : `Receiver (${activeConv?.partnerName || "Counterpart"})`;
-    const evidenceText = `[Condition Evidence] Stage: ${evidenceStage === "PICKUP" ? "Pickup / Pre-transit" : "Return / Delivery Inspection"} | Category: ${cat.label} (${mediaType.toUpperCase()}) | Uploader: ${uploaderRole} | File: ${sampleUrl} | Notes: ${evidenceNotes || "Verified compliant with category standard"}`;
+    const evidenceText = `[Condition Evidence] Stage: ${evidenceStage === "PICKUP" ? "Pickup / Pre-transit" : "Return / Delivery Inspection"} | Category: ${cat.label} (${mediaType.toUpperCase()}) | Uploader: ${uploaderRole} | File: ${fileRef} | Notes: ${evidenceNotes || "Verified compliant with category standard"}`;
 
     try {
       const newMsg = await conversationsApi.sendMessage(activeConvId, {
         text: evidenceText,
         type: evidenceStage === "PICKUP" ? "dispatch" : "return",
+        senderName: currentBusinessName,
       });
 
       setMessages((prev) => [...prev, newMsg]);
       setShowEvidenceModal(false);
       setEvidenceNotes("");
+
+      // Broadcast to other tabs/windows
+      try {
+        const bc = new BroadcastChannel("hrex_b2b_chat");
+        bc.postMessage({ convId: activeConvId });
+        bc.close();
+      } catch {}
+
       toast.success(
         `Category condition ${mediaType === "video" ? "operational video" : "photo proof"} verified & saved!`,
       );
@@ -584,7 +628,7 @@ function ConversationsContent() {
                           variant="secondary"
                           className="px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wider"
                         >
-                          {conv.tradeRole === "buyer" ? "Buyer" : "Seller"}
+                          {conv.tradeRole === "buyer" ? "Buying" : "Selling"}
                         </Badge>
                         <span className="truncate text-[11px] text-muted-foreground font-medium">
                           {conv.resourceTitle}
@@ -656,7 +700,7 @@ function ConversationsContent() {
                       </h3>
                       <BadgeCheckIcon className="size-4 text-emerald-500" />
                       <Badge variant="outline" className="text-[10px] uppercase font-semibold">
-                        {activeConv.tradeRole === "buyer" ? "Buyer" : "Seller"}
+                        {activeConv.partnerRole ? (activeConv.partnerRole === "buyer" ? "Buyer" : "Seller") : (activeConv.tradeRole === "buyer" ? "Seller" : "Buyer")}
                       </Badge>
                     </div>
 
@@ -754,7 +798,8 @@ function ConversationsContent() {
                   messages.map((msg) => {
                     const isMe =
                       msg.senderId === currentUserId ||
-                      (Boolean(msg.senderName) && Boolean(currentBusinessName) && msg.senderName.toLowerCase() === currentBusinessName.toLowerCase());
+                      msg.senderId === profile?.userId ||
+                      (Boolean(msg.senderName) && Boolean(currentBusinessName) && msg.senderName.toLowerCase().trim() === currentBusinessName.toLowerCase().trim());
 
                     return (
                       <div
@@ -845,30 +890,6 @@ function ConversationsContent() {
                               </div>
                               <p className="text-xs leading-relaxed">{msg.text}</p>
 
-                              {/* Sample Media Display */}
-                              <div className="mt-2 overflow-hidden rounded-lg border border-border/40">
-                                {activeCategory.evidenceType === "video" ? (
-                                  <video
-                                    src={
-                                      msg.type === "dispatch"
-                                        ? SAMPLE_MEDIA.video.sender
-                                        : SAMPLE_MEDIA.video.receiver
-                                    }
-                                    controls
-                                    className="h-36 w-full object-cover bg-black"
-                                  />
-                                ) : (
-                                  <img
-                                    src={
-                                      msg.type === "dispatch"
-                                        ? SAMPLE_MEDIA.photo.sender
-                                        : SAMPLE_MEDIA.photo.receiver
-                                    }
-                                    alt="Condition Evidence"
-                                    className="h-36 w-full object-cover"
-                                  />
-                                )}
-                              </div>
                             </div>
                           ) : (
                             <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -1117,24 +1138,49 @@ function ConversationsContent() {
                 </div>
               </div>
 
-              {/* Sample Media Preview */}
+              {/* Evidence File Upload */}
               <div>
-                <label className="font-semibold text-foreground">Verified Media Preview</label>
-                <div className="mt-1.5 overflow-hidden rounded-xl border border-border bg-black/40">
-                  {activeCategory.evidenceType === "video" ? (
-                    <video
-                      src={evidenceStage === "PICKUP" ? SAMPLE_MEDIA.video.sender : SAMPLE_MEDIA.video.receiver}
-                      controls
-                      className="h-44 w-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src={evidenceStage === "PICKUP" ? SAMPLE_MEDIA.photo.sender : SAMPLE_MEDIA.photo.receiver}
-                      alt="Condition preview"
-                      className="h-44 w-full object-cover"
-                    />
-                  )}
-                </div>
+                <label className="font-semibold text-foreground">
+                  Upload {activeCategory.evidenceType === "video" ? "Operational Video" : "Inspection Photo"}
+                </label>
+                <input
+                  type="file"
+                  accept={activeCategory.evidenceType === "video" ? "video/*" : "image/*"}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      setCustomEvidenceUrl(ev.target?.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                    toast.success(`${file.name} loaded as inspection media.`);
+                  }}
+                  className="mt-1.5 w-full text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+                />
+                <Input
+                  placeholder={`Or paste a ${activeCategory.evidenceType.toUpperCase()} URL...`}
+                  value={customEvidenceUrl}
+                  onChange={(e) => setCustomEvidenceUrl(e.target.value)}
+                  className="mt-2 text-xs h-8"
+                />
+                {customEvidenceUrl && (
+                  <div className="mt-2 overflow-hidden rounded-xl border border-border bg-black/40">
+                    {activeCategory.evidenceType === "video" ? (
+                      <video
+                        src={customEvidenceUrl}
+                        controls
+                        className="h-44 w-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={customEvidenceUrl}
+                        alt="Evidence preview"
+                        className="h-44 w-full object-cover"
+                      />
+                    )}
+                  </div>
+                )}
                 <span className="mt-1 block text-[10px] text-muted-foreground">
                   {activeCategory.evidenceType === "video"
                     ? "Operational video: Verifies mechanical motion, sound, and live function."

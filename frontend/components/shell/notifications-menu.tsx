@@ -35,8 +35,8 @@ export function notificationHref(n: AppNotification, kind: "business" | "driver"
     type.includes("COUNTER") ||
     (n.referenceId && (n.referenceId.startsWith("request_") || n.referenceId.startsWith("req_")))
   ) {
-    const reqQuery = n.referenceId ? `?requestId=${n.referenceId}` : "";
-    return `/dashboard/negotiation${reqQuery}`;
+    const reqQuery = n.referenceId ? `?id=${n.referenceId}` : "";
+    return `/dashboard/conversations${reqQuery}`;
   }
   if (n.referenceId?.startsWith("booking_")) return `/dashboard/bookings/${n.referenceId}`;
   if (type.includes("BOOKING") || type.includes("ESCROW") || type.includes("PAYMENT") || type.includes("DELIVERY")) {

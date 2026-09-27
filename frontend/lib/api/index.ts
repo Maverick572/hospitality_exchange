@@ -185,7 +185,10 @@ export type EncryptedConversation = {
   participantNames?: Record<string, string>;
   partnerName: string;
   partnerAddress?: string;
+  partnerRole?: "buyer" | "seller";
   tradeRole: "buyer" | "seller";
+  buyerId?: string;
+  sellerId?: string;
   resourceTitle: string;
   category?: string;
   evidenceType?: "photo" | "video" | "photo_video";
@@ -230,6 +233,7 @@ export const conversationsApi = {
       amount?: number;
       depTime?: string;
       arrTime?: string;
+      senderName?: string;
     },
   ) => api.post<EncryptedMessage>(`/conversations/${id}/messages`, data),
   create: (data: {
@@ -243,6 +247,7 @@ export const conversationsApi = {
     depTime?: string;
     arrTime?: string;
     tradeRole?: string;
+    senderName?: string;
   }) => api.post<EncryptedConversation>("/conversations", data),
 };
 

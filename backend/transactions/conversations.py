@@ -76,141 +76,24 @@ def decrypt_payload(ciphertext: str, user_a: str, user_b: str) -> str:
 
 
 # ============================================================
-# SEED SAMPLE HOSPITALITY CONVERSATIONS
+# USER RESOLUTION HELPER
 # ============================================================
 
-def _seed_conversations_for_user(user_id: str, user_name: str) -> list[dict[str, Any]]:
-    """Seed sample B2B conversation threads for Mumbai luxury hotels."""
-    mumbai_partners = [
-        {
-            "id": "partner_jio_bkc",
-            "name": "Jio World Centre",
-            "address": "G Block, Bandra Kurla Complex, Mumbai 400098",
-            "role": "seller",
-            "resource": "300 × Cushioned Banquet Chairs (Co-loaded Route #402)",
-            "category": "banquet_seating",
-            "evidenceType": "photo",
-            "amount": 4100,
-            "depTime": "08:10",
-            "arrTime": "08:38",
-            "status": "negotiating",
-            "snippet": "Counter-proposal: ₹4,100 with departure at 08:10 and arrival at 08:38.",
-            "unread": 1,
-        },
-        {
-            "id": "partner_st_regis",
-            "name": "The St. Regis Mumbai",
-            "address": "462 Senapati Bapat Marg, Lower Parel, Mumbai 400013",
-            "role": "seller",
-            "resource": "1 × Commercial 4-Burner Gas Range",
-            "category": "cooking_equipment",
-            "evidenceType": "video",
-            "amount": 5500,
-            "depTime": "09:00",
-            "arrTime": "09:45",
-            "status": "accepted",
-            "snippet": "Terms accepted at ₹5,500. Pre-transit operational video pending dispatch.",
-            "unread": 0,
-        },
-        {
-            "id": "partner_trident_np",
-            "name": "Trident Nariman Point",
-            "address": "CR 2, Nariman Point, Mumbai 400021",
-            "role": "buyer",
-            "resource": "400 × Damask Banquet Tablecloths",
-            "category": "linen_textiles",
-            "evidenceType": "photo",
-            "amount": 3200,
-            "depTime": "07:30",
-            "arrTime": "08:15",
-            "status": "completed",
-            "snippet": "Return inspection verified. Escrow deposit released in full.",
-            "unread": 0,
-        },
-        {
-            "id": "partner_grand_hyatt",
-            "name": "Grand Hyatt Mumbai",
-            "address": "BKC Vicinity, Santacruz East, Mumbai 400055",
-            "role": "seller",
-            "resource": "2 × Walk-in Chiller & Deep Freezers",
-            "category": "refrigeration",
-            "evidenceType": "video",
-            "amount": 7800,
-            "depTime": "08:30",
-            "arrTime": "09:15",
-            "status": "in_transit",
-            "snippet": "Convoy dispatched with operational cooling proof. ETA 09:15 AM.",
-            "unread": 0,
-        },
-    ]
-
-    created = []
-    now = datetime.now(timezone.utc)
-
-    for p in mumbai_partners:
-        p_id = p["id"]
-        conv_seed = f"{user_id}_{p_id}".encode("utf-8")
-        conv_id = f"conv_{hashlib.md5(conv_seed).hexdigest()[:10]}"
-        partner_uid = resolve_user_id(p["id"])
-        participants = [user_id, partner_uid]
-        encrypted_snippet = encrypt_payload(p["snippet"], user_id, partner_uid)
-
-        doc = {
-            "conversationId": conv_id,
-            "participants": participants,
-            "participantNames": {
-                user_id: user_name,
-                partner_uid: p["name"],
-            },
-            "partnerName": p["name"],
-            "partnerAddress": p["address"],
-            "tradeRole": p["role"],
-            "resourceTitle": p["resource"],
-            "category": p["category"],
-            "evidenceType": p["evidenceType"],
-            "status": p["status"],
-            "currentAmount": p["amount"],
-            "departureTime": p["depTime"],
-            "arrivalTime": p["arrTime"],
-            "lastMessageCiphertext": encrypted_snippet,
-            "lastMessage": p["snippet"],
-            "lastTimestamp": now.isoformat(),
-            "unreadCount": p["unread"],
-            "encryptionStandard": "AES-128 / Fernet (Pairwise Key)",
-            "createdAt": now.isoformat(),
-            "updatedAt": now.isoformat(),
-        }
-
-        # Store in Firestore if db active
-        if db is not None:
-            try:
-                db.collection("conversations").document(conv_id).set(doc)
-            except Exception:
-                pass
-
-        _IN_MEMORY_CONVERSATIONS[conv_id] = doc
-
-        # Initial message history
-        initial_msg = {
-            "id": f"msg-init-{conv_id}",
-            "conversationId": conv_id,
-            "senderId": partner_uid,
-            "senderName": p["name"],
-            "type": "message",
-            "ciphertext": encrypted_snippet,
-            "text": p["snippet"],
-            "timestamp": now.strftime("%I:%M %p"),
-        }
-        if db is not None:
-            try:
-                db.collection("conversations").document(conv_id).collection("messages").document(initial_msg["id"]).set(initial_msg)
-            except Exception:
-                pass
-
-        _IN_MEMORY_MESSAGES[conv_id] = [initial_msg]
-        created.append(doc)
-
-    return created
+def _get_user_business_name(user_id: str, default_name: str | None = None) -> str:
+    """Retrieve canonical businessName from Firestore users collection if available."""
+    if default_name and default_name not in ("User", "Sender", "Hospitality Partner"):
+        return default_name
+    if db is not None:
+        try:
+            udoc = db.collection("users").document(user_id).get()
+            if udoc.exists:
+                udata = udoc.to_dict() or {}
+                name = udata.get("businessName") or udata.get("name")
+                if name:
+                    return name
+        except Exception:
+            pass
+    return default_name or "Hospitality Partner"
 
 
 # ============================================================
@@ -227,7 +110,7 @@ def list_conversations(
     Decrypted preview snippets are generated using the participant's derived key.
     """
     user_id = current_user["uid"]
-    user_name = current_user.get("businessName") or current_user.get("name") or "Hospitality Partner"
+    user_name = _get_user_business_name(user_id, current_user.get("businessName") or current_user.get("name"))
 
     results = []
 
@@ -248,10 +131,6 @@ def list_conversations(
             if user_id in data.get("participants", []):
                 results.append(data)
 
-    # If still none, auto-seed realistic hospitality conversations for the user
-    if not results:
-        results = _seed_conversations_for_user(user_id, user_name)
-
     # Process and decrypt snippets for the current user
     decrypted_results = []
     for item in results:
@@ -261,11 +140,29 @@ def list_conversations(
         plaintext = decrypt_payload(cipher, user_id, other_uid) if cipher else item.get("lastMessage", "")
 
         names = item.get("participantNames", {})
-        partner_name = item.get("partnerName") or names.get(other_uid, "Trade Counterpart")
+        partner_name = names.get(other_uid)
+        if not partner_name:
+            stored_partner = item.get("partnerName")
+            if stored_partner and stored_partner != user_name:
+                partner_name = stored_partner
+            else:
+                partner_name = names.get(other_uid, "Trade Counterpart")
+
+        buyer_id = item.get("buyerId")
+        if buyer_id:
+            my_role = "buyer" if user_id == buyer_id else "seller"
+        else:
+            creator_id = parts[0] if parts else user_id
+            creator_role = item.get("tradeRole", "buyer")
+            my_role = creator_role if user_id == creator_id else ("seller" if creator_role == "buyer" else "buyer")
+
+        partner_role = "seller" if my_role == "buyer" else "buyer"
 
         decrypted_item = {
             **item,
             "partnerName": partner_name,
+            "partnerRole": partner_role,
+            "tradeRole": my_role,
             "lastMessage": plaintext,
             "isEncrypted": True,
             "encryptionProtocol": "AES-128 / Fernet Pairwise Encryption",
@@ -298,6 +195,7 @@ def get_conversation_details(
     All ciphertexts in DB are decrypted on the fly for authorized users.
     """
     user_id = current_user["uid"]
+    user_name = _get_user_business_name(user_id, current_user.get("businessName") or current_user.get("name"))
 
     conv_doc = None
     if db is not None:
@@ -325,6 +223,26 @@ def get_conversation_details(
 
     part_a = participants[0] if len(participants) > 0 else user_id
     part_b = participants[1] if len(participants) > 1 else user_id
+    other_uid = part_b if user_id == part_a else part_a
+
+    names = conv_doc.get("participantNames", {})
+    partner_name = names.get(other_uid)
+    if not partner_name:
+        stored_partner = conv_doc.get("partnerName")
+        if stored_partner and stored_partner != user_name:
+            partner_name = stored_partner
+        else:
+            partner_name = "Trade Counterpart"
+
+    buyer_id = conv_doc.get("buyerId")
+    if buyer_id:
+        my_role = "buyer" if user_id == buyer_id else "seller"
+    else:
+        creator_id = participants[0] if participants else user_id
+        creator_role = conv_doc.get("tradeRole", "buyer")
+        my_role = creator_role if user_id == creator_id else ("seller" if creator_role == "buyer" else "buyer")
+
+    partner_role = "seller" if my_role == "buyer" else "buyer"
 
     # Retrieve messages
     messages = []
@@ -334,7 +252,7 @@ def get_conversation_details(
                 db.collection("conversations")
                 .document(conversation_id)
                 .collection("messages")
-                .order_by("timestamp")
+                .order_by("createdAt")
                 .stream()
             )
             for m in m_docs:
@@ -342,7 +260,20 @@ def get_conversation_details(
                 m_data["id"] = m.id
                 messages.append(m_data)
         except Exception:
-            pass
+            try:
+                m_docs = (
+                    db.collection("conversations")
+                    .document(conversation_id)
+                    .collection("messages")
+                    .order_by("timestamp")
+                    .stream()
+                )
+                for m in m_docs:
+                    m_data = m.to_dict() or {}
+                    m_data["id"] = m.id
+                    messages.append(m_data)
+            except Exception:
+                pass
 
     if not messages:
         messages = _IN_MEMORY_MESSAGES.get(conversation_id, [])
@@ -362,12 +293,16 @@ def get_conversation_details(
             "depTime": msg.get("depTime"),
             "arrTime": msg.get("arrTime"),
             "timestamp": msg.get("timestamp"),
+            "createdAt": msg.get("createdAt"),
             "isEncrypted": True,
             "ciphertextSample": (c_text[:20] + "...") if c_text else None,
         })
 
     response_data = {
         **serialize_firestore_doc(conv_doc),
+        "partnerName": partner_name,
+        "partnerRole": partner_role,
+        "tradeRole": my_role,
         "messages": decrypted_messages,
     }
 
@@ -391,7 +326,7 @@ def post_conversation_message(
     Encrypt message using participant-derived AES key and append to conversation.
     """
     user_id = current_user["uid"]
-    user_name = current_user.get("businessName") or current_user.get("name") or "Sender"
+    user_name = payload.get("senderName") or _get_user_business_name(user_id, current_user.get("businessName") or current_user.get("name"))
     text = payload.get("text", "").strip()
     msg_type = payload.get("type", "message")
     amount = payload.get("amount")
@@ -491,9 +426,14 @@ def post_conversation_message(
     return standard_response(
         data={
             "id": msg_id,
+            "senderId": user_id,
+            "senderName": user_name,
             "text": text,
             "ciphertext": ciphertext,
             "type": msg_type,
+            "amount": amount,
+            "depTime": dep_time,
+            "arrTime": arr_time,
             "timestamp": time_str,
             "isEncrypted": True,
         },
@@ -514,22 +454,59 @@ def create_conversation(
     Start an encrypted B2B conversation between current user and partner.
     """
     user_id = current_user["uid"]
-    user_name = current_user.get("businessName") or current_user.get("name") or "User"
+    user_name = payload.get("senderName") or _get_user_business_name(user_id, current_user.get("businessName") or current_user.get("name"))
 
     partner_id = payload.get("partnerId")
     partner_name = payload.get("partnerName", "Trade Partner")
-    resource_title = payload.get("resourceTitle", "Resource Lot")
-    category = payload.get("category", "banquet_seating")
+    resource_title = payload.get("resourceTitle", "Requested Resource")
+    category = payload.get("category", "general")
     evidence_type = payload.get("evidenceType", "photo")
-    initial_amount = payload.get("amount", 4000)
-    initial_msg_text = payload.get("initialMessage", f"Hello! Proposing terms for {resource_title}.")
+    initial_amount = payload.get("amount", 0)
+    dep_time = payload.get("depTime", "")
+    arr_time = payload.get("arrTime", "")
+    initial_msg_text = payload.get("initialMessage", f"Booking inquiry initiated for {resource_title}.")
+    trade_role = payload.get("tradeRole", "buyer")
 
     if not partner_id:
         partner_id = resolve_user_id(partner_name)
 
-    conv_id = f"conv_{hashlib.md5(f'{user_id}_{partner_id}_{resource_title}'.encode()).hexdigest()[:10]}"
+    # Deterministic conversation ID using sorted participant IDs
+    pair_hash = hashlib.md5(f"{':'.join(sorted([user_id, partner_id]))}:{resource_title}".encode()).hexdigest()[:10]
+    conv_id = f"conv_{pair_hash}"
+
+    # If already exists in Firestore, return it
+    if db is not None:
+        try:
+            snap = db.collection("conversations").document(conv_id).get()
+            if snap.exists:
+                existing_data = snap.to_dict() or {}
+                existing_data["conversationId"] = snap.id
+                return standard_response(
+                    data=serialize_firestore_doc(existing_data),
+                    message="Existing encrypted conversation loaded."
+                )
+        except Exception:
+            pass
+
+    if conv_id in _IN_MEMORY_CONVERSATIONS:
+        return standard_response(
+            data=_IN_MEMORY_CONVERSATIONS[conv_id],
+            message="Existing encrypted conversation loaded."
+        )
+
     now = datetime.now(timezone.utc)
     cipher_text = encrypt_payload(initial_msg_text, user_id, partner_id)
+
+    if trade_role == "buyer":
+        buyer_id = user_id
+        buyer_name = user_name
+        seller_id = partner_id
+        seller_name = partner_name
+    else:
+        buyer_id = partner_id
+        buyer_name = partner_name
+        seller_id = user_id
+        seller_name = user_name
 
     conv_data = {
         "conversationId": conv_id,
@@ -538,15 +515,19 @@ def create_conversation(
             user_id: user_name,
             partner_id: partner_name,
         },
+        "buyerId": buyer_id,
+        "buyerName": buyer_name,
+        "sellerId": seller_id,
+        "sellerName": seller_name,
         "partnerName": partner_name,
-        "tradeRole": "buyer",
+        "tradeRole": trade_role,
         "resourceTitle": resource_title,
         "category": category,
         "evidenceType": evidence_type,
         "status": "negotiating",
         "currentAmount": initial_amount,
-        "departureTime": "08:15",
-        "arrivalTime": "08:42",
+        "departureTime": dep_time,
+        "arrivalTime": arr_time,
         "lastMessageCiphertext": cipher_text,
         "lastMessage": initial_msg_text,
         "lastTimestamp": now.isoformat(),
@@ -556,24 +537,32 @@ def create_conversation(
         "updatedAt": now.isoformat(),
     }
 
+    msg_id = f"msg_init_{conv_id}"
+    time_str = now.strftime("%I:%M %p")
+    msg_doc = {
+        "id": msg_id,
+        "conversationId": conv_id,
+        "senderId": user_id,
+        "senderName": user_name,
+        "type": "request",
+        "ciphertext": cipher_text,
+        "text": initial_msg_text,
+        "amount": initial_amount,
+        "depTime": dep_time,
+        "arrTime": arr_time,
+        "timestamp": time_str,
+        "createdAt": now.isoformat(),
+    }
+
     if db is not None:
         try:
             db.collection("conversations").document(conv_id).set(conv_data)
-            msg_doc = {
-                "id": f"msg_init_{conv_id}",
-                "conversationId": conv_id,
-                "senderId": user_id,
-                "senderName": user_name,
-                "type": "request",
-                "ciphertext": cipher_text,
-                "text": initial_msg_text,
-                "timestamp": now.strftime("%I:%M %p"),
-            }
-            db.collection("conversations").document(conv_id).collection("messages").document(msg_doc["id"]).set(msg_doc)
+            db.collection("conversations").document(conv_id).collection("messages").document(msg_id).set(msg_doc)
         except Exception:
             pass
 
     _IN_MEMORY_CONVERSATIONS[conv_id] = conv_data
+    _IN_MEMORY_MESSAGES[conv_id] = [msg_doc]
 
     return standard_response(
         data=conv_data,
