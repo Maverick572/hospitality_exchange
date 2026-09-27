@@ -19,6 +19,7 @@ import { toast } from "sonner";
 
 import { CostComparison } from "@/components/logistics/cost-comparison";
 import { Button } from "@/components/ui/button";
+import { useBusinessSession } from "@/lib/session";
 import { usePerspective } from "@/lib/perspective";
 import { logisticsApi } from "@/lib/api";
 
@@ -129,11 +130,28 @@ function LogisticsContent() {
   const requiredQty = quantityParam ? Math.max(1, parseInt(quantityParam, 10)) : 300;
 
   const { perspective, setPerspective } = usePerspective();
+  const { profile } = useBusinessSession();
+
+  const currentBusinessName = profile?.businessName || profile?.name || "Taj Lands End";
+  const currentAddress = profile?.location?.address || profile?.address || "Taj Lands End, Bandra West, Mumbai 400050";
+  const counterpartName = currentBusinessName.toLowerCase().includes("jio")
+    ? "Taj Lands End"
+    : "Jio World Centre";
+  const counterpartAddress = currentBusinessName.toLowerCase().includes("jio")
+    ? "Taj Lands End, Bandra West, Mumbai 400050"
+    : "Jio World Centre, G Block, BKC, Mumbai 400098";
+
+  const isSeeker = perspective === "seeker";
   const [confirmed, setConfirmed] = useState(false);
   const [routes, setRoutes] = useState<RouteMatch[]>([]);
   const [pool, setPool] = useState<PooledSolution | null>(null);
   const [activeTab, setActiveTab] = useState<"pooled" | "individual">("pooled");
   const [loading, setLoading] = useState(true);
+
+  // In Seeker View: Surplus goods are picked up at Seller's venue, delivered to YOUR venue.
+  // In Provider View: Goods are picked up at YOUR venue, delivered to Buyer's venue.
+  const resolvedPickup = pickupParam ?? (isSeeker ? counterpartAddress : currentAddress);
+  const resolvedDelivery = deliveryParam ?? (isSeeker ? currentAddress : counterpartAddress);
 
   // Fetch matched routes and multi-driver pooling solution from CP-SAT backend using OSM
   useEffect(() => {
@@ -144,19 +162,19 @@ function LogisticsContent() {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const pLat = pickupLatParam ? parseFloat(pickupLatParam) : 19.044;
-        const pLng = pickupLngParam ? parseFloat(pickupLngParam) : 72.821;
-        const dLat = deliveryLatParam ? parseFloat(deliveryLatParam) : 19.0588;
-        const dLng = deliveryLngParam ? parseFloat(deliveryLngParam) : 72.8653;
+        const pLat = pickupLatParam ? parseFloat(pickupLatParam) : (isSeeker ? 19.0588 : 19.044);
+        const pLng = pickupLngParam ? parseFloat(pickupLngParam) : (isSeeker ? 72.8653 : 72.821);
+        const dLat = deliveryLatParam ? parseFloat(deliveryLatParam) : (isSeeker ? 19.044 : 19.0588);
+        const dLng = deliveryLngParam ? parseFloat(deliveryLngParam) : (isSeeker ? 72.821 : 72.8653);
 
         const data = await logisticsApi.matchRoutes({
           pickupLocation: {
-            address: pickupParam ?? "Taj Lands End, Bandra West, Mumbai 400050",
+            address: resolvedPickup,
             latitude: pLat,
             longitude: pLng,
           },
           deliveryLocation: {
-            address: deliveryParam ?? "Jio World Centre, G Block, BKC, Mumbai 400098",
+            address: resolvedDelivery,
             latitude: dLat,
             longitude: dLng,
           },
@@ -193,7 +211,7 @@ function LogisticsContent() {
     return () => {
       cancelled = true;
     };
-  }, [pickupParam, deliveryParam, pickupLatParam, pickupLngParam, deliveryLatParam, deliveryLngParam, quantityParam, requiredQty]);
+  }, [resolvedPickup, resolvedDelivery, pickupLatParam, pickupLngParam, deliveryLatParam, deliveryLngParam, requiredQty, isSeeker]);
 
   const topRoute = routes[0];
 
@@ -204,12 +222,18 @@ function LogisticsContent() {
     }
     setConfirmed(true);
     toast.success("Booking proposal initiated! Opening negotiation chat...", { icon: "🤝" });
+
+    const buyerName = isSeeker ? currentBusinessName : counterpartName;
+    const sellerName = isSeeker ? counterpartName : currentBusinessName;
+
     const params = new URLSearchParams({
       resource: `${requiredQty} × Cushioned Banquet Chairs (Co-loaded Route)`,
       qty: String(requiredQty),
       amount: String(activeTab === "pooled" && pool ? pool.totalPrice : (topRoute?.price ?? 4250)),
-      provider: pickupParam ?? "Taj Lands End, Bandra West, Mumbai",
-      seeker: deliveryParam ?? "Jio World Centre, G Block, BKC, Mumbai",
+      provider: resolvedPickup,
+      providerName: sellerName,
+      seeker: resolvedDelivery,
+      seekerName: buyerName,
       dep: pool?.drivers?.[0]?.departureTime ?? topRoute?.departureTime ?? "08:15",
       arr: pool?.drivers?.[0]?.arrivalTime ?? topRoute?.arrivalTime ?? "08:42",
       category: "banquet_seating",
@@ -415,8 +439,8 @@ function LogisticsContent() {
                       className="size-full object-cover"
                     />
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">{shortAddr(pickupParam ?? pool.drivers[0]?.startAddress)}</h4>
-                  <p className="text-[11px] text-muted-foreground font-medium">Origin (Pickup Hub)</p>
+                  <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedPickup ?? pool.drivers[0]?.startAddress)}</h4>
+                  <p className="text-[11px] text-muted-foreground font-medium">Origin ({isSeeker ? `${counterpartName} Hub` : "Your Loading Bay"})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted/60 px-2.5 py-1 text-xs font-semibold text-foreground">
                     Departure: {pool.drivers[0]?.departureTime ?? "09:00"}
                   </div>
@@ -468,8 +492,8 @@ function LogisticsContent() {
                       className="size-full object-cover"
                     />
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">{shortAddr(deliveryParam ?? pool.drivers[0]?.destinationAddress)}</h4>
-                  <p className="text-[11px] text-muted-foreground font-medium">Destination (Dropoff)</p>
+                  <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedDelivery ?? pool.drivers[0]?.destinationAddress)}</h4>
+                  <p className="text-[11px] text-muted-foreground font-medium">Destination ({isSeeker ? "Your Event Venue" : `${counterpartName} Venue`})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted/60 px-2.5 py-1 text-xs font-semibold text-foreground">
                     Arrival: {pool.drivers[0]?.arrivalTime ?? "09:30"}
                   </div>
@@ -588,8 +612,8 @@ function LogisticsContent() {
                       className="size-full object-cover"
                     />
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">{shortAddr(pickupParam ?? topRoute.startLocation?.address)}</h4>
-                  <p className="text-[11px] text-muted-foreground">Origin (Pickup)</p>
+                  <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedPickup ?? topRoute.startLocation?.address)}</h4>
+                  <p className="text-[11px] text-muted-foreground">Origin ({isSeeker ? `${counterpartName} Hub` : "Your Loading Bay"})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
                     Departure: {topRoute.departureTime ?? "09:00"}
                   </div>
@@ -636,8 +660,8 @@ function LogisticsContent() {
                       className="size-full object-cover"
                     />
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">{shortAddr(deliveryParam ?? topRoute.destination?.address)}</h4>
-                  <p className="text-[11px] text-muted-foreground">Destination (Dropoff)</p>
+                  <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedDelivery ?? topRoute.destination?.address)}</h4>
+                  <p className="text-[11px] text-muted-foreground">Destination ({isSeeker ? "Your Event Venue" : `${counterpartName} Venue`})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
                     Arrival: {topRoute.arrivalTime ?? "09:30"}
                   </div>

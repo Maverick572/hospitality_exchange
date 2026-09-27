@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { useBusinessSession } from "@/lib/session";
 import { usePerspective } from "@/lib/perspective";
 import { evidenceApi, requestsApi } from "@/lib/api";
 import { inr } from "@/lib/format";
@@ -109,16 +110,57 @@ type EvidenceItem = {
   uploader: string;
 };
 
+function extractShortName(text: string | null): string {
+  if (!text) return "";
+  const first = text.split(",")[0].trim();
+  return first;
+}
+
 function NegotiationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { perspective } = usePerspective();
+  const { profile } = useBusinessSession();
+
+  const currentBusinessName = profile?.businessName || profile?.name || "Taj Lands End";
+  const isCurrentSeeker = perspective === "seeker";
+
+  const rawProvider = searchParams.get("provider");
+  const rawSeeker = searchParams.get("seeker");
+  const providerNameParam = searchParams.get("providerName");
+  const seekerNameParam = searchParams.get("seekerName");
+
+  // Dynamically resolve Buyer (Seeker) vs Seller (Provider)
+  // In Seeker View: The logged in business is ALWAYS the buyer. The seller is the counterpart.
+  // In Provider View: The logged in business is the seller. The buyer is the counterpart.
+  let buyerName = "";
+  let sellerName = "";
+
+  if (isCurrentSeeker) {
+    buyerName = currentBusinessName;
+    if (providerNameParam && providerNameParam !== currentBusinessName) {
+      sellerName = providerNameParam;
+    } else if (rawProvider && !rawProvider.toLowerCase().includes(currentBusinessName.toLowerCase())) {
+      sellerName = extractShortName(rawProvider);
+    } else {
+      sellerName = currentBusinessName.toLowerCase().includes("jio") ? "Taj Lands End" : "Jio World Centre";
+    }
+  } else {
+    sellerName = currentBusinessName;
+    if (seekerNameParam && seekerNameParam !== currentBusinessName) {
+      buyerName = seekerNameParam;
+    } else if (rawSeeker && !rawSeeker.toLowerCase().includes(currentBusinessName.toLowerCase())) {
+      buyerName = extractShortName(rawSeeker);
+    } else {
+      buyerName = currentBusinessName.toLowerCase().includes("jio") ? "Taj Lands End" : "Jio World Centre";
+    }
+  }
 
   const resourceTitle = searchParams.get("resource") ?? "300 × Cushioned Banquet Chairs (Co-loaded Route #402)";
   const initialQty = parseInt(searchParams.get("qty") ?? "300", 10);
   const initialAmount = parseInt(searchParams.get("amount") ?? "4250", 10);
-  const providerAddress = searchParams.get("provider") ?? "Taj Lands End, Bandra West, Mumbai";
-  const seekerAddress = searchParams.get("seeker") ?? "Jio World Centre, G Block, BKC, Mumbai";
+  const providerAddress = searchParams.get("provider") ?? (isCurrentSeeker ? `${sellerName}, BKC, Mumbai` : `${sellerName}, Bandra West, Mumbai`);
+  const seekerAddress = searchParams.get("seeker") ?? (isCurrentSeeker ? `${buyerName}, Bandra West, Mumbai` : `${buyerName}, BKC, Mumbai`);
   const initDep = searchParams.get("dep") ?? "08:15";
   const initArr = searchParams.get("arr") ?? "08:42";
   const categoryKey = searchParams.get("category") ?? "banquet_seating";
@@ -155,12 +197,12 @@ function NegotiationContent() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Chat stream
+  // Initial chat stream
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "msg-1",
       sender: "seeker",
-      senderName: "Jio World Centre (Buyer)",
+      senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
       type: "request",
       text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles.`,
       amount: initialAmount,
@@ -171,9 +213,9 @@ function NegotiationContent() {
     {
       id: "msg-2",
       sender: "provider",
-      senderName: "Taj Lands End (Seller)",
+      senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
       type: "message",
-      text: `Hello! We reviewed your demand for ${initialQty} chairs. Loading bay 3 at Bandra is reserved for the pooled convoy. Schedule looks viable.`,
+      text: `Hello! We reviewed your demand for ${initialQty} units. Loading bay at ${sellerName} is reserved for the pooled convoy. Schedule looks viable.`,
       timestamp: "08:05 AM",
     },
   ]);
@@ -191,12 +233,14 @@ function NegotiationContent() {
       return;
     }
 
-    const isSeeker = perspective === "seeker";
-    const senderName = isSeeker ? "Jio World Centre (Buyer)" : "Taj Lands End (Seller)";
+    const myRole = isCurrentSeeker ? "seeker" : "provider";
+    const senderName = isCurrentSeeker
+      ? `${buyerName} (Buyer) • You`
+      : `${sellerName} (Seller) • You`;
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
-      sender: isSeeker ? "seeker" : "provider",
+      sender: myRole,
       senderName,
       type: "counter",
       text: counterNote.trim() || `Counter-proposal: ₹${priceNum.toLocaleString("en-IN")} with departure at ${counterDep} and arrival at ${counterArr}.`,
@@ -220,12 +264,14 @@ function NegotiationContent() {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const isSeeker = perspective === "seeker";
-    const senderName = isSeeker ? "Jio World Centre (Buyer)" : "Taj Lands End (Seller)";
+    const myRole = isCurrentSeeker ? "seeker" : "provider";
+    const senderName = isCurrentSeeker
+      ? `${buyerName} (Buyer) • You`
+      : `${sellerName} (Seller) • You`;
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
-      sender: isSeeker ? "seeker" : "provider",
+      sender: myRole,
       senderName,
       type: "message",
       text: inputText.trim(),
@@ -238,15 +284,17 @@ function NegotiationContent() {
 
   // Accept offer and proceed to pre-transit export evidence
   const handleAcceptOffer = () => {
-    const isSeeker = perspective === "seeker";
-    const accepterName = isSeeker ? "Jio World Centre (Buyer)" : "Taj Lands End (Seller)";
+    const myRole = isCurrentSeeker ? "seeker" : "provider";
+    const accepterName = isCurrentSeeker
+      ? `${buyerName} (Buyer) • You`
+      : `${sellerName} (Seller) • You`;
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
-      sender: isSeeker ? "seeker" : "provider",
+      sender: myRole,
       senderName: accepterName,
       type: "accept",
-      text: `Offer officially accepted at ₹${currentAmount.toLocaleString("en-IN")}. Transit window finalized for Departure ${departureTime} → Arrival ${arrivalTime}. Next step: Sender pre-transit condition verification.`,
+      text: `Offer officially accepted at ₹${currentAmount.toLocaleString("en-IN")}. Transit window finalized for Departure ${departureTime} → Arrival ${arrivalTime}. Next step: ${sellerName} pre-transit condition verification.`,
       amount: currentAmount,
       depTime: departureTime,
       arrTime: arrivalTime,
@@ -278,7 +326,7 @@ function NegotiationContent() {
       url: senderMediaUrl,
       description: senderNotes.trim() || `All ${initialQty} units inspected at loading bay. Clean upholstery, structural integrity verified.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      uploader: "Taj Lands End Dispatch Officer",
+      uploader: `${sellerName} Dispatch Officer`,
     };
 
     setSenderEvidence([item]);
@@ -287,9 +335,9 @@ function NegotiationContent() {
     const dispatchMsg: ChatMessage = {
       id: `msg-disp-${Date.now()}`,
       sender: "provider",
-      senderName: "Taj Lands End (Seller)",
+      senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
       type: "dispatch",
-      text: `PRE-TRANSIT EVIDENCE RECORDED: ${rule.evidenceType.toUpperCase()} verified and logged. 3-truck convoy departed Bandra loading bay at ${departureTime}. En route to Jio World Centre.`,
+      text: `PRE-TRANSIT EVIDENCE RECORDED: ${rule.evidenceType.toUpperCase()} verified and logged. 3-truck convoy departed ${sellerName} loading bay at ${departureTime}. En route to ${buyerName}.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -328,7 +376,7 @@ function NegotiationContent() {
       url: receiverMediaUrl,
       description: receiverNotes.trim() || `All ${initialQty} units accounted for. Zero damage observed upon check-in.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      uploader: "Jio World Centre Receiving Lead",
+      uploader: `${buyerName} Receiving Lead`,
     };
 
     setReceiverEvidence([item]);
@@ -336,9 +384,9 @@ function NegotiationContent() {
     const returnMsg: ChatMessage = {
       id: `msg-ret-${Date.now()}`,
       sender: "seeker",
-      senderName: "Jio World Centre (Buyer)",
+      senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
       type: "return",
-      text: `MANDATORY RETURN EVIDENCE RECORDED: Return media verified against initial dispatch records. Items returned undamaged. Escrow deposit released.`,
+      text: `MANDATORY RETURN EVIDENCE RECORDED: Return media verified against initial dispatch records. Items returned undamaged to ${sellerName}. Escrow deposit released.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -465,7 +513,7 @@ function NegotiationContent() {
                   <div>
                     <h3 className="text-sm font-bold text-foreground">Direct Buyer-Seller Channel</h3>
                     <p className="text-[11px] text-muted-foreground">
-                      Bandra Loading Bay ↔ BKC Jio World Centre
+                      {sellerName} (Seller Loading Bay) ↔ {buyerName} (Buyer Destination)
                     </p>
                   </div>
                 </div>
@@ -477,15 +525,16 @@ function NegotiationContent() {
               {/* Chat Messages Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-background/50">
                 {messages.map((msg) => {
-                  const isSeeker = msg.sender === "seeker";
-                  const isProvider = msg.sender === "provider";
+                  const isMyMessage =
+                    (isCurrentSeeker && msg.sender === "seeker") ||
+                    (!isCurrentSeeker && msg.sender === "provider");
 
                   return (
                     <div
                       key={msg.id}
                       className={`flex flex-col ${
-                        isSeeker ? "items-end" : "items-start"
-                      } space-y-1 max-w-[85%] sm:max-w-[78%] ${isSeeker ? "ml-auto" : "mr-auto"}`}
+                        isMyMessage ? "items-end" : "items-start"
+                      } space-y-1 max-w-[85%] sm:max-w-[78%] ${isMyMessage ? "ml-auto" : "mr-auto"}`}
                     >
                       <div className="flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
                         <span className="font-semibold text-foreground/80">{msg.senderName}</span>
@@ -495,7 +544,7 @@ function NegotiationContent() {
 
                       <div
                         className={`rounded-2xl p-4 text-xs leading-relaxed shadow-xs ${
-                          isSeeker
+                          isMyMessage
                             ? "bg-primary text-primary-foreground rounded-tr-xs"
                             : "bg-card border border-border text-foreground rounded-tl-xs"
                         }`}
@@ -505,7 +554,7 @@ function NegotiationContent() {
                           <div className="mb-2">
                             <span
                               className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                                isSeeker
+                                isMyMessage
                                   ? "bg-white/20 text-white"
                                   : msg.type === "counter"
                                   ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30"
@@ -531,7 +580,7 @@ function NegotiationContent() {
                         {msg.amount !== undefined && (
                           <div
                             className={`mt-2.5 pt-2 border-t flex items-center justify-between gap-4 text-xs ${
-                              isSeeker ? "border-white/20" : "border-border"
+                              isMyMessage ? "border-white/20" : "border-border"
                             }`}
                           >
                             <span>Proposed Rate:</span>
@@ -542,7 +591,7 @@ function NegotiationContent() {
                         {msg.depTime && msg.arrTime && (
                           <div
                             className={`mt-1 flex items-center justify-between gap-2 text-[11px] ${
-                              isSeeker ? "text-white/80" : "text-muted-foreground"
+                              isMyMessage ? "text-white/80" : "text-muted-foreground"
                             }`}
                           >
                             <span>Window:</span>
@@ -716,10 +765,10 @@ function NegotiationContent() {
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                     <CameraIcon className="size-3.5 text-primary" />
-                    <span>Phase 1: Sender Pre-Transit Handover</span>
+                    <span>Phase 1: Sender Pre-Transit Handover ({sellerName})</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Before convoy departs loading bay, sender must log initial condition proof.
+                    Before convoy departs loading bay, {sellerName} must log initial condition proof.
                   </p>
                 </div>
                 <Badge
@@ -846,7 +895,7 @@ function NegotiationContent() {
                           Condition Inspection Notes
                         </label>
                         <Textarea
-                          placeholder="e.g. All 300 banquet chairs inspected at Taj Lands End loading bay. Clean upholstery, zero tears, frames intact. Tagged Lot #BE-300."
+                          placeholder={`e.g. All ${initialQty} units inspected at ${sellerName} loading bay. Clean condition, zero tears, frames intact. Tagged Lot #BE-${initialQty}.`}
                           value={senderNotes}
                           onChange={(e) => setSenderNotes(e.target.value)}
                           className="text-xs min-h-[60px]"
@@ -897,10 +946,10 @@ function NegotiationContent() {
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                     <FileCheck2Icon className="size-3.5 text-emerald-600" />
-                    <span>Phase 2: Receiver Mandatory Return Handover</span>
+                    <span>Phase 2: Receiver Mandatory Return Handover ({buyerName})</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Mandatory visual proof of returned items required before escrow deposit release.
+                    Mandatory visual proof of returned items by {buyerName} required before escrow deposit release to {sellerName}.
                   </p>
                 </div>
                 <Badge
@@ -1053,7 +1102,7 @@ function NegotiationContent() {
                           Return Audit Remarks
                         </label>
                         <Textarea
-                          placeholder="e.g. All 300 units counted and loaded back onto carrier. Clean, undamaged, fabric intact."
+                          placeholder={`e.g. All ${initialQty} units counted and loaded back onto carrier by ${buyerName}. Clean, undamaged condition verified.`}
                           value={receiverNotes}
                           onChange={(e) => setReceiverNotes(e.target.value)}
                           className="text-xs min-h-[50px]"
