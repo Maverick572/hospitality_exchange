@@ -6,6 +6,7 @@ import {
   ClipboardListIcon,
   HandshakeIcon,
   LayoutDashboardIcon,
+  MessageSquareIcon,
   RouteIcon,
   SearchIcon,
   SparklesIcon,
@@ -63,6 +64,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     {
       label: "TRANSACTIONS",
       items: [
+        { href: "/dashboard/negotiation", icon: MessageSquareIcon, label: "Negotiation Chat", badge: "LIVE" },
         { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
         { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
       ],
@@ -74,6 +76,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },
     { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
     { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
+    { href: "/dashboard/negotiation", icon: MessageSquareIcon, label: "Negotiation Chat" },
     { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
     { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
   ],

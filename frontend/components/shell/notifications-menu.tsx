@@ -29,10 +29,15 @@ export function notificationHref(n: AppNotification, kind: "business" | "driver"
     if (type.includes("ROUTE") || type.includes("MATCH")) return "/driver/routes";
     return "/driver/deliveries";
   }
-  if (type.includes("NEGOTIATION") || (n.referenceId?.startsWith("request_") && type.startsWith("REQUEST"))) {
-    return `/dashboard/negotiation?requestId=${n.referenceId}`;
+  if (
+    type.includes("NEGOTIATION") ||
+    type.includes("REQUEST") ||
+    type.includes("COUNTER") ||
+    (n.referenceId && (n.referenceId.startsWith("request_") || n.referenceId.startsWith("req_")))
+  ) {
+    const reqQuery = n.referenceId ? `?requestId=${n.referenceId}` : "";
+    return `/dashboard/negotiation${reqQuery}`;
   }
-  if (type.startsWith("REQUEST")) return "/dashboard/requests";
   if (n.referenceId?.startsWith("booking_")) return `/dashboard/bookings/${n.referenceId}`;
   if (type.includes("BOOKING") || type.includes("ESCROW") || type.includes("PAYMENT") || type.includes("DELIVERY")) {
     return "/dashboard/bookings";
