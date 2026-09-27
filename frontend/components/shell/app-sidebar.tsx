@@ -13,6 +13,7 @@ import {
   ClipboardListIcon,
   HandshakeIcon,
   HotelIcon,
+  LayoutDashboardIcon,
   LogOutIcon,
   MessageSquareIcon,
   PackageIcon,
@@ -214,6 +215,12 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
             : perspective === "seeker"
               ? [
                   {
+                    label: "MAIN",
+                    items: [
+                      { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
+                    ],
+                  },
+                  {
                     label: "SEEKER SOURCING",
                     items: [
                       { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
@@ -237,6 +244,12 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   },
                 ]
               : [
+                  {
+                    label: "MAIN",
+                    items: [
+                      { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
+                    ],
+                  },
                   {
                     label: "PROVIDER INVENTORY",
                     items: [

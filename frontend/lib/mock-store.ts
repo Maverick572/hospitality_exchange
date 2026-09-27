@@ -74,7 +74,9 @@ class MockStore {
     return this.user;
   }
   updateUser(data: Partial<UserProfile>): UserProfile {
-    this.user = { ...this.user, ...data, updatedAt: new Date().toISOString() };
+    const isNewUser = (this.user.userId === "usr_grand_hyatt_bkc" && Boolean(data.name || data.businessName)) || Boolean(data.userId && data.userId !== "usr_grand_hyatt_bkc");
+    const userId = data.userId || (isNewUser && this.user.userId === "usr_grand_hyatt_bkc" ? `usr_${Date.now()}` : this.user.userId);
+    this.user = { ...this.user, ...data, userId, updatedAt: new Date().toISOString() };
     return this.user;
   }
 
@@ -86,6 +88,9 @@ class MockStore {
   // --- Resources ---
   getResources(): Resource[] {
     return this.resources;
+  }
+  getMyResources(): Resource[] {
+    return this.resources.filter((r) => r.userId === this.user.userId && r.status !== "inactive");
   }
   getResourceById(id: string): Resource | undefined {
     return this.resources.find((r) => r.resourceId === id);
@@ -200,6 +205,9 @@ class MockStore {
 
   // --- Requests ---
   getRequests(): ResourceRequest[] {
+    if (this.user.userId !== "usr_grand_hyatt_bkc") {
+      return this.requests.filter((r) => r.seekerId === this.user.userId || r.providerId === this.user.userId);
+    }
     return this.requests;
   }
   createRequest(data: CreateRequestInput): ResourceRequest {
@@ -316,6 +324,9 @@ class MockStore {
 
   // --- Bookings ---
   getBookings(): Booking[] {
+    if (this.user.userId !== "usr_grand_hyatt_bkc") {
+      return this.bookings.filter((b) => b.seekerId === this.user.userId || b.providerId === this.user.userId);
+    }
     return this.bookings;
   }
   getBookingById(id: string): Booking | undefined {
@@ -359,6 +370,9 @@ class MockStore {
 
   // --- Notifications ---
   getNotifications(): AppNotification[] {
+    if (this.user.userId !== "usr_grand_hyatt_bkc") {
+      return this.notifications.filter((n) => n.userId === this.user.userId);
+    }
     return this.notifications;
   }
   emitNotification(data: Partial<AppNotification>): AppNotification {
@@ -390,12 +404,43 @@ class MockStore {
 
   // --- Dashboards ---
   getUserDashboard(): UserDashboard {
+    if (this.user.userId === "usr_grand_hyatt_bkc") {
+      return {
+        activeResources: this.resources.filter((r) => r.userId === this.user.userId && r.status === "active").length || 6,
+        activeBookings: this.bookings.filter((b) => (b.seekerId === this.user.userId || b.providerId === this.user.userId) && !["completed", "cancelled"].includes(b.status)).length || 2,
+        completedBookings: 24,
+        pendingRequests: this.requests.filter((r) => (r.seekerId === this.user.userId || r.providerId === this.user.userId) && ["pending", "countered"].includes(r.status)).length || 2,
+        totalEarnings: 184500,
+        pendingPayments: 15000,
+      };
+    }
+
+    const myResources = this.resources.filter((r) => r.userId === this.user.userId && r.status === "active");
+    const myBookings = this.bookings.filter((b) => (b.seekerId === this.user.userId || b.providerId === this.user.userId) && !["completed", "cancelled"].includes(b.status));
+    const completed = this.bookings.filter((b) => (b.seekerId === this.user.userId || b.providerId === this.user.userId) && b.status === "completed").length;
+    const myRequests = this.requests.filter((r) => (r.seekerId === this.user.userId || r.providerId === this.user.userId) && ["pending", "countered"].includes(r.status));
+
+    let totalEarnings = 0;
+    let pendingPayments = 0;
+    this.bookings.forEach((b) => {
+      if (b.providerId === this.user.userId) {
+        const amt = b.resourceAmount || b.totalAmount || b.totalPrice || 0;
+        if (b.status === "completed") {
+          totalEarnings += amt;
+        } else if (["confirmed", "picked_up", "in_transit", "delivered"].includes(b.status)) {
+          pendingPayments += amt;
+        }
+      }
+    });
+
     return {
-      activeResources: this.resources.filter((r) => r.status === "active").length,
-      activeBookings: this.bookings.filter((b) => !["completed", "cancelled"].includes(b.status)).length,
-      completedBookings: 24,
-      pendingRequests: this.requests.filter((r) => ["pending", "countered"].includes(r.status)).length,
-      totalEarnings: 184500,
+      activeResources: myResources.length,
+      activeRequirements: this.requirements.filter((r) => (r.seekerId === this.user.userId || r.seeker?.userId === this.user.userId) && r.status === "active").length,
+      activeBookings: myBookings.length,
+      completedBookings: completed,
+      pendingRequests: myRequests.length,
+      totalEarnings,
+      pendingPayments,
     };
   }
   getDriverDashboard(): DriverDashboard {

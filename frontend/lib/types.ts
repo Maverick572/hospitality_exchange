@@ -33,6 +33,8 @@ export type UserProfileInput = {
   businessName: string;
   location: GeoLocation | null;
   profileImage?: string | null;
+  userId?: string;
+  email?: string | null;
 };
 
 export type DriverProfile = {

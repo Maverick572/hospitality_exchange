@@ -59,7 +59,7 @@ function resolveMockFallback<T>(path: string, options: RequestOptions): T {
   if (path === "/categories") return { categories: mockStore.getCategories() } as unknown as T;
 
   // Resources
-  if (path === "/resources/my") return mockStore.getResources() as unknown as T;
+  if (path === "/resources/my") return mockStore.getMyResources() as unknown as T;
   if (path === "/resources/all") return mockStore.getResources() as unknown as T;
   if (path === "/resources" && method === "POST") return mockStore.createResource(b as unknown as Parameters<typeof mockStore.createResource>[0]) as unknown as T;
   if (path.startsWith("/resources/")) {

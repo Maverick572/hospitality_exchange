@@ -39,8 +39,14 @@ export type ShellConfig = {
 
 export const BUSINESS_SHELL: ShellConfig = {
   kind: "business",
-  home: { href: "/dashboard", icon: LayoutDashboardIcon, label: "Overview" },
+  home: { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
   groups: [
+    {
+      label: "OVERVIEW",
+      items: [
+        { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
+      ],
+    },
     {
       label: "SEEKER SOURCING",
       items: [
@@ -71,6 +77,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     },
   ],
   items: [
+    { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
     { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
     { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
     { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },

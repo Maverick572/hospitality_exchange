@@ -44,7 +44,14 @@ export default function BusinessOnboardingPage() {
     setError(null);
     setSaving(true);
     try {
-      await usersApi.createProfile({ name, businessName, phone, location });
+      await usersApi.createProfile({
+        name,
+        businessName,
+        phone,
+        location,
+        userId: user?.uid,
+        email: user?.email,
+      });
       router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
