@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BoxesIcon,
   ChevronRightIcon,
+  MessageSquareIcon,
   MoonIcon,
   SunIcon,
 } from "lucide-react";
@@ -88,6 +89,22 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
 
         {/* ── Right Actions ── */}
         <div className="flex items-center gap-2.5">
+          {/* Quick Chat & Messages Link */}
+          {config.kind === "business" && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              asChild
+              className="text-muted-foreground hover:text-foreground relative"
+              title="Chat & Messages"
+            >
+              <Link href="/dashboard/conversations">
+                <MessageSquareIcon className="size-4" />
+                <span className="sr-only">Chat & Messages</span>
+              </Link>
+            </Button>
+          )}
+
           {/* Notifications Dropdown */}
           <NotificationsMenu kind={config.kind} />
 

@@ -155,46 +155,47 @@ function NegotiationContent() {
   const { perspective, togglePerspective } = usePerspective();
   const { profile } = useBusinessSession();
 
-  const currentBusinessName = profile?.businessName || profile?.name || "Taj Lands End";
-  const isCurrentSeeker = perspective === "seeker";
+  const currentBusinessName = profile?.businessName || profile?.name || "My Business";
 
   const rawProvider = searchParams.get("provider");
   const rawSeeker = searchParams.get("seeker");
   const providerNameParam = searchParams.get("providerName");
   const seekerNameParam = searchParams.get("seekerName");
 
-  // Dynamically resolve Buyer (Seeker) vs Seller (Provider)
-  let buyerName = "";
-  let sellerName = "";
+  // Fixed transaction roles: Buyer is the seeker (requester), Seller is the provider (inventory owner)
+  // These roles NEVER flip when the viewing perspective is toggled.
+  const [userRole] = useState<"seeker" | "provider">(() => {
+    const myName = currentBusinessName.toLowerCase();
+    const sName = (seekerNameParam || rawSeeker || "").toLowerCase();
+    const pName = (providerNameParam || rawProvider || "").toLowerCase();
+    if (sName && sName.includes(myName)) return "seeker";
+    if (pName && pName.includes(myName)) return "provider";
+    return perspective === "provider" ? "provider" : "seeker";
+  });
+  const isCurrentSeeker = userRole === "seeker";
 
-  if (isCurrentSeeker) {
-    buyerName = currentBusinessName;
-    if (providerNameParam && providerNameParam !== currentBusinessName) {
-      sellerName = providerNameParam;
-    } else if (rawProvider && !rawProvider.toLowerCase().includes(currentBusinessName.toLowerCase())) {
-      sellerName = extractShortName(rawProvider);
-    } else {
-      sellerName = currentBusinessName.toLowerCase().includes("jio") ? "Taj Lands End" : "Jio World Centre";
-    }
-  } else {
-    sellerName = currentBusinessName;
-    if (seekerNameParam && seekerNameParam !== currentBusinessName) {
-      buyerName = seekerNameParam;
-    } else if (rawSeeker && !rawSeeker.toLowerCase().includes(currentBusinessName.toLowerCase())) {
-      buyerName = extractShortName(rawSeeker);
-    } else {
-      buyerName = currentBusinessName.toLowerCase().includes("jio") ? "Taj Lands End" : "Jio World Centre";
-    }
-  }
+  const [buyerName] = useState<string>(() => {
+    if (seekerNameParam) return seekerNameParam;
+    if (rawSeeker) return extractShortName(rawSeeker);
+    if (userRole === "seeker") return currentBusinessName;
+    return "Trade Buyer";
+  });
+
+  const [sellerName] = useState<string>(() => {
+    if (providerNameParam) return providerNameParam;
+    if (rawProvider) return extractShortName(rawProvider);
+    if (userRole === "provider") return currentBusinessName;
+    return "Trade Supplier";
+  });
 
   const [resourceTitle, setResourceTitle] = useState(
-    searchParams.get("resource") ?? "300 × Cushioned Banquet Chairs (Co-loaded Route #402)"
+    searchParams.get("resource") ?? "Hospitality Inventory"
   );
-  const initialQty = parseInt(searchParams.get("qty") ?? "300", 10);
-  const initialAmount = parseInt(searchParams.get("amount") ?? "4250", 10);
-  const initDep = searchParams.get("dep") ?? "08:15";
-  const initArr = searchParams.get("arr") ?? "08:42";
-  const vehicleCount = parseInt(searchParams.get("vehicles") ?? "3", 10);
+  const initialQty = parseInt(searchParams.get("qty") ?? "1", 10);
+  const initialAmount = parseInt(searchParams.get("amount") ?? "0", 10);
+  const initDep = searchParams.get("dep") ?? "09:00";
+  const initArr = searchParams.get("arr") ?? "10:00";
+  const vehicleCount = parseInt(searchParams.get("vehicles") ?? "1", 10);
 
   // Dynamic category resolution from categories.json
   const initialCatParam = searchParams.get("category");
@@ -255,26 +256,26 @@ function NegotiationContent() {
   const hasNotifiedInitialRef = useRef(false);
   const CHAT_SYNC_KEY = `hrex_chat_sync_${activeReqId}`;
 
-  // Initial chat stream
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  // Initial chat stream: Sender names are fixed to the trade parties and never flip
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: "msg-1",
       sender: "seeker",
-      senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
+      senderName: `${buyerName} (Buyer)`,
       type: "request",
-      text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
+      text: `Proposal submitted for ${resourceTitle} (${initialQty} unit${initialQty > 1 ? "s" : ""}). Terms: ${initialAmount > 0 ? inr(initialAmount) : "Standard rate"}${initDep && initArr ? ` • Scheduled window: ${initDep} → ${initArr}` : ""}. Inspection protocol: ${categoryDef.label} (${categoryDef.evidenceType.toUpperCase()}).`,
       amount: initialAmount,
       depTime: initDep,
       arrTime: initArr,
-      timestamp: "08:02 AM",
+      timestamp: "09:00 AM",
     },
     {
       id: "msg-2",
       sender: "provider",
-      senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
+      senderName: `${sellerName} (Seller)`,
       type: "message",
-      text: `Hello! We reviewed your demand for ${initialQty} units (${categoryDef.label}). Loading bay at ${sellerName} is reserved for the pooled convoy. Pre-transit inspection ready.`,
-      timestamp: "08:05 AM",
+      text: `Inquiry acknowledged for ${resourceTitle}. Loading bay and inventory check initiated at ${sellerName}. Ready to coordinate delivery schedule and condition verification.`,
+      timestamp: "09:05 AM",
     },
   ]);
 
@@ -358,7 +359,7 @@ function NegotiationContent() {
             {
               id: "msg-1",
               sender: "seeker",
-              senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
+              senderName: `${buyerName} (Buyer)`,
               type: "request",
               text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
               amount: initialAmount,
@@ -369,7 +370,7 @@ function NegotiationContent() {
             {
               id: "msg-2",
               sender: "provider",
-              senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
+              senderName: `${sellerName} (Seller)`,
               type: "message",
               text: `Hello! We reviewed your demand for ${initialQty} units (${categoryDef.label}). Loading bay at ${sellerName} is reserved for the pooled convoy. Pre-transit inspection ready.`,
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -475,10 +476,10 @@ function NegotiationContent() {
       return;
     }
 
-    const myRole = isCurrentSeeker ? "seeker" : "provider";
-    const senderName = isCurrentSeeker
-      ? `${buyerName} (Buyer) • You`
-      : `${sellerName} (Seller) • You`;
+    const myRole = userRole;
+    const senderName = myRole === "seeker"
+      ? `${buyerName} (Buyer)`
+      : `${sellerName} (Seller)`;
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -508,11 +509,11 @@ function NegotiationContent() {
       arrTime: counterArr,
     });
 
-    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    const counterpartUid = myRole === "seeker" ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
     void notificationsApi.create({
       userId: counterpartUid,
       type: "REQUEST_COUNTERED",
-      title: `Counter-Offer from ${senderName.replace(" • You", "")}`,
+      title: `Counter-Offer from ${senderName}`,
       message: `Counter-proposal: ₹${priceNum.toLocaleString("en-IN")} (Departure ${counterDep} → Arrival ${counterArr}). ${counterNote}`.trim(),
       referenceId: activeReqId,
     }).catch(() => undefined);
@@ -523,10 +524,10 @@ function NegotiationContent() {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const myRole = isCurrentSeeker ? "seeker" : "provider";
-    const senderName = isCurrentSeeker
-      ? `${buyerName} (Buyer) • You`
-      : `${sellerName} (Seller) • You`;
+    const myRole = userRole;
+    const senderName = myRole === "seeker"
+      ? `${buyerName} (Buyer)`
+      : `${sellerName} (Seller)`;
     const messageContent = inputText.trim();
 
     const newMsg: ChatMessage = {
@@ -544,11 +545,11 @@ function NegotiationContent() {
 
     broadcastSync({ messages: updated });
 
-    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    const counterpartUid = myRole === "seeker" ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
     void notificationsApi.create({
       userId: counterpartUid,
       type: "NEGOTIATION_MESSAGE",
-      title: `Message from ${senderName.replace(" • You", "")}`,
+      title: `Message from ${senderName}`,
       message: messageContent,
       referenceId: activeReqId,
     }).catch(() => undefined);
@@ -556,10 +557,10 @@ function NegotiationContent() {
 
   // Accept offer and proceed to pre-transit export evidence
   const handleAcceptOffer = () => {
-    const myRole = isCurrentSeeker ? "seeker" : "provider";
-    const accepterName = isCurrentSeeker
-      ? `${buyerName} (Buyer) • You`
-      : `${sellerName} (Seller) • You`;
+    const myRole = userRole;
+    const accepterName = myRole === "seeker"
+      ? `${buyerName} (Buyer)`
+      : `${sellerName} (Seller)`;
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -580,11 +581,11 @@ function NegotiationContent() {
 
     broadcastSync({ messages: updated, status: "accepted" });
 
-    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    const counterpartUid = userRole === "seeker" ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
     void notificationsApi.create({
       userId: counterpartUid,
       type: "REQUEST_ACCEPTED",
-      title: `Agreement Finalized with ${accepterName.replace(" • You", "")}!`,
+      title: `Agreement Finalized with ${accepterName}!`,
       message: `Offer accepted at ₹${currentAmount.toLocaleString("en-IN")}. Pre-transit handover unlocked.`,
       referenceId: activeReqId,
     }).catch(() => undefined);
@@ -656,9 +657,9 @@ function NegotiationContent() {
     const dispatchMsg: ChatMessage = {
       id: `msg-disp-${Date.now()}`,
       sender: "provider",
-      senderName: `${sellerName} (Seller) • You`,
+      senderName: `${sellerName} (Seller)`,
       type: "dispatch",
-      text: `SENDER DISPATCH VERIFIED: Pre-transit ${categoryDef.evidenceType.toUpperCase()} evidence recorded by ${sellerName} for category [${categoryDef.label}]. ${vehicleCount}-truck pooled convoy departed loading bay at ${departureTime}. En route to ${buyerName}.`,
+      text: `SENDER DISPATCH VERIFIED: Pre-transit ${categoryDef.evidenceType.toUpperCase()} evidence recorded by ${sellerName} for category [${categoryDef.label}]. Transport departed loading bay at ${departureTime}. En route to ${buyerName}.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -739,7 +740,7 @@ function NegotiationContent() {
     const returnMsg: ChatMessage = {
       id: `msg-ret-${Date.now()}`,
       sender: "seeker",
-      senderName: `${buyerName} (Buyer) • You`,
+      senderName: `${buyerName} (Buyer)`,
       type: "return",
       text: `RECEIVER RETURN VERIFIED: Return ${categoryDef.evidenceType.toUpperCase()} evidence submitted by ${buyerName} and matched against initial dispatch baseline. All ${initialQty} units of [${categoryDef.label}] returned undamaged to ${sellerName}. Escrow deposit released.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -820,9 +821,9 @@ function NegotiationContent() {
       {
         id: "msg-1",
         sender: "seeker",
-        senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
+        senderName: `${buyerName} (Buyer)`,
         type: "request",
-        text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
+        text: `Proposal submitted for ${resourceTitle} (${initialQty} unit${initialQty > 1 ? "s" : ""}). Terms: ${initialAmount > 0 ? inr(initialAmount) : "Standard rate"}${initDep && initArr ? ` • Scheduled window: ${initDep} → ${initArr}` : ""}. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
         amount: initialAmount,
         depTime: initDep,
         arrTime: initArr,
@@ -831,14 +832,14 @@ function NegotiationContent() {
       {
         id: "msg-2",
         sender: "provider",
-        senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
+        senderName: `${sellerName} (Seller)`,
         type: "message",
-        text: `Hello! We reviewed your demand for ${initialQty} units (${categoryDef.label}). Loading bay at ${sellerName} is reserved for the pooled convoy. Pre-transit inspection ready.`,
+        text: `Inquiry acknowledged for ${resourceTitle}. Loading bay at ${sellerName} is reserved. Pre-transit inspection ready.`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
 
-    toast.success("Conversations and negotiation history wiped clean! You can start over.", { icon: "🧹" });
+    toast.success("Conversations and negotiation history reset cleanly.", { icon: "🧹" });
   };
 
   return (
@@ -858,22 +859,15 @@ function NegotiationContent() {
           {/* Interactive Role Switcher Pill for Two-Party Simulation */}
           <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-1.5 shadow-2xs">
             <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">You are acting as:</span>
+              <span className="text-muted-foreground">Contract Role:</span>
               <strong className="text-foreground font-bold">
-                {currentBusinessName} ({isCurrentSeeker ? "Receiver / Buyer" : "Sender / Seller"})
+                {currentBusinessName} ({isCurrentSeeker ? "Buyer / Requester" : "Seller / Provider"})
               </strong>
             </div>
             <Separator orientation="vertical" className="h-4" />
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={togglePerspective}
-              className="text-xs h-7 px-2.5 font-bold gap-1.5 hover:bg-primary hover:text-primary-foreground transition-colors"
-              title="Toggle between Sender and Receiver perspective to test two-party handover permissions"
-            >
-              <RefreshCwIcon className="size-3" />
-              <span>Switch to {isCurrentSeeker ? "Sender (Seller)" : "Receiver (Buyer)"} View</span>
-            </Button>
+            <Badge variant="outline" className="text-xs py-0.5 px-2 font-semibold border-primary/30 text-primary">
+              {isCurrentSeeker ? "Buyer Perspective" : "Seller Perspective"}
+            </Badge>
             <Separator orientation="vertical" className="h-4" />
             <Button
               variant="ghost"
@@ -1052,9 +1046,7 @@ function NegotiationContent() {
               {/* Chat Messages Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-background/50">
                 {messages.map((msg) => {
-                  const isMyMessage =
-                    (isCurrentSeeker && msg.sender === "seeker") ||
-                    (!isCurrentSeeker && msg.sender === "provider");
+                  const isMyMessage = msg.sender === userRole;
 
                   return (
                     <div
@@ -1065,6 +1057,9 @@ function NegotiationContent() {
                     >
                       <div className="flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
                         <span className="font-semibold text-foreground/80">{msg.senderName}</span>
+                        {isMyMessage && (
+                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">You</span>
+                        )}
                         <span>·</span>
                         <span>{msg.timestamp}</span>
                       </div>

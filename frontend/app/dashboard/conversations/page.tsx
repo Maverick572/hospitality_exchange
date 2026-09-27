@@ -418,21 +418,10 @@ function ConversationsContent() {
               Sync
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                togglePerspective();
-                toast.success(
-                  `Switched perspective to ${perspective === "seeker" ? "Provider (Taj Lands End)" : "Seeker (Sourcing)"}`,
-                );
-              }}
-              className="gap-1.5 text-xs border-primary/30"
-            >
-              <UserCheckIcon className="size-3.5 text-primary" />
-              <span className="hidden sm:inline">Role:</span>
-              <span className="font-semibold text-primary capitalize">{perspective}</span>
-            </Button>
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
+              <span className="text-muted-foreground">Account:</span>
+              <span className="font-semibold text-foreground">{currentBusinessName}</span>
+            </div>
           </div>
         }
       />
@@ -764,8 +753,8 @@ function ConversationsContent() {
                 ) : (
                   messages.map((msg) => {
                     const isMe =
-                      msg.senderName.toLowerCase().includes("taj") ||
-                      msg.senderId === currentUserId;
+                      msg.senderId === currentUserId ||
+                      (Boolean(msg.senderName) && Boolean(currentBusinessName) && msg.senderName.toLowerCase() === currentBusinessName.toLowerCase());
 
                     return (
                       <div
@@ -834,7 +823,7 @@ function ConversationsContent() {
                               </div>
                               <p className="text-xs leading-relaxed">{msg.text}</p>
                               <div className="mt-2 rounded-lg bg-black/20 p-2 text-[11px] flex items-center justify-between">
-                                <span>Escrow Deposit: <strong>{inr(activeConv.currentAmount || 4100)}</strong></span>
+                                <span>Escrow Deposit: <strong>{inr(activeConv.currentAmount || 0)}</strong></span>
                                 <Badge variant="outline" className="text-[9px] border-emerald-400 text-emerald-400">
                                   Ready
                                 </Badge>
@@ -1006,7 +995,7 @@ function ConversationsContent() {
                   className="mt-1.5"
                 />
                 <span className="text-[11px] text-muted-foreground mt-1 block">
-                  Original listing estimate: {inr(activeConv.currentAmount || 4100)}
+                  Original listing estimate: {activeConv.currentAmount ? inr(activeConv.currentAmount) : "Active proposal rate"}
                 </span>
               </div>
 

@@ -86,7 +86,7 @@ def _seed_conversations_for_user(user_id: str, user_name: str) -> list[dict[str,
             "id": "partner_jio_bkc",
             "name": "Jio World Centre",
             "address": "G Block, Bandra Kurla Complex, Mumbai 400098",
-            "role": "buyer" if "taj" in user_name.lower() else "seller",
+            "role": "seller",
             "resource": "300 × Cushioned Banquet Chairs (Co-loaded Route #402)",
             "category": "banquet_seating",
             "evidenceType": "photo",
@@ -227,7 +227,7 @@ def list_conversations(
     Decrypted preview snippets are generated using the participant's derived key.
     """
     user_id = current_user["uid"]
-    user_name = current_user.get("businessName") or current_user.get("name") or "Taj Lands End"
+    user_name = current_user.get("businessName") or current_user.get("name") or "Hospitality Partner"
 
     results = []
 
