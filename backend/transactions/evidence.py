@@ -134,3 +134,23 @@ def record_condition_evidence(
         },
         message="Condition evidence recorded successfully."
     )
+
+
+# ============================================================
+# GET CONDITION EVIDENCE FOR BOOKING
+# ============================================================
+
+@router.get("/{booking_id}", summary="Get condition evidence for booking")
+def get_condition_evidence(booking_id: str, current_user: dict = Depends(get_current_user)):
+    """Retrieve all condition evidence uploaded for a given booking (both PICKUP and DELIVERY stages)."""
+    results = []
+    if db is not None:
+        docs = db.collection("conditionEvidence").where("bookingId", "==", booking_id).stream()
+        for doc in docs:
+            item = doc.to_dict() or {}
+            item["evidenceId"] = doc.id
+            results.append(serialize_firestore_doc(item))
+    # Sort by timestamp ascending
+    results.sort(key=lambda x: x.get("timestamp", ""))
+    return standard_response(data=results)
+

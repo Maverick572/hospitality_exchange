@@ -90,11 +90,16 @@ function demoUserFromToken(token: string, email: string, name?: string): AuthUse
 /** Current ID token for API calls, or null when signed out. */
 export async function getIdToken(): Promise<string | null> {
   if (firebaseEnabled) {
-    const current = firebaseAuth().currentUser;
+    const auth = firebaseAuth();
+    if (typeof auth.authStateReady === "function") {
+      await auth.authStateReady();
+    }
+    const current = auth.currentUser;
     return current ? current.getIdToken() : null;
   }
   return readStorage(DEMO_TOKEN_KEY);
 }
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");

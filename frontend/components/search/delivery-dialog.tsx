@@ -14,7 +14,7 @@ import {
 import { useApi } from "@/hooks/use-api";
 import { logisticsApi } from "@/lib/api";
 import { inr } from "@/lib/format";
-import type { GeoLocation } from "@/lib/types";
+import type { GeoLocation, RouteMatch } from "@/lib/types";
 
 export type DeliveryQuery = {
   title: string;
@@ -57,16 +57,21 @@ export function DeliveryDialog({
             <ErrorState error={matches.error} onRetry={matches.reload} />
           ) : !matches.data ? (
             <ListSkeleton rows={3} />
-          ) : matches.data.length === 0 ? (
-            <EmptyState
-              icon={RouteIcon}
-              title="No drivers on this route yet"
-              description="Nobody has published a route that passes near both points on that date. The provider can still arrange delivery."
-            />
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {matches.data.map((match) => (
-                <li key={match.routeId} className="rounded-xl border border-border bg-card p-3">
+          ) : (() => {
+            const routeList = Array.isArray(matches.data) ? matches.data : ((matches.data as unknown as { routes?: RouteMatch[] })?.routes ?? []);
+            if (routeList.length === 0) {
+              return (
+                <EmptyState
+                  icon={RouteIcon}
+                  title="No drivers on this route yet"
+                  description="Nobody has published a route that passes near both points on that date. The provider can still arrange delivery."
+                />
+              );
+            }
+            return (
+              <ul className="flex flex-col gap-2">
+                {routeList.map((match) => (
+                  <li key={match.routeId} className="rounded-xl border border-border bg-card p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                       <span className="flex size-9 items-center justify-center rounded-lg bg-muted">
@@ -106,9 +111,10 @@ export function DeliveryDialog({
                     )}
                   </div>
                 </li>
-              ))}
-            </ul>
-          )}
+                ))}
+              </ul>
+            );
+          })()}
         </div>
       </DialogContent>
     </Dialog>

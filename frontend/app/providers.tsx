@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
+import { PerspectiveProvider } from "@/lib/perspective";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -15,19 +16,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider>
-      <TooltipProvider>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          forcedTheme={forcedTheme}
-          enableColorScheme
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster position="bottom-right" richColors closeButton />
-        </ThemeProvider>
-      </TooltipProvider>
+      <PerspectiveProvider>
+        <TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            forcedTheme={forcedTheme}
+            enableColorScheme
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster position="bottom-right" richColors closeButton />
+          </ThemeProvider>
+        </TooltipProvider>
+      </PerspectiveProvider>
     </AuthProvider>
   );
 }

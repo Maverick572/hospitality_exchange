@@ -53,7 +53,7 @@ export function RouteMatchesSheet({
         <SheetHeader>
           <SheetTitle>Delivery opportunities</SheetTitle>
           <SheetDescription>
-            {route.startLocation.address} → {route.destination.address} · {route.travelDate}
+            {route.startLocation.address} → {route.destination?.address ?? route.endLocation?.address ?? "Destination"} · {route.travelDate}
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-4">

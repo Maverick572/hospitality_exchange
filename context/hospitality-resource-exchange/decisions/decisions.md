@@ -139,3 +139,57 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D014 — Next.js Frontend Integration & Dual-Mode API Client
+- **Date:** 2026-09-27
+- **Decision:** Integrated full Next.js 16 (App Router, Turbopack, TailwindCSS, Radix/shadcn UI) frontend into `main` branch. Integrated 26 routes spanning Business and Driver app shells, marketplace, smart matches, logistics, escrow, notifications, and analytics. Built unified API client in `frontend/lib/api/client.ts` communicating with FastAPI at `http://127.0.0.1:8000/api/v1` with automatic Bearer token injection and graceful demo/mock fallback (`mockStore`) on connection failures.
+- **Alternatives considered:** Keeping frontend on a separate branch, using static HTML/JS prototypes, or hard-failing without mock fallback.
+- **Rejected because:** Branch divergence creates integration friction; hard-failing prevents demo and testing without local backend running.
+- **Accepted because:** Ensures single-branch codebase with seamless live/demo switching and full feature parity across all backend subsystems.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D015 — End-to-End Firebase Authentication & Onboarding Gate Flow
+- **Date:** 2026-09-27
+- **Decision:** Wired live Firebase Web App configuration for project `hospitality-exchange-370a7` in `frontend/.env.local`. Added `auth.authStateReady()` in `getIdToken()` to prevent token resolution race conditions during page hydration. Refactored `frontend/lib/api/client.ts` to exempt `/users/me` and `/drivers/me` from 404 mock-fallback suppression, allowing `ApiError(404)` to propagate to `session-gate.tsx` so newly authenticated users without a Firestore document are seamlessly routed to `/onboarding` (or `/driver/onboarding`) to create their business/driver profile before accessing the workspace.
+- **Alternatives considered:** Auto-creating placeholder user profiles on login, or falling back to mock user when profile is 404.
+- **Rejected because:** Falling back to mock user locks newly registered Firebase users into fake demo data; auto-creating blank profiles skips vital business location/category details needed for search and matching.
+- **Accepted because:** Preserves real identity lifecycle from Firebase Auth -> Onboarding Profile -> Firestore -> Live Dashboard.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D016 — Real-World Mumbai Ecosystem Seeding, Strict Operational Roles, and OSM Transit Engine
+- **Date:** 2026-09-27
+- **Decision:** Re-seeded Firestore with genuine Mumbai business profiles (5 vendors, 5 buyers) and 8 verified commercial carriers with real physical coordinates and active corridors across BKC, Bandra, Colaba, Lower Parel, Dadar, Thane, Vashi, and Borivali via OpenStreetMap Nominatim and OSRM. Replaced unrealistic mock payload capacities with physically verified Mumbai vehicle capabilities (Tata Ace 50 max, Bolero Maxi 80 max, Bada Dost 100 max, Tata 407 150 max, Eicher Pro 220 max, Piaggio Ape 25 max). Enforced strict operational role segregation in frontend UI: seeker mode strictly restricts actions to seeker queries and booking, and demand matching filters out the user's own business listings. Added dynamic OSRM transit calculation (`backend/services/osrm.py`) replacing hardcoded trip times.
+- **Alternatives considered:** Keeping random dummy numbers for vehicles and hardcoded departure times.
+- **Rejected because:** Unrealistic payloads (e.g. 500 chairs in a Bolero or 131 in a 3-wheeler) undermine demo credibility and break physical logistics modeling.
+- **Accepted because:** Grounds the platform in actual Mumbai geography, real vehicle specifications, and accurate OSRM transit timelines.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D017 — OR-Tools CP-SAT Multi-Driver Fleet Pooling
+- **Date:** 2026-09-27
+- **Decision:** Implemented Multi-Driver Fleet Pooling in `backend/logistics/matcher.py`. When a demand request exceeds any single available vehicle's payload (e.g. 300 chairs), instead of failing or suggesting an impossibly large single vehicle, Google OR-Tools CP-SAT solver pools multiple coordinated carriers along the transport corridor. Solves a bounded knapsack / fleet assignment model:
+  - Minimizes vehicle count (penalty weight 150) + total delivery price + total detour distance + directional invalidity penalty.
+  - Binds integer cargo units $u_i \in [1, C_i]$ per selected vehicle such that $\sum u_i = \text{targetDemand}$.
+  - Computes coordinated convoy schedules, per-driver cargo and price allocations, dedicated vs pooled cost savings (e.g. saving ₹5,250 on a 300-chair transport), and CO2 emission reduction metrics.
+  - Integrated into `frontend/app/dashboard/logistics/page.tsx` with a Coordinated Multi-Driver Fleet Dispatch UI card and convoy visualizer.
+- **Alternatives considered:** Rejecting large delivery orders that exceed single vehicle capacity or requiring seekers to manually book 3 separate drivers.
+- **Rejected because:** Manual multi-booking is tedious and seekers lack routing knowledge to coordinate multiple drivers along shared corridors.
+- **Accepted because:** Completely automates multi-carrier consolidation with mathematical optimality and transparent cost savings.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D018 — Two-Phase Category-Coupled Handover & Mandatory Return Evidence Verification Protocol
+- **Date:** 2026-09-27
+- **Decision:** Implemented an end-to-end B2B chat negotiation and two-phase visual condition verification system (`frontend/app/dashboard/negotiation/page.tsx`, `backend/transactions/evidence.py`, `backend/transactions/requests.py`). After confirming a booking/logistics match, the buyer and seller enter an active negotiation channel to lock rate, quantity, and scheduled transit window (departure & arrival times computed from OSRM). Upon offer acceptance, the workflow enforces a strict two-phase condition evidence lifecycle:
+  1. **Sender Pre-Transit Handover (Export/Dispatch Phase):** The seller must log visual evidence conforming to the resource category rule in `shared/categories.json` (photo for physical goods, video for powered equipment, photo+video for spatial/structural assets). Convoy dispatch is locked until valid pre-transit evidence is saved.
+  2. **Receiver Mandatory Return Handover (Return/Check-In Phase):** When the rental period concludes, the receiver is mandatorily required to submit return condition media (photo or video as dictated by category) and confirm undamaged return. The side-by-side verification inspector compares departure vs return state, and return sign-off atomically triggers the release of the escrow damage deposit (₹2,000).
+- **Alternatives considered:** Relying on informal off-platform chat without structured offer locking, or allowing unverified returns without mandatory condition media.
+- **Rejected because:** Unstructured negotiation causes transit timing misalignment, and absence of mandatory return evidence makes damage disputes unarbitrable.
+- **Accepted because:** Enforces cryptographic/media accountability at both export and return, couples evidence formats to physical asset requirements, and establishes a seamless bridge from fleet pooling to escrow release.
+- **Status:** implemented
+- **Supersedes:** —
+
+
+
+

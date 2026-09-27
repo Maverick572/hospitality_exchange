@@ -347,6 +347,8 @@ def accept_request(
         "deliveryLocation": delivery_location,
         "pickupDate": pickup_date,
         "deliveryDate": delivery_date,
+        "departureTime": req.get("departureTime", "08:15"),
+        "arrivalTime": req.get("arrivalTime", "08:42"),
         "status": "confirmed",
         "escrowStatus": "pending",
         "escrowId": escrow_id,
@@ -468,3 +470,181 @@ def reject_request(
         },
         message="Request rejected."
     )
+
+
+# ============================================================
+# 6. GET SINGLE REQUEST WITH NEGOTIATION THREAD
+# ============================================================
+
+@router.get("/{request_id}", summary="Get Request Details & Negotiation Thread")
+def get_request_details(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Retrieve detailed request including chat negotiation history, participants, and resource info."""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database client unavailable.")
+
+    doc_ref, req = get_doc_or_404(db, "requests", request_id)
+    user_id = current_user["uid"]
+
+    if user_id not in (req.get("seekerId"), req.get("providerId")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to view this negotiation."
+        )
+
+    # Enrich seeker info
+    seeker_id = req.get("seekerId")
+    if "seeker" not in req and seeker_id:
+        seeker_info = {"userId": seeker_id, "businessName": seeker_id}
+        try:
+            s_snap = db.collection("users").document(seeker_id).get()
+            if s_snap.exists:
+                s_data = s_snap.to_dict() or {}
+                seeker_info["businessName"] = s_data.get("businessName") or s_data.get("name") or seeker_id
+                seeker_info["contactName"] = s_data.get("contactName") or s_data.get("name")
+                seeker_info["phone"] = s_data.get("phone")
+                seeker_info["rating"] = s_data.get("rating", 4.9)
+        except Exception:
+            pass
+        req["seeker"] = seeker_info
+
+    # Enrich provider info
+    provider_id = req.get("providerId")
+    if "provider" not in req and provider_id:
+        prov_info = {"userId": provider_id, "businessName": provider_id}
+        try:
+            p_snap = db.collection("users").document(provider_id).get()
+            if p_snap.exists:
+                p_data = p_snap.to_dict() or {}
+                prov_info["businessName"] = p_data.get("businessName") or p_data.get("name") or provider_id
+                prov_info["contactName"] = p_data.get("contactName") or p_data.get("name")
+                prov_info["phone"] = p_data.get("phone")
+                prov_info["rating"] = p_data.get("rating", 4.8)
+        except Exception:
+            pass
+        req["provider"] = prov_info
+
+    # Enrich resource info
+    resource_id = req.get("resourceId")
+    if "resource" not in req and resource_id:
+        res_info = {"resourceId": resource_id, "name": "Resource"}
+        try:
+            r_snap = db.collection("resources").document(resource_id).get()
+            if r_snap.exists:
+                r_data = r_snap.to_dict() or {}
+                res_info["name"] = r_data.get("name") or "Resource"
+                res_info["category"] = r_data.get("category", "banquet_seating")
+                res_info["price"] = r_data.get("price", 0)
+                res_info["location"] = r_data.get("location")
+        except Exception:
+            pass
+        req["resource"] = res_info
+
+    # Initialize messages thread if empty
+    if not req.get("messages"):
+        init_amount = req.get("offeredPrice", 0)
+        req["messages"] = [
+            {
+                "id": f"msg_init_{request_id}",
+                "senderId": req.get("seekerId"),
+                "senderName": req.get("seeker", {}).get("businessName", "Buyer"),
+                "type": "request",
+                "content": req.get("message") or f"Requested booking for {req.get('requestedQuantity')} units at ₹{init_amount:,}.",
+                "amount": init_amount,
+                "departureTime": req.get("departureTime", "08:15"),
+                "arrivalTime": req.get("arrivalTime", "08:42"),
+                "timestamp": (req.get("createdAt") or datetime.now(timezone.utc)).isoformat() if hasattr(req.get("createdAt"), "isoformat") else str(req.get("createdAt")),
+            }
+        ]
+
+    return standard_response(data=serialize_firestore_doc(req))
+
+
+# ============================================================
+# 7. POST CHAT MESSAGE IN NEGOTIATION THREAD
+# ============================================================
+
+@router.post("/{request_id}/messages", summary="Post negotiation chat message")
+def post_negotiation_message(
+    request_id: str,
+    payload: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Post a message or counter-proposal in the buyer-seller negotiation chat thread."""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database client unavailable.")
+
+    doc_ref, req = get_doc_or_404(db, "requests", request_id)
+    user_id = current_user["uid"]
+
+    if user_id not in (req.get("seekerId"), req.get("providerId")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to message on this negotiation."
+        )
+
+    now = datetime.now(timezone.utc)
+    content = payload.get("message") or payload.get("content", "")
+    msg_type = payload.get("type", "message")
+    amount = payload.get("amount")
+    departure_time = payload.get("departureTime")
+    arrival_time = payload.get("arrivalTime")
+
+    # Resolve sender display name
+    sender_name = "User"
+    try:
+        user_snap = db.collection("users").document(user_id).get()
+        if user_snap.exists:
+            u_data = user_snap.to_dict() or {}
+            sender_name = u_data.get("businessName") or u_data.get("name") or "User"
+    except Exception:
+        pass
+
+    new_msg = {
+        "id": f"msg_{uuid.uuid4().hex[:10]}",
+        "senderId": user_id,
+        "senderName": sender_name,
+        "type": msg_type,
+        "content": content,
+        "timestamp": now.isoformat()
+    }
+    if amount is not None:
+        new_msg["amount"] = float(amount)
+    if departure_time:
+        new_msg["departureTime"] = departure_time
+    if arrival_time:
+        new_msg["arrivalTime"] = arrival_time
+
+    # Append to messages array
+    messages = req.get("messages", [])
+    messages.append(new_msg)
+
+    update_fields = {
+        "messages": messages,
+        "updatedAt": now
+    }
+
+    if amount is not None and msg_type in ("counter", "offer"):
+        update_fields["counterPrice"] = float(amount)
+        update_fields["status"] = "countered"
+
+    if departure_time:
+        update_fields["departureTime"] = departure_time
+    if arrival_time:
+        update_fields["arrivalTime"] = arrival_time
+
+    doc_ref.update(update_fields)
+
+    recipient_id = req["seekerId"] if user_id == req["providerId"] else req["providerId"]
+    emit_notification(
+        user_id=recipient_id,
+        type="NEGOTIATION_MESSAGE",
+        title=f"New Message from {sender_name}",
+        message=content[:120] if content else f"Proposal updated: ₹{amount if amount is not None else ''}",
+        reference_id=request_id
+    )
+
+    return standard_response(
+        data=new_msg,
+        message="Message posted successfully."
+    )
+

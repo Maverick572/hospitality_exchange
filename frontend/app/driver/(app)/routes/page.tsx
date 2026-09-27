@@ -98,37 +98,44 @@ function RoutesPageInner() {
           }
         />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5">
           {list.map((route) => (
-            <article key={route.routeId} className="rounded-[1.375rem] border border-border bg-muted p-1">
-              <div className="flex flex-col gap-3 rounded-[1.125rem] border border-border bg-card p-4 md:flex-row md:items-center">
-                <div className="min-w-0 flex-1 space-y-2">
-                  <RoutePath route={route} />
-                  <RouteMeta route={route} />
-                </div>
-                {route.status !== "inactive" && (
-                  <div className="flex flex-wrap gap-1.5">
-                    <Button size="sm" onClick={() => setViewing(route)}>
-                      <SparklesIcon data-icon="inline-start" />
-                      View matches
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditing(route);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <PencilIcon data-icon="inline-start" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setDeactivating(route)} aria-label="Deactivate route">
-                      <PowerOffIcon />
-                    </Button>
-                  </div>
-                )}
+            <article
+              key={route.routeId}
+              className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-5 shadow-xs transition-all hover:border-foreground/20 md:flex-row md:items-center"
+            >
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <RoutePath route={route} />
+                <RouteMeta route={route} />
               </div>
+              {route.status !== "inactive" && (
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <Button size="sm" onClick={() => setViewing(route)} className="font-semibold shadow-xs">
+                    <SparklesIcon data-icon="inline-start" />
+                    View Matches
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditing(route);
+                      setFormOpen(true);
+                    }}
+                  >
+                    <PencilIcon data-icon="inline-start" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => setDeactivating(route)}
+                    aria-label="Deactivate route"
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <PowerOffIcon className="size-4" />
+                  </Button>
+                </div>
+              )}
             </article>
           ))}
         </div>

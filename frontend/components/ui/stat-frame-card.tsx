@@ -5,21 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-// Nested-border chrome like ChartCard, but FLIPPED vs. it and vs. every other
-// overview card: the bg-card (dark) panel with the number sits on TOP, and the
-// muted (grey) strip holding the icon + heading sits at the BOTTOM. That inverse
-// makes these KPI cards read differently from the top-heading cards around them.
-//
-// The panel's meta row is a fixed height and nothing is conditionally added or
-// removed, so an empty org's card is the exact same shape as a full one — only
-// the text/badge inside changes.
-
 type StatFrameCardProps = {
   label: string;
   value: string;
   subValue?: string;
   trend?: {
-    value: number; // +/- percentage
+    value: number;
     label?: string;
   };
   icon?: LucideIcon;
@@ -35,29 +26,39 @@ function StatFrameCard({
   className,
 }: StatFrameCardProps) {
   const isPositive = trend && trend.value >= 0;
-  // Caption on the panel's meta row: prefer the descriptive sub-value (e.g.
-  // "3 unique opens", "0 this week") so the row is never blank in an empty org;
-  // fall back to the trend caption. The trend badge sits on the right regardless.
   const caption = subValue ?? trend?.label ?? "";
 
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-[1.375rem] border border-border bg-muted p-1 pb-0 gap-0",
+        "flex flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4 shadow-xs transition-all duration-200 hover:border-foreground/20 hover:shadow-sm",
         className,
       )}
     >
-      {/* Dark panel on top — meta caption + trend badge, then the big value */}
-      <div className="rounded-[1.125rem] border border-border bg-card px-4 pb-4 pt-3">
-        <div className="flex h-6 items-center justify-between gap-2">
-          <span className="truncate text-xs text-muted-foreground">{caption}</span>
+      <div className="flex items-center justify-between text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+        {Icon ? (
+          <span className="flex size-7.5 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-3">
+        <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
+          {value}
+        </p>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          {caption ? (
+            <span className="truncate text-xs text-muted-foreground">{caption}</span>
+          ) : null}
           {trend ? (
             <Badge
               variant="outline"
               className={cn(
-                "shrink-0 gap-1 text-xs font-normal tabular-nums",
+                "shrink-0 gap-1 text-[10px] font-semibold tabular-nums",
                 isPositive
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   : "border-destructive/30 bg-destructive/10 text-destructive",
               )}
             >
@@ -71,15 +72,6 @@ function StatFrameCard({
             </Badge>
           ) : null}
         </div>
-        <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight">
-          {value}
-        </p>
-      </div>
-
-      {/* Grey strip at the bottom — icon + heading */}
-      <div className="flex items-center gap-1.5 px-3 py-2 text-muted-foreground">
-        {Icon ? <Icon className="size-3.5" aria-hidden="true" /> : null}
-        <span className="text-sm">{label}</span>
       </div>
     </Card>
   );

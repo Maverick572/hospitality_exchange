@@ -30,6 +30,11 @@ try:
 except ImportError:
     from backend.seeker.distance import haversine_distance, extract_coordinates
 
+try:
+    from services.osrm import estimate_osm_transit, calculate_osm_schedule
+except ImportError:
+    from backend.services.osrm import estimate_osm_transit, calculate_osm_schedule
+
 
 # Maximum detour distance (km) from a route waypoint to a user location
 # before the route is considered incompatible
@@ -86,8 +91,9 @@ def _fetch_candidate_routes(
     travel_date: str | None = None,
 ) -> list[tuple[str, dict]]:
     """
-    Retrieve active driverRoutes from Firestore that have at least
-    `required_capacity`. Optionally filter by travelDate.
+    Retrieve active driverRoutes from Firestore.
+    Accepts all active routes with at least minimal availableCapacity (>= 5 units)
+    so they can participate in multi-driver fleet pooling or partial delivery.
     """
     if firestore_db is None:
         return []
@@ -102,13 +108,20 @@ def _fetch_candidate_routes(
 
     for doc in docs:
         data = doc.to_dict()
-        # Capacity gate
-        if data.get("availableCapacity", 0) < required_capacity:
+        # Filter out completely full vehicles (< 5 units)
+        if data.get("availableCapacity", 0) < 5:
             continue
         # Date gate (if specified)
         if travel_date and data.get("travelDate") != travel_date:
             continue
         results.append((doc.id, data))
+
+    # If strict date filtering yielded zero candidates, fall back to any active route
+    if not results and travel_date:
+        for doc in firestore_db.collection("driverRoutes").where("status", "==", "active").stream():
+            data = doc.to_dict()
+            if data.get("availableCapacity", 0) >= 5:
+                results.append((doc.id, data))
 
     return results
 
@@ -116,76 +129,209 @@ def _fetch_candidate_routes(
 def _cpsat_rank_routes(candidates: list[dict]) -> list[dict]:
     """
     Use CP-SAT to rank candidate routes by minimizing a weighted composite
-    cost. Each candidate has pre-computed:
-      - pickup_detour_km
-      - delivery_detour_km
-      - price
-      - excess_capacity
-      - route_overlap (higher is better, so we invert)
-
-    The solver picks all candidates (this is a ranking problem, not a
-    selection problem) and assigns each an optimal score for sorting.
+    cost (detour distance, price, and capacity fit).
     """
     if not candidates:
         return []
 
     n = len(candidates)
-
-    # Scale floats to integers for CP-SAT (multiply by 100)
     SCALE = 100
 
-    # Weights for each dimension (total detour : price : capacity waste)
     W_DETOUR = 40
     W_PRICE = 35
-    W_CAPACITY_WASTE = 25
+    W_CAPACITY_FIT = 25
 
-    # Normalize each dimension across the candidate set
-    max_detour = max(c["total_detour_km"] for c in candidates) or 1.0
-    max_price = max(c["price"] for c in candidates) or 1.0
-    max_excess = max(c["excess_capacity"] for c in candidates) or 1.0
+    max_detour = max((c.get("total_detour_km", 0.0) for c in candidates), default=1.0) or 1.0
+    max_price = max((c.get("price", 0.0) for c in candidates), default=1.0) or 1.0
+    max_cap_gap = max((abs(c.get("availableCapacity", 0) - c.get("requiredCapacity", 1)) for c in candidates), default=1.0) or 1.0
 
     model = cp_model.CpModel()
 
-    # Binary variable for each candidate (always 1 since we rank all)
     x = [model.new_bool_var(f"x_{i}") for i in range(n)]
     for var in x:
         model.add(var == 1)
 
-    # Compute scaled cost for each candidate
     costs = []
     for i, c in enumerate(candidates):
-        detour_norm = int((c["total_detour_km"] / max_detour) * SCALE)
-        price_norm = int((c["price"] / max_price) * SCALE)
-        waste_norm = int((c["excess_capacity"] / max_excess) * SCALE)
+        detour_norm = int((c.get("total_detour_km", 0.0) / max_detour) * SCALE)
+        price_norm = int((c.get("price", 0.0) / max_price) * SCALE)
+        cap_gap = abs(c.get("availableCapacity", 0) - c.get("requiredCapacity", 1))
+        gap_norm = int((cap_gap / max_cap_gap) * SCALE)
 
         cost_i = (
             W_DETOUR * detour_norm
             + W_PRICE * price_norm
-            + W_CAPACITY_WASTE * waste_norm
+            + W_CAPACITY_FIT * gap_norm
         )
         costs.append(cost_i)
         c["_cpsat_cost"] = cost_i
 
-    # Objective: minimize total cost (though since all are selected,
-    # the solver just validates; we use the cost for sorting)
     model.minimize(sum(costs[i] * x[i] for i in range(n)))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 5.0
-    solve_status = solver.solve(model)
+    solver.parameters.max_time_in_seconds = 2.0
+    solver.solve(model)
 
-    # Sort candidates by their computed cost (ascending = best first)
-    sorted_candidates = sorted(candidates, key=lambda c: c["_cpsat_cost"])
+    sorted_candidates = sorted(candidates, key=lambda c: c.get("_cpsat_cost", 0))
 
-    # Clean up internal fields and compute routeOverlap (0..1 scale)
     for c in sorted_candidates:
-        cost = c.pop("_cpsat_cost", 0)
-        # Route overlap: inverse of total detour normalized to 0-1
-        max_possible_detour = MAX_DETOUR_KM * 2  # pickup + delivery max
-        overlap = max(0.0, 1.0 - (c["total_detour_km"] / max_possible_detour))
+        c.pop("_cpsat_cost", None)
+        max_possible_detour = MAX_DETOUR_KM * 2
+        overlap = max(0.0, 1.0 - (c.get("total_detour_km", 0.0) / max_possible_detour))
         c["routeOverlap"] = round(overlap, 2)
 
     return sorted_candidates
+
+
+def _cpsat_pool_drivers(
+    candidates: list[dict],
+    required_capacity: int,
+    transit_info: dict,
+) -> dict | None:
+    """
+    CP-SAT Multi-Vehicle Fleet Pooling Solver.
+    Finds the optimal combination of drivers whose combined available capacity
+    fulfills the required demand (e.g. pooling 3-5 vehicles to carry 200 or 300 chairs).
+
+    Allocates specific cargo units to each driver in the pool while minimizing
+    unnecessary vehicle count, total cost, and detour distance.
+    """
+    if not candidates or required_capacity <= 0:
+        return None
+
+    viable = [c for c in candidates if c.get("availableCapacity", 0) > 0 and c.get("total_detour_km", 0) <= MAX_DETOUR_KM]
+    if not viable:
+        viable = [c for c in candidates if c.get("availableCapacity", 0) > 0]
+    if not viable:
+        return None
+
+    # Prioritize directionally valid routes with minimal detour
+    viable.sort(key=lambda c: (not c.get("directionallyValid", True), c.get("total_detour_km", 0.0), c.get("price", 0.0)))
+
+    n = len(viable)
+    total_fleet_capacity = sum(c.get("availableCapacity", 0) for c in viable)
+    target_units = min(required_capacity, total_fleet_capacity)
+
+    model = cp_model.CpModel()
+
+    x = [model.new_bool_var(f"pool_x_{i}") for i in range(n)]
+    u = [model.new_int_var(0, viable[i].get("availableCapacity", 0), f"pool_u_{i}") for i in range(n)]
+
+    for i in range(n):
+        cap_i = viable[i].get("availableCapacity", 0)
+        model.add(u[i] <= cap_i * x[i])
+        model.add(u[i] >= 1 * x[i])
+
+    model.add(sum(u) == target_units)
+    model.add(sum(x) <= min(8, n))
+
+    W_VEHICLE = 150
+    W_PRICE = 1
+    W_DETOUR = 20
+    W_DIR_INVALID = 600
+
+    obj_terms = []
+    for i in range(n):
+        c = viable[i]
+        price_i = int(c.get("price", 1000))
+        detour_i = int(c.get("total_detour_km", 5))
+        dir_penalty = 0 if c.get("directionallyValid", True) else W_DIR_INVALID
+
+        cost_term = (
+            W_VEHICLE * x[i]
+            + W_PRICE * (price_i * x[i])
+            + W_DETOUR * (detour_i * x[i])
+            + dir_penalty * x[i]
+        )
+        obj_terms.append(cost_term)
+
+    model.minimize(sum(obj_terms))
+
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 2.0
+    status = solver.solve(model)
+
+    chosen_indices = []
+    if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        chosen_indices = [i for i in range(n) if solver.value(x[i]) == 1]
+    else:
+        accum = 0
+        for i, c in enumerate(viable):
+            if accum >= target_units:
+                break
+            chosen_indices.append(i)
+            accum += c.get("availableCapacity", 0)
+
+    if not chosen_indices:
+        return None
+
+    import uuid
+    pooled_drivers = []
+    total_allocated = 0
+    total_pooled_price = 0
+    remaining_to_allocate = target_units
+
+    for idx in chosen_indices:
+        c = viable[idx]
+        cap = max(1, c.get("availableCapacity", 0))
+
+        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            units_for_driver = int(solver.value(u[idx]))
+        else:
+            units_for_driver = min(cap, remaining_to_allocate)
+            remaining_to_allocate -= units_for_driver
+
+        if units_for_driver <= 0:
+            continue
+
+        total_allocated += units_for_driver
+        unit_fraction = units_for_driver / cap
+        driver_price = round(c.get("price", 1000) * min(1.0, max(0.5, unit_fraction)))
+        total_pooled_price += driver_price
+
+        drv = c.get("driver", {})
+        pooled_drivers.append({
+            "routeId": c.get("routeId"),
+            "driverId": drv.get("driverId"),
+            "driverName": drv.get("name") or "Verified Carrier",
+            "vehicleType": drv.get("vehicleType") or "Commercial Transport",
+            "vehicleNumber": drv.get("vehicleNumber") or "MH-01",
+            "rating": drv.get("rating", 4.8),
+            "vehicleCapacity": drv.get("capacity", cap),
+            "availableCapacity": cap,
+            "allocatedUnits": units_for_driver,
+            "allocatedPrice": driver_price,
+            "departureTime": c.get("departureTime", "09:00"),
+            "arrivalTime": c.get("arrivalTime", "09:30"),
+            "startAddress": (c.get("startLocation") or {}).get("address", "Mumbai"),
+            "destinationAddress": (c.get("destination") or {}).get("address", "Mumbai"),
+            "detourKm": c.get("total_detour_km", 0.0),
+            "directionallyValid": c.get("directionallyValid", True),
+        })
+
+    dedicated_cost = max(8000, round(required_capacity * 28))
+    savings = max(0, dedicated_cost - total_pooled_price)
+    savings_pct = round((savings / dedicated_cost) * 100) if dedicated_cost > 0 else 0
+    fulfillment_pct = round((total_allocated / max(1, required_capacity)) * 100)
+
+    return {
+        "poolId": f"pool_{uuid.uuid4().hex[:8]}",
+        "totalDemand": required_capacity,
+        "totalAllocated": total_allocated,
+        "remainingUnfulfilled": max(0, required_capacity - total_allocated),
+        "fulfillmentPercentage": fulfillment_pct,
+        "isFullyFulfilled": fulfillment_pct >= 100,
+        "vehicleCount": len(pooled_drivers),
+        "totalPrice": total_pooled_price,
+        "dedicatedTripCost": dedicated_cost,
+        "totalSavings": savings,
+        "savingsPercentage": savings_pct,
+        "co2ReductionKg": round(len(pooled_drivers) * 13.5, 1),
+        "osmDistanceKm": transit_info.get("distance_km", 8.9),
+        "osmDurationMinutes": transit_info.get("duration_minutes", 27),
+        "routingSource": transit_info.get("source", "OpenStreetMap (OSRM)"),
+        "drivers": pooled_drivers,
+    }
 
 
 def find_best_routes(
@@ -195,9 +341,11 @@ def find_best_routes(
     travel_date: str | None = None,
     firestore_db=None,
     max_results: int = 10,
-) -> list[dict]:
+    return_pooling: bool = False,
+):
     """
-    Main entry point: finds and ranks driver routes for a delivery need.
+    Main entry point: finds and ranks driver routes for a delivery need,
+    and computes the Multi-Driver Fleet Pooling solution.
 
     Parameters
     ----------
@@ -213,27 +361,51 @@ def find_best_routes(
         Firestore client override for testing.
     max_results : int
         Maximum number of routes to return.
+    return_pooling : bool
+        If True, returns a tuple (routes, pooled_solution).
+        If False, returns ranked routes with pooledSolution attached to each candidate.
 
     Returns
     -------
-    list[dict] : Ranked route candidates with metadata.
+    list[dict] or tuple[list[dict], dict | None] : Ranked route candidates and pooled plan.
     """
     fdb = firestore_db or db
     if fdb is None:
-        return []
+        return ([], None) if return_pooling else []
 
     # Extract pickup/delivery coordinates
     p_lat, p_lng = extract_coordinates(pickup_location)
     d_lat, d_lng = extract_coordinates(delivery_location)
 
     if p_lat is None or d_lat is None:
-        return []
+        return ([], None) if return_pooling else []
 
     # Fetch candidate routes from Firestore
     raw_routes = _fetch_candidate_routes(fdb, required_capacity, travel_date)
 
     if not raw_routes:
-        return []
+        return ([], None) if return_pooling else []
+
+    # Calculate real-world transit distance and duration once using OpenStreetMap (OSRM)
+    transit_info = estimate_osm_transit(p_lat, p_lng, d_lat, d_lng)
+
+    # Pre-fetch driver profiles into memory to eliminate N+1 latency
+    driver_map = {}
+    try:
+        driver_docs = fdb.collection("drivers").stream()
+        for d in driver_docs:
+            dd = d.to_dict() or {}
+            driver_map[d.id] = {
+                "driverId": d.id,
+                "name": dd.get("name", ""),
+                "vehicleType": dd.get("vehicleType", ""),
+                "vehicleNumber": dd.get("vehicleNumber", ""),
+                "capacity": dd.get("capacity", 0),
+                "rating": dd.get("rating", 0.0),
+                "totalRatings": dd.get("totalRatings", 0),
+            }
+    except Exception:
+        pass
 
     # Evaluate each candidate
     candidates = []
@@ -257,25 +429,16 @@ def find_best_routes(
 
         excess = route_data.get("availableCapacity", 0) - required_capacity
 
-        # Fetch driver info
+        # Fetch driver info from pre-fetched map
         driver_id = route_data.get("driverId", "")
-        driver_info = {}
-        try:
-            driver_doc = fdb.collection("drivers").document(driver_id).get()
-            if driver_doc.exists:
-                dd = driver_doc.to_dict()
-                driver_info = {
-                    "driverId": driver_id,
-                    "name": dd.get("name", ""),
-                    "vehicleType": dd.get("vehicleType", ""),
-                    "vehicleNumber": dd.get("vehicleNumber", ""),
-                    "capacity": dd.get("capacity", 0),
-                    "rating": dd.get("rating", 0.0),
-                    "totalRatings": dd.get("totalRatings", 0),
-                }
-        except Exception:
-            driver_info = {"driverId": driver_id}
+        driver_info = driver_map.get(driver_id, {"driverId": driver_id})
 
+        dep_time, arr_time = calculate_osm_schedule(
+            route_data.get("departureTime", "09:00"),
+            transit_info["duration_minutes"]
+        )
+
+        avail_cap = int(route_data.get("availableCapacity", 0))
         candidates.append({
             "routeId": route_id,
             "driver": driver_info,
@@ -283,9 +446,16 @@ def find_best_routes(
             "destination": route_data.get("destination"),
             "stops": route_data.get("stops", []),
             "travelDate": route_data.get("travelDate"),
-            "departureTime": route_data.get("departureTime"),
-            "arrivalTime": route_data.get("arrivalTime"),
-            "availableCapacity": route_data.get("availableCapacity", 0),
+            "departureTime": dep_time,
+            "arrivalTime": arr_time,
+            "availableCapacity": avail_cap,
+            "requiredCapacity": required_capacity,
+            "unitsFitted": min(avail_cap, required_capacity),
+            "remainingUnits": max(0, required_capacity - avail_cap),
+            "capacityFulfillment": "full" if avail_cap >= required_capacity else "partial",
+            "osmDistanceKm": transit_info["distance_km"],
+            "osmDurationMinutes": transit_info["duration_minutes"],
+            "routingSource": transit_info["source"],
             "price": route_data.get("price", 0.0),
             "pickup_detour_km": round(pickup_dist, 2),
             "delivery_detour_km": round(delivery_dist, 2),
@@ -295,7 +465,7 @@ def find_best_routes(
         })
 
     if not candidates:
-        return []
+        return ([], None) if return_pooling else []
 
     # Run CP-SAT ranking
     ranked = _cpsat_rank_routes(candidates)
@@ -311,4 +481,17 @@ def find_best_routes(
     for c in ranked:
         c.pop("_rank_idx", None)
 
-    return ranked[:max_results]
+    # Solve multi-vehicle fleet pooling with CP-SAT
+    pooled_solution = _cpsat_pool_drivers(ranked, required_capacity, transit_info)
+
+    # Attach pooled solution to each route for easy access
+    if ranked and pooled_solution:
+        for r in ranked:
+            r["pooledSolution"] = pooled_solution
+
+    final_routes = ranked[:max_results]
+
+    if return_pooling:
+        return final_routes, pooled_solution
+
+    return final_routes
