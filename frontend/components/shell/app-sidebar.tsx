@@ -223,7 +223,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   {
                     label: "SHARED LOGISTICS",
                     items: [
-                      { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match", badge: "81% OFF" },
+                      { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
                     ],
                   },
                   {

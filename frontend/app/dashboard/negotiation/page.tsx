@@ -18,10 +18,12 @@ import {
   MapPinIcon,
   MessageSquareIcon,
   RefreshCwIcon,
+  RotateCcwIcon,
   SendIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
   SparklesIcon,
+  Trash2Icon,
   TruckIcon,
   UploadCloudIcon,
   UserCheckIcon,
@@ -338,6 +340,43 @@ function NegotiationContent() {
       channel = new BroadcastChannel("hrex_chat_channel");
       channel.onmessage = (event) => {
         const data = event.data;
+        if (data && data.reset) {
+          setStatus("negotiating");
+          setCurrentAmount(initialAmount);
+          setDepartureTime(initDep);
+          setArrivalTime(initArr);
+          setCounterPrice(String(initialAmount));
+          setShowCounterForm(false);
+          setSenderEvidence([]);
+          setSenderMediaUrl("");
+          setSenderNotes("");
+          setReceiverEvidence([]);
+          setReceiverMediaUrl("");
+          setReceiverNotes("");
+          setConditionConfirmed(false);
+          setMessages([
+            {
+              id: "msg-1",
+              sender: "seeker",
+              senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
+              type: "request",
+              text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
+              amount: initialAmount,
+              depTime: initDep,
+              arrTime: initArr,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+            {
+              id: "msg-2",
+              sender: "provider",
+              senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
+              type: "message",
+              text: `Hello! We reviewed your demand for ${initialQty} units (${categoryDef.label}). Loading bay at ${sellerName} is reserved for the pooled convoy. Pre-transit inspection ready.`,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+          ]);
+          return;
+        }
         if (data && (data.activeReqId === activeReqId || !data.activeReqId)) {
           if (data.messages) setMessages(data.messages);
           if (data.amount !== undefined) setCurrentAmount(data.amount);
@@ -355,6 +394,16 @@ function NegotiationContent() {
       if ((e.key === CHAT_SYNC_KEY || e.key === "hrex_chat_sync_latest") && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
+          if (data.reset) {
+            setStatus("negotiating");
+            setCurrentAmount(initialAmount);
+            setDepartureTime(initDep);
+            setArrivalTime(initArr);
+            setCounterPrice(String(initialAmount));
+            setSenderEvidence([]);
+            setReceiverEvidence([]);
+            return;
+          }
           if (data.messages) setMessages(data.messages);
           if (data.amount !== undefined) setCurrentAmount(data.amount);
           if (data.depTime) setDepartureTime(data.depTime);
@@ -735,6 +784,63 @@ function NegotiationContent() {
     broadcastSync({ category: newCatId });
   };
 
+  // Completely wipe conversation history and start fresh
+  const handleResetNegotiation = () => {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("hrex_chat_sync_") || key === "hrex_chat_sync_latest")) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {}
+
+    try {
+      const bc = new BroadcastChannel("hrex_chat_channel");
+      bc.postMessage({ reset: true, timestamp: Date.now() });
+      bc.close();
+    } catch {}
+
+    setStatus("negotiating");
+    setCurrentAmount(initialAmount);
+    setDepartureTime(initDep);
+    setArrivalTime(initArr);
+    setCounterPrice(String(initialAmount));
+    setShowCounterForm(false);
+    setCounterNote("");
+    setInputText("");
+    setSenderEvidence([]);
+    setSenderMediaUrl("");
+    setSenderNotes("");
+    setReceiverEvidence([]);
+    setReceiverMediaUrl("");
+    setReceiverNotes("");
+    setConditionConfirmed(false);
+    setMessages([
+      {
+        id: "msg-1",
+        sender: "seeker",
+        senderName: `${buyerName} (Buyer)${isCurrentSeeker ? " • You" : ""}`,
+        type: "request",
+        text: `Proposal submitted: Renting ${initialQty} units. Scheduled transport: Departure ${initDep} → Arrival ${initArr} via ${vehicleCount} pooled vehicles. Category protocol: [${categoryDef.label}] requires ${categoryDef.evidenceType.toUpperCase()} evidence.`,
+        amount: initialAmount,
+        depTime: initDep,
+        arrTime: initArr,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+      {
+        id: "msg-2",
+        sender: "provider",
+        senderName: `${sellerName} (Seller)${!isCurrentSeeker ? " • You" : ""}`,
+        type: "message",
+        text: `Hello! We reviewed your demand for ${initialQty} units (${categoryDef.label}). Loading bay at ${sellerName} is reserved for the pooled convoy. Pre-transit inspection ready.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+
+    toast.success("Conversations and negotiation history wiped clean! You can start over.", { icon: "🧹" });
+  };
+
   return (
     <Page>
       <div className="space-y-6 pb-16">
@@ -767,6 +873,17 @@ function NegotiationContent() {
             >
               <RefreshCwIcon className="size-3" />
               <span>Switch to {isCurrentSeeker ? "Sender (Seller)" : "Receiver (Buyer)"} View</span>
+            </Button>
+            <Separator orientation="vertical" className="h-4" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetNegotiation}
+              className="text-xs h-7 px-2 font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors gap-1"
+              title="Clear all chat messages and reset to clean proposal"
+            >
+              <RotateCcwIcon className="size-3" />
+              <span>Reset & Start Over</span>
             </Button>
           </div>
         </div>
@@ -911,12 +1028,24 @@ function NegotiationContent() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Live Sync</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Live Sync</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetNegotiation}
+                    className="text-[11px] h-7 px-2 font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors gap-1"
+                    title="Clear all chat history and start over"
+                  >
+                    <RotateCcwIcon className="size-3" />
+                    <span>Reset Chat</span>
+                  </Button>
                 </div>
               </div>
 

@@ -1,17 +1,21 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRightIcon,
+  BoxesIcon,
   CheckCircle2Icon,
   ClockIcon,
   LayersIcon,
   LeafIcon,
   Loader2Icon,
   MapPinIcon,
+  PackageXIcon,
   ShieldAlertIcon,
   SparklesIcon,
+  StoreIcon,
   TrendingDownIcon,
   TruckIcon,
 } from "lucide-react";
@@ -21,7 +25,7 @@ import { CostComparison } from "@/components/logistics/cost-comparison";
 import { Button } from "@/components/ui/button";
 import { useBusinessSession } from "@/lib/session";
 import { usePerspective } from "@/lib/perspective";
-import { logisticsApi, notificationsApi } from "@/lib/api";
+import { bookingsApi, logisticsApi, notificationsApi, requestsApi } from "@/lib/api";
 import { resolveBusinessUid } from "@/lib/business-uids";
 
 type PooledDriver = {
@@ -128,6 +132,22 @@ function LogisticsContent() {
   const deliveryLatParam = searchParams.get("deliveryLat");
   const deliveryLngParam = searchParams.get("deliveryLng");
   const quantityParam = searchParams.get("quantity");
+  const isDemo = searchParams.get("demo") === "true";
+  const resourceIdParam = searchParams.get("resourceId");
+  const bookingIdParam = searchParams.get("bookingId");
+  const requestIdParam = searchParams.get("requestId");
+
+  const hasExplicitParams = Boolean(
+    (pickupParam && deliveryParam) ||
+    resourceIdParam ||
+    bookingIdParam ||
+    requestIdParam ||
+    isDemo
+  );
+
+  const [checkingActiveOrders, setCheckingActiveOrders] = useState(!hasExplicitParams);
+  const [hasActiveOrderOrSale, setHasActiveOrderOrSale] = useState(hasExplicitParams);
+
   const requiredQty = quantityParam ? Math.max(1, parseInt(quantityParam, 10)) : 300;
 
   const { perspective, setPerspective } = usePerspective();
@@ -147,7 +167,41 @@ function LogisticsContent() {
   const [routes, setRoutes] = useState<RouteMatch[]>([]);
   const [pool, setPool] = useState<PooledSolution | null>(null);
   const [activeTab, setActiveTab] = useState<"pooled" | "individual">("pooled");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasExplicitParams);
+
+  // Check if current user has any active/pending bookings or requests
+  useEffect(() => {
+    if (hasExplicitParams) {
+      setHasActiveOrderOrSale(true);
+      setCheckingActiveOrders(false);
+      return;
+    }
+
+    let cancelled = false;
+    async function checkUserOrders() {
+      setCheckingActiveOrders(true);
+      try {
+        const [bookings, requests] = await Promise.all([
+          bookingsApi.getMine().catch(() => []),
+          requestsApi.getProviderRequests().catch(() => []),
+        ]);
+        if (!cancelled) {
+          const activeBookings = Array.isArray(bookings) && bookings.length > 0;
+          const activeRequests = Array.isArray(requests) && requests.length > 0;
+          setHasActiveOrderOrSale(activeBookings || activeRequests);
+        }
+      } catch {
+        if (!cancelled) setHasActiveOrderOrSale(false);
+      } finally {
+        if (!cancelled) setCheckingActiveOrders(false);
+      }
+    }
+
+    checkUserOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasExplicitParams]);
 
   // In Seeker View: Surplus goods are picked up at Seller's venue, delivered to YOUR venue.
   // In Provider View: Goods are picked up at YOUR venue, delivered to Buyer's venue.
@@ -156,6 +210,10 @@ function LogisticsContent() {
 
   // Fetch matched routes and multi-driver pooling solution from CP-SAT backend using OSM
   useEffect(() => {
+    if (!hasActiveOrderOrSale || checkingActiveOrders) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     async function fetchRoutes() {
       setLoading(true);
@@ -212,7 +270,7 @@ function LogisticsContent() {
     return () => {
       cancelled = true;
     };
-  }, [resolvedPickup, resolvedDelivery, pickupLatParam, pickupLngParam, deliveryLatParam, deliveryLngParam, requiredQty, isSeeker]);
+  }, [hasActiveOrderOrSale, checkingActiveOrders, resolvedPickup, resolvedDelivery, pickupLatParam, pickupLngParam, deliveryLatParam, deliveryLngParam, requiredQty, isSeeker]);
 
   const topRoute = routes[0];
 
@@ -263,8 +321,115 @@ function LogisticsContent() {
 
   const dedicatedCost = pool?.dedicatedTripCost ?? 8000;
   const sharedCost = activeTab === "pooled" && pool ? pool.totalPrice : (topRoute?.price ?? 1500);
-  const savings = Math.max(0, dedicatedCost - sharedCost);
-  const savingsPercent = Math.round((savings / dedicatedCost) * 100);
+  if (checkingActiveOrders) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+        <Loader2Icon className="size-8 animate-spin text-primary" />
+        <p className="text-sm font-semibold text-muted-foreground">Checking active orders & logistics status...</p>
+      </div>
+    );
+  }
+
+  if (!hasActiveOrderOrSale && !hasExplicitParams) {
+    return (
+      <div className="space-y-6 pb-16">
+        {/* Page Header */}
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary tracking-wide mb-3">
+            <TruckIcon className="size-3.5" />
+            <span>MULTI-CARRIER LOGISTICS POOLING</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            Logistics Match & Fleet Pooling
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground max-w-2xl leading-relaxed">
+            AI-powered carrier pooling and corridor matching to eliminate dedicated freight charges and deadhead miles.
+          </p>
+        </div>
+
+        {/* Empty State Card */}
+        <div className="rounded-3xl border border-border bg-gradient-to-b from-card via-card to-card/60 p-8 sm:p-12 text-center shadow-xs space-y-6">
+          <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary shadow-xs">
+            <PackageXIcon className="size-8" />
+          </div>
+
+          <div className="max-w-xl mx-auto space-y-2">
+            <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+              No Active Logistics Dispatches
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              You haven't ordered or sold any hospitality surplus items yet. 
+              Our multi-carrier CP-SAT solver and cost-cut calculations automatically activate when you source resources in the Marketplace or accept an incoming order.
+            </p>
+          </div>
+
+          {/* Three Feature Pillars Explaining the Tech */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left pt-2">
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                <LayersIcon className="size-4 text-emerald-500" />
+                <span>Multi-Driver Pooling</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Aggregates verified carriers (Eicher Pro, Tata 407, Bolero Maxi) along existing commercial routes to fulfill your exact demand.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                <TrendingDownIcon className="size-4 text-primary" />
+                <span>Algorithmic Cost Cuts</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Co-loading on return legs slashes freight overhead by up to 80% compared to private dedicated truck bookings.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                <LeafIcon className="size-4 text-emerald-600" />
+                <span>Green Mile Optimization</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Calculates real-time OSRM turn-by-turn road geometry, reducing carbon emissions and eliminating empty return miles.
+              </p>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+            <Button asChild size="default" className="text-xs font-bold gap-1.5">
+              <Link href="/dashboard/marketplace">
+                <StoreIcon className="size-3.5" />
+                <span>Browse Marketplace</span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="default" className="text-xs font-bold gap-1.5">
+              <Link href="/dashboard/smart-matches">
+                <SparklesIcon className="size-3.5 text-primary" />
+                <span>View Smart Matches</span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="default" className="text-xs font-bold gap-1.5">
+              <Link href="/dashboard/resources">
+                <BoxesIcon className="size-3.5" />
+                <span>List Surplus to Sell</span>
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="default"
+              onClick={() => router.push("/dashboard/logistics?demo=true")}
+              className="text-xs font-bold text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <span>Simulate Sample Route Fleet</span>
+              <ArrowRightIcon className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">
