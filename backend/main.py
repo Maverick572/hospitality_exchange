@@ -5,6 +5,10 @@ backend_dir = os.path.abspath(os.path.dirname(__file__))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
+root_dir = os.path.abspath(os.path.join(backend_dir, ".."))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 from fastapi import FastAPI, Depends, HTTPException, Query, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -22,6 +26,7 @@ try:
     from services.category_registry import CATEGORIES
     from core.auth import get_current_user
     from core.firebase import db
+    from weather.router import router as twin_weather_router
 except ImportError:
     from backend.users import router as users_router
     from backend.drivers import router as drivers_router
@@ -34,6 +39,7 @@ except ImportError:
     from backend.services.category_registry import CATEGORIES
     from backend.core.auth import get_current_user
     from backend.core.firebase import db
+    from backend.weather.router import router as twin_weather_router
 
 
 app = FastAPI(
@@ -98,6 +104,12 @@ app.include_router(
 # Real-time social & web weather scraping
 app.include_router(
     weather_router,
+    prefix="/api/v1"
+)
+
+# Digital Twin weather endpoints
+app.include_router(
+    twin_weather_router,
     prefix="/api/v1"
 )
 

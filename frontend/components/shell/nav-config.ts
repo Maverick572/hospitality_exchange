@@ -12,6 +12,7 @@ import {
   StoreIcon,
   TruckIcon,
   UserRoundIcon,
+  GlobeIcon,
 } from "lucide-react";
 
 export type NavItem = {
@@ -58,6 +59,7 @@ export const BUSINESS_SHELL: ShellConfig = {
       label: "SHARED LOGISTICS",
       items: [
         { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match", badge: "81% OFF" },
+        { href: "/dashboard/twin", icon: GlobeIcon, label: "Digital Twin", badge: "New" },
       ],
     },
     {
@@ -74,6 +76,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },
     { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
     { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
+    { href: "/dashboard/twin", icon: GlobeIcon, label: "Digital Twin" },
     { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
     { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
   ],
@@ -82,6 +85,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     { href: "/dashboard/profile", icon: UserRoundIcon, label: "Settings & Profile" },
   ],
   extraTitles: {
+    "/dashboard/twin": { title: "Digital Twin Simulator", icon: GlobeIcon },
     "/dashboard/logistics": { title: "Logistics-Aware Matching", icon: TruckIcon },
     "/dashboard/marketplace": { title: "Resource Marketplace", icon: StoreIcon },
     "/dashboard/smart-matches": { title: "Smart Matches", icon: SparklesIcon },

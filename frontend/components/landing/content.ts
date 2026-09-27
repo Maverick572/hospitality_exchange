@@ -13,6 +13,7 @@ import {
 export const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
+  { label: "Digital Twin", href: "/dashboard/twin" },
   { label: "Who it's for", href: "#roles" },
   { label: "Examples", href: "#examples" },
 ];

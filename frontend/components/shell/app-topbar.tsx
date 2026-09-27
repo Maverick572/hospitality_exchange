@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BoxesIcon,
   ChevronRightIcon,
+  GlobeIcon,
   MoonIcon,
   SearchIcon,
   SparklesIcon,
@@ -166,6 +167,24 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
 
         {/* ── Right Actions ── */}
         <div className="flex items-center gap-2.5">
+          {/* Digital Twin Quick Access Button */}
+          {config.kind === "business" && (
+            <Link
+              href="/dashboard/twin"
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all hover:bg-muted/70",
+                pathname === "/dashboard/twin"
+                  ? "border-primary/50 bg-primary/10 text-primary shadow-2xs font-bold"
+                  : "border-border/80 bg-background/50 text-muted-foreground hover:text-foreground"
+              )}
+              title="Open Digital Twin Simulator"
+            >
+              <GlobeIcon className={cn("size-3.5", pathname === "/dashboard/twin" ? "text-primary animate-pulse" : "text-muted-foreground")} />
+              <span className="hidden sm:inline">Digital Twin</span>
+              <span className="rounded bg-primary/20 px-1 py-0.2 text-[9px] font-bold text-primary">NEW</span>
+            </Link>
+          )}
+
           {/* Connection Pill */}
           <Popover>
             <PopoverTrigger asChild>
