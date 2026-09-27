@@ -34,11 +34,7 @@ function useProfileGate<T>(kind: Kind, load: () => Promise<T>) {
     try {
       setProfile(await load());
     } catch (err) {
-      if (err instanceof ApiError && err.status === 404 && !err.notImplemented) {
-        router.replace(ROUTES[kind].onboarding);
-        return;
-      }
-      if (err instanceof ApiError && err.status === 401) {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 401)) {
         router.replace(ROUTES[kind].login);
         return;
       }

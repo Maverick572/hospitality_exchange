@@ -36,14 +36,86 @@ export function firebaseAuth(): Auth {
   return getAuth(firebaseApp());
 }
 
-/** Upload a file to Firebase Storage and return its public download URL. */
+/**
+ * Compress an image file to max 1000px dimension and convert to high-efficiency data URL.
+ * Stored directly in Firestore document payload.
+ */
+export function compressAndEncodeImage(file: File, maxDimension = 1000, quality = 0.82): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      // Fallback for non-images
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        // Fallback if canvas 2d context is unavailable
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve(dataUrl);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * Upload a file to Firebase Storage (if configured) or encode as an optimized
+ * compressed data URL to store directly with the Firestore document.
+ */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  if (!storageEnabled) {
-    throw new Error("File uploads need Firebase Storage to be configured.");
+  if (storageEnabled) {
+    try {
+      const safeName = file.name.replace(/[^\w.-]+/g, "_");
+      const path = `${folder}/${Date.now()}-${safeName}`;
+      const storageRef = ref(getStorage(firebaseApp()), path);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      return await getDownloadURL(storageRef);
+    } catch (err) {
+      console.warn("Firebase Storage upload failed, storing optimized image directly:", err);
+    }
   }
-  const safeName = file.name.replace(/[^\w.-]+/g, "_");
-  const path = `${folder}/${Date.now()}-${safeName}`;
-  const storageRef = ref(getStorage(firebaseApp()), path);
-  await uploadBytes(storageRef, file, { contentType: file.type });
-  return getDownloadURL(storageRef);
+
+  // Stored directly in Firestore document
+  return compressAndEncodeImage(file);
 }
