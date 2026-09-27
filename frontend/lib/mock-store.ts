@@ -225,6 +225,15 @@ class MockStore {
       },
     };
     this.requests.unshift(newReq);
+
+    this.emitNotification({
+      userId: data.providerId,
+      type: "REQUEST_RECEIVED",
+      title: "New Resource Booking Request",
+      message: `${this.user.businessName || "Buyer"} requested ${data.requestedQuantity} units: "${data.message || "Review proposal"}"`,
+      referenceId: newReq.requestId,
+    });
+
     return newReq;
   }
   counterRequest(id: string, data: CounterInput) {
@@ -234,6 +243,15 @@ class MockStore {
       req.counterPrice = data.counterPrice ?? data.price;
       req.counterNotes = data.notes ?? data.message;
       req.updatedAt = new Date().toISOString();
+
+      const recipientId = req.providerId === this.user.userId ? req.seekerId : req.providerId;
+      this.emitNotification({
+        userId: recipientId,
+        type: "REQUEST_COUNTERED",
+        title: "Counter-Offer Received",
+        message: `New proposal: ₹${(req.counterPrice ?? 0).toLocaleString("en-IN")}. ${data.message || ""}`,
+        referenceId: req.requestId,
+      });
     }
   }
   acceptRequest(id: string): { requestId: string; status: string; bookingId: string } {
@@ -243,6 +261,16 @@ class MockStore {
       req.status = "accepted";
       req.updatedAt = new Date().toISOString();
       const totalPrice = req.counterPrice ?? req.offeredPrice;
+
+      const otherParty = req.providerId === this.user.userId ? req.seekerId : req.providerId;
+      this.emitNotification({
+        userId: otherParty,
+        type: "REQUEST_ACCEPTED",
+        title: "Agreement Finalized!",
+        message: `Booking ${bookingId} confirmed at ₹${(totalPrice ?? 0).toLocaleString("en-IN")}. Proceed with condition verification.`,
+        referenceId: bookingId,
+      });
+
       const newBooking: Booking = {
         bookingId,
         requestId: req.requestId,
@@ -332,6 +360,28 @@ class MockStore {
   // --- Notifications ---
   getNotifications(): AppNotification[] {
     return this.notifications;
+  }
+  emitNotification(data: Partial<AppNotification>): AppNotification {
+    const notif: AppNotification = {
+      notificationId: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      userId: data.userId || "usr_taj_lands_end",
+      type: data.type || "REQUEST_RECEIVED",
+      title: data.title || "New Notification",
+      message: data.message || "",
+      referenceId: data.referenceId,
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    this.notifications.unshift(notif);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("hrex_last_notif", JSON.stringify(notif));
+        window.dispatchEvent(new CustomEvent("hrex_notification_received", { detail: notif }));
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return notif;
   }
   markNotificationRead(id: string) {
     const n = this.notifications.find((item) => item.notificationId === id);

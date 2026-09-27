@@ -133,6 +133,13 @@ export const reviewsApi = {
 
 export const notificationsApi = {
   getAll: () => api.get<AppNotification[]>("/notifications"),
+  create: (data: {
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    referenceId?: string;
+  }) => api.post<AppNotification>("/notifications", data),
   markRead: (id: string) => api.patch<unknown>(`/notifications/${id}/read`),
 };
 

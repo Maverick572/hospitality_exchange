@@ -39,7 +39,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useBusinessSession } from "@/lib/session";
 import { usePerspective } from "@/lib/perspective";
-import { evidenceApi, requestsApi } from "@/lib/api";
+import { evidenceApi, notificationsApi, requestsApi } from "@/lib/api";
+import { resolveBusinessUid } from "@/lib/business-uids";
 import { inr } from "@/lib/format";
 
 type EvidenceRule = {
@@ -197,6 +198,10 @@ function NegotiationContent() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const reqIdParam = searchParams.get("requestId");
+  const [activeReqId] = useState(() => reqIdParam || `req_${Date.now()}`);
+  const hasNotifiedInitialRef = useRef(false);
+
   // Initial chat stream
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -223,6 +228,21 @@ function NegotiationContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
+
+  // Dispatch initial notification to seller if arriving as buyer for a new booking
+  useEffect(() => {
+    if (isCurrentSeeker && !hasNotifiedInitialRef.current && !reqIdParam) {
+      hasNotifiedInitialRef.current = true;
+      const sellerUid = resolveBusinessUid(sellerName);
+      void notificationsApi.create({
+        userId: sellerUid,
+        type: "REQUEST_RECEIVED",
+        title: `New Booking Proposal from ${buyerName}`,
+        message: `Proposal submitted for ${initialQty} units (${resourceTitle}). Review commercial offer.`,
+        referenceId: activeReqId,
+      }).catch(() => undefined);
+    }
+  }, [isCurrentSeeker, sellerName, buyerName, initialQty, activeReqId, reqIdParam, resourceTitle]);
 
   // Handle counter offer submission
   const handleSendCounter = (e: React.FormEvent) => {
@@ -257,6 +277,16 @@ function NegotiationContent() {
     setShowCounterForm(false);
     setCounterNote("");
     toast.success("Counter-offer proposed!");
+
+    // Dispatch real-time notification to counterpart
+    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    void notificationsApi.create({
+      userId: counterpartUid,
+      type: "REQUEST_COUNTERED",
+      title: `Counter-Offer from ${senderName.replace(" • You", "")}`,
+      message: `Counter-proposal: ₹${priceNum.toLocaleString("en-IN")} (Departure ${counterDep} → Arrival ${counterArr}). ${counterNote}`.trim(),
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   // Send simple text message
@@ -268,18 +298,29 @@ function NegotiationContent() {
     const senderName = isCurrentSeeker
       ? `${buyerName} (Buyer) • You`
       : `${sellerName} (Seller) • You`;
+    const messageContent = inputText.trim();
 
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: myRole,
       senderName,
       type: "message",
-      text: inputText.trim(),
+      text: messageContent,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     setMessages((prev) => [...prev, newMsg]);
     setInputText("");
+
+    // Dispatch real-time notification to counterpart
+    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    void notificationsApi.create({
+      userId: counterpartUid,
+      type: "NEGOTIATION_MESSAGE",
+      title: `Message from ${senderName.replace(" • You", "")}`,
+      message: messageContent,
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   // Accept offer and proceed to pre-transit export evidence
@@ -304,6 +345,16 @@ function NegotiationContent() {
     setMessages((prev) => [...prev, newMsg]);
     setStatus("accepted");
     toast.success("Terms finalized! Sender handover verification unlocked.", { icon: "✅" });
+
+    // Dispatch notification to counterpart
+    const counterpartUid = isCurrentSeeker ? resolveBusinessUid(sellerName) : resolveBusinessUid(buyerName);
+    void notificationsApi.create({
+      userId: counterpartUid,
+      type: "REQUEST_ACCEPTED",
+      title: `Agreement Finalized with ${accepterName.replace(" • You", "")}!`,
+      message: `Offer accepted at ₹${currentAmount.toLocaleString("en-IN")}. Handover verification unlocked.`,
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   // Sender uploads pre-transit export evidence
@@ -344,12 +395,31 @@ function NegotiationContent() {
     setMessages((prev) => [...prev, dispatchMsg]);
     setStatus("in_transit");
     toast.success("Sender condition evidence recorded! Convoy dispatched in-transit.", { icon: "🚚" });
+
+    // Notify buyer that convoy is in transit
+    const buyerUid = resolveBusinessUid(buyerName);
+    void notificationsApi.create({
+      userId: buyerUid,
+      type: "DELIVERY_DISPATCHED",
+      title: `Goods Dispatched from ${sellerName}!`,
+      message: `Sender condition verified. 3-truck convoy departed loading bay at ${departureTime}.`,
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   // Simulate arrival at destination
   const handleSimulateArrival = () => {
     setStatus("return_pending");
     toast.info("Rental period active. Goods delivered and in-use. Return phase initiated.");
+
+    const sellerUid = resolveBusinessUid(sellerName);
+    void notificationsApi.create({
+      userId: sellerUid,
+      type: "DELIVERY_ARRIVED",
+      title: `Shipment Arrived at ${buyerName}!`,
+      message: `Goods arrived safely at destination venue. Rental period actively in progress.`,
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   // Receiver uploads mandatory return evidence & completes escrow release
@@ -393,6 +463,16 @@ function NegotiationContent() {
     setMessages((prev) => [...prev, returnMsg]);
     setStatus("completed");
     toast.success("Return condition verified! Escrow deposit refunded & booking completed.", { icon: "🎉" });
+
+    // Notify seller that return is completed and verified
+    const sellerUid = resolveBusinessUid(sellerName);
+    void notificationsApi.create({
+      userId: sellerUid,
+      type: "RETURN_COMPLETED",
+      title: `Return Verified & Escrow Released!`,
+      message: `${buyerName} completed return condition inspection. All items accounted for and undamaged.`,
+      referenceId: activeReqId,
+    }).catch(() => undefined);
   };
 
   return (

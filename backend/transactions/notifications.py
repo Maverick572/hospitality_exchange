@@ -20,6 +20,48 @@ router = APIRouter(
 )
 
 
+BUSINESS_NAME_TO_UID = {
+    "taj lands end": "usr_taj_lands_end",
+    "taj": "usr_taj_lands_end",
+    "itc maratha mumbai": "usr_itc_maratha",
+    "itc maratha": "usr_itc_maratha",
+    "itc": "usr_itc_maratha",
+    "trident hotel bkc": "usr_trident_bkc",
+    "trident bkc": "usr_trident_bkc",
+    "trident": "usr_trident_bkc",
+    "renaissance mumbai convention centre": "usr_renaissance_powai",
+    "renaissance powai": "usr_renaissance_powai",
+    "renaissance": "usr_renaissance_powai",
+    "hotel sahara star": "usr_sahara_star",
+    "sahara star": "usr_sahara_star",
+    "sahara": "usr_sahara_star",
+    "jio world convention centre": "usr_jio_convention",
+    "jio world centre": "usr_jio_convention",
+    "jio convention": "usr_jio_convention",
+    "jio": "usr_jio_convention",
+    "bombay gymkhana club": "usr_bombay_gymkhana",
+    "bombay gymkhana": "usr_bombay_gymkhana",
+    "nesco exhibition centre": "usr_nesco_goregaon",
+    "nesco": "usr_nesco_goregaon",
+    "the taj mahal palace": "usr_taj_colaba",
+    "taj colaba": "usr_taj_colaba",
+    "taj palace": "usr_taj_colaba",
+    "blue sea banquets worli": "usr_blue_sea_worli",
+    "blue sea": "usr_blue_sea_worli",
+}
+
+def resolve_user_id(val: str | None) -> str:
+    if not val:
+        return "usr_taj_lands_end"
+    if val.startswith("usr_") or val.startswith("drv_"):
+        return val
+    lower = val.lower().strip()
+    for k, v in BUSINESS_NAME_TO_UID.items():
+        if k in lower:
+            return v
+    return val
+
+
 def emit_notification(
     user_id: str,
     type: str,
@@ -38,12 +80,13 @@ def emit_notification(
       - read (False)
       - createdAt
     """
+    canonical_id = resolve_user_id(user_id)
     notif_id = f"notif_{uuid.uuid4().hex[:12]}"
     now = datetime.now(timezone.utc)
 
     notif_data = {
         "notificationId": notif_id,
-        "userId": user_id,
+        "userId": canonical_id,
         "type": type,
         "title": title,
         "message": message,
@@ -75,16 +118,22 @@ def get_user_notifications(
     Get notifications for the authenticated user.
     """
     user_id = current_user["uid"]
+    canonical_id = resolve_user_id(user_id)
     notifications = []
+    seen_ids = set()
 
     if db is not None:
         try:
-            query = db.collection("notifications").where("userId", "==", user_id)
-            docs = query.stream()
-            for doc in docs:
-                item = doc.to_dict()
-                item["notificationId"] = doc.id
-                notifications.append(serialize_firestore_doc(item))
+            ids_to_query = list({user_id, canonical_id})
+            for q_id in ids_to_query:
+                query = db.collection("notifications").where("userId", "==", q_id)
+                docs = query.stream()
+                for doc in docs:
+                    if doc.id not in seen_ids:
+                        seen_ids.add(doc.id)
+                        item = doc.to_dict()
+                        item["notificationId"] = doc.id
+                        notifications.append(serialize_firestore_doc(item))
         except Exception as e:
             print(f"[Warning] Failed to retrieve notifications: {e}")
 
@@ -95,6 +144,56 @@ def get_user_notifications(
         pass
 
     return standard_response(data=notifications)
+
+
+# ============================================================
+# 2. SEND / DISPATCH NOTIFICATION
+# ============================================================
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/send", status_code=status.HTTP_201_CREATED)
+def send_notification(
+    payload: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Directly dispatch a notification to another user or business.
+    Useful for negotiation offers, inquiries, and logistics handoffs.
+    """
+    recipient = payload.get("userId") or payload.get("recipientId") or payload.get("recipient")
+    if not recipient:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="userId or recipientId is required."
+        )
+
+    canonical_recipient = resolve_user_id(recipient)
+    notif_type = payload.get("type", "REQUEST_RECEIVED")
+    title = payload.get("title", "New Notification")
+    message = payload.get("message", "")
+    reference_id = payload.get("referenceId")
+
+    notif_id = emit_notification(
+        user_id=canonical_recipient,
+        type=notif_type,
+        title=title,
+        message=message,
+        reference_id=reference_id
+    )
+
+    return standard_response(
+        data={
+            "notificationId": notif_id,
+            "userId": canonical_recipient,
+            "type": notif_type,
+            "title": title,
+            "message": message,
+            "referenceId": reference_id,
+            "read": False,
+            "createdAt": datetime.now(timezone.utc).isoformat()
+        },
+        message="Notification delivered successfully."
+    )
 
 
 # ============================================================

@@ -21,7 +21,8 @@ import { CostComparison } from "@/components/logistics/cost-comparison";
 import { Button } from "@/components/ui/button";
 import { useBusinessSession } from "@/lib/session";
 import { usePerspective } from "@/lib/perspective";
-import { logisticsApi } from "@/lib/api";
+import { logisticsApi, notificationsApi } from "@/lib/api";
+import { resolveBusinessUid } from "@/lib/business-uids";
 
 type PooledDriver = {
   routeId?: string;
@@ -225,17 +226,32 @@ function LogisticsContent() {
 
     const buyerName = isSeeker ? currentBusinessName : counterpartName;
     const sellerName = isSeeker ? counterpartName : currentBusinessName;
+    const reqId = `request_${Date.now()}`;
+    const depTime = pool?.drivers?.[0]?.departureTime ?? topRoute?.departureTime ?? "08:15";
+    const arrTime = pool?.drivers?.[0]?.arrivalTime ?? topRoute?.arrivalTime ?? "08:42";
+    const totalProposedPrice = activeTab === "pooled" && pool ? pool.totalPrice : (topRoute?.price ?? 4250);
+
+    // Dispatch real notification to seller immediately
+    const sellerUid = resolveBusinessUid(sellerName);
+    void notificationsApi.create({
+      userId: sellerUid,
+      type: "REQUEST_RECEIVED",
+      title: `New Booking Proposal from ${buyerName}`,
+      message: `Requested ${requiredQty} units with pickup at ${sellerName}. Transit: Departure ${depTime} → Arrival ${arrTime} (₹${totalProposedPrice.toLocaleString("en-IN")}).`,
+      referenceId: reqId,
+    }).catch(() => undefined);
 
     const params = new URLSearchParams({
+      requestId: reqId,
       resource: `${requiredQty} × Cushioned Banquet Chairs (Co-loaded Route)`,
       qty: String(requiredQty),
-      amount: String(activeTab === "pooled" && pool ? pool.totalPrice : (topRoute?.price ?? 4250)),
+      amount: String(totalProposedPrice),
       provider: resolvedPickup,
       providerName: sellerName,
       seeker: resolvedDelivery,
       seekerName: buyerName,
-      dep: pool?.drivers?.[0]?.departureTime ?? topRoute?.departureTime ?? "08:15",
-      arr: pool?.drivers?.[0]?.arrivalTime ?? topRoute?.arrivalTime ?? "08:42",
+      dep: depTime,
+      arr: arrTime,
       category: "banquet_seating",
       evidenceType: "photo",
       vehicles: String(pool?.vehicleCount ?? 3),

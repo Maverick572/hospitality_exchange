@@ -127,7 +127,8 @@ function resolveMockFallback<T>(path: string, options: RequestOptions): T {
   }
 
   // Notifications
-  if (path === "/notifications") return mockStore.getNotifications() as unknown as T;
+  if (path === "/notifications" && method === "GET") return mockStore.getNotifications() as unknown as T;
+  if (path.startsWith("/notifications") && method === "POST") return mockStore.emitNotification(b as Parameters<typeof mockStore.emitNotification>[0]) as unknown as T;
   if (path.includes("/read")) {
     const id = path.split("/")[2];
     mockStore.markNotificationRead(id);

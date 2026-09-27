@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BellIcon, CheckCheckIcon } from "lucide-react";
@@ -18,7 +18,9 @@ import { relativeTime } from "@/lib/format";
 import type { AppNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const POLL_MS = 60_000;
+import { toast } from "sonner";
+
+const POLL_MS = 5_000;
 
 /** Where clicking a notification should land, by its type and reference. */
 export function notificationHref(n: AppNotification, kind: "business" | "driver") {
@@ -26,6 +28,9 @@ export function notificationHref(n: AppNotification, kind: "business" | "driver"
   if (kind === "driver") {
     if (type.includes("ROUTE") || type.includes("MATCH")) return "/driver/routes";
     return "/driver/deliveries";
+  }
+  if (type.includes("NEGOTIATION") || (n.referenceId?.startsWith("request_") && type.startsWith("REQUEST"))) {
+    return `/dashboard/negotiation?requestId=${n.referenceId}`;
   }
   if (type.startsWith("REQUEST")) return "/dashboard/requests";
   if (n.referenceId?.startsWith("booking_")) return `/dashboard/bookings/${n.referenceId}`;
@@ -38,10 +43,33 @@ export function notificationHref(n: AppNotification, kind: "business" | "driver"
 export function NotificationsMenu({ kind }: { kind: "business" | "driver" }) {
   const router = useRouter();
   const [items, setItems] = useState<AppNotification[]>([]);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const isInitialRef = useRef(true);
 
   const load = useCallback(async () => {
     try {
-      setItems(await notificationsApi.getAll());
+      const data = await notificationsApi.getAll();
+      const list = Array.isArray(data) ? data : [];
+      setItems(list);
+
+      // Check for incoming new unread notifications to alert the user
+      for (const n of list) {
+        if (!n.read && !seenIdsRef.current.has(n.notificationId)) {
+          if (!isInitialRef.current) {
+            toast(n.title, {
+              description: n.message,
+              action: {
+                label: "View",
+                onClick: () => {
+                  void open(n);
+                },
+              },
+            });
+          }
+          seenIdsRef.current.add(n.notificationId);
+        }
+      }
+      isInitialRef.current = false;
     } catch {
       // The bell is secondary; a failed poll just keeps the last list.
     }
@@ -50,7 +78,25 @@ export function NotificationsMenu({ kind }: { kind: "business" | "driver" }) {
   useEffect(() => {
     void load();
     const timer = window.setInterval(() => void load(), POLL_MS);
-    return () => window.clearInterval(timer);
+
+    // Cross-tab and local broadcast listeners for instant notification delivery
+    const handleCustom = (e: Event) => {
+      void load();
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "hrex_last_notif") {
+        void load();
+      }
+    };
+
+    window.addEventListener("hrex_notification_received", handleCustom);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("hrex_notification_received", handleCustom);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, [load]);
 
   const unread = items.filter((n) => !n.read);
