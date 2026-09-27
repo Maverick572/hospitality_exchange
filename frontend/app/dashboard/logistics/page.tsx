@@ -267,7 +267,11 @@ function LogisticsContent() {
         });
 
         if (!cancelled) {
-          const rawList = Array.isArray(data) ? data : ((data as unknown as { routes?: RouteMatch[] })?.routes ?? []);
+          const rawList = (
+            Array.isArray(data)
+              ? data
+              : ((data as unknown as { routes?: RouteMatch[] })?.routes ?? [])
+          ) as unknown as RouteMatch[];
           const poolData: PooledSolution | null =
             (Array.isArray(data)
               ? (data[0] as unknown as { pooledSolution?: PooledSolution })?.pooledSolution

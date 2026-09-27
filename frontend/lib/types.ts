@@ -450,6 +450,25 @@ export type DeliveryOpportunity = {
   status?: string;
 };
 
+// Mirrors backend/logistics/weather_delay/calculator.py
+export type WeatherDelay = {
+  has_delay: boolean;
+  delay_minutes: number;
+  original_arrival_time?: string;
+  adjusted_arrival_time?: string;
+  weather_condition: string;
+  condition_raw?: string;
+  temperature?: string;
+  precipitation_mm?: number;
+  wind_kmph?: number;
+  severity_level: string;
+  disruption_detected?: boolean;
+  detected_events?: string[];
+  advisory?: string;
+  delay_factor?: number;
+  data_sources?: string[];
+};
+
 // Mirrors backend/logistics/matcher.py find_best_routes().
 export type RouteMatch = {
   routeId: string;
@@ -521,7 +540,9 @@ export type RouteMatch = {
       detourKm?: number;
       directionallyValid?: boolean;
     }>;
+    weatherDelay?: WeatherDelay;
   };
+  weatherDelay?: WeatherDelay;
 };
 
 export type DeliveryStatus = "pickup_pending" | "picked_up" | "in_transit" | "delivered";
