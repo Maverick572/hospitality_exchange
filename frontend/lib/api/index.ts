@@ -155,6 +155,13 @@ export const driversApi = {
     ),
   createProfile: (data: DriverProfileInput) => api.post<DriverProfile>("/drivers/profile", data),
   getMe: () => api.get<DriverProfile>("/drivers/me"),
+  updateLocation: (data: {
+    latitude: number;
+    longitude: number;
+    heading?: number;
+    speed?: number;
+    bookingId?: string;
+  }) => api.post<unknown>("/drivers/location", data),
 };
 
 export const routesApi = {

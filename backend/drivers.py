@@ -242,3 +242,60 @@ def get_current_driver_profile(
             **driver_data
         }
     }
+
+
+# ============================================================
+# UPDATE DRIVER LIVE GPS LOCATION
+# ============================================================
+
+class DriverLocationUpdate(BaseModel):
+    latitude: float = Field(..., description="Current latitude")
+    longitude: float = Field(..., description="Current longitude")
+    heading: Optional[float] = Field(None, description="Current bearing or compass heading in degrees")
+    speed: Optional[float] = Field(None, description="Current speed in km/h")
+    bookingId: Optional[str] = Field(None, description="Optional active delivery booking ID")
+
+
+@router.post(
+    "/location",
+    summary="Update Driver Live GPS Location",
+    description="Updates the driver's real-time location and syncs with the active delivery booking if provided."
+)
+def update_driver_location(
+    payload: DriverLocationUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["uid"]
+    firestore_db = get_db()
+    now = datetime.now(timezone.utc)
+
+    loc_data = {
+        "latitude": payload.latitude,
+        "longitude": payload.longitude,
+        "heading": payload.heading,
+        "speed": payload.speed,
+        "updatedAt": now.isoformat()
+    }
+
+    # Update driver doc
+    try:
+        driver_ref = firestore_db.collection("drivers").document(user_id)
+        if driver_ref.get().exists:
+            driver_ref.update({"currentLocation": loc_data, "lastLocationUpdate": now})
+    except Exception:
+        pass
+
+    # If bookingId supplied, update booking doc as well
+    if payload.bookingId:
+        try:
+            booking_ref = firestore_db.collection("bookings").document(payload.bookingId)
+            if booking_ref.get().exists:
+                booking_ref.update({"driverCurrentLocation": loc_data, "updatedAt": now})
+        except Exception:
+            pass
+
+    return {
+        "success": True,
+        "data": loc_data,
+        "message": "Driver location updated successfully."
+    }

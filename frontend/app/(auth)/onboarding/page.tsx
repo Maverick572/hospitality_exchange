@@ -37,8 +37,32 @@ export default function BusinessOnboardingPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!location) {
-      setError("Press Find next to the address so we can pin your location.");
+    let finalLocation = location;
+
+    if (!finalLocation) {
+      const locInput = (document.getElementById("location") as HTMLInputElement)?.value?.trim();
+      if (locInput) {
+        setSaving(true);
+        try {
+          const resp = await fetch(`/api/geocode?q=${encodeURIComponent(locInput)}`);
+          const res = await resp.json();
+          if (res.success && res.data) {
+            finalLocation = {
+              address: res.data.address,
+              latitude: res.data.latitude,
+              longitude: res.data.longitude,
+            };
+            setLocation(finalLocation);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (!finalLocation) {
+      setError("Please specify your business location. Type an area (e.g. Bandra West) and click Find, or click the GPS crosshair.");
+      setSaving(false);
       return;
     }
     setError(null);
@@ -48,7 +72,7 @@ export default function BusinessOnboardingPage() {
         name,
         businessName,
         phone,
-        location,
+        location: finalLocation,
         userId: user?.uid,
         email: user?.email,
       });

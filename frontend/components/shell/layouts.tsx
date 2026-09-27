@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { useBusinessSession, useDriverSession } from "@/lib/session";
 
+import { FloatingGpsBar } from "@/components/driver/navigation/floating-gps-bar";
+import { DriverNavigationProvider } from "@/contexts/driver-navigation-context";
 import { AppShell } from "./app-shell";
 import { BUSINESS_SHELL, DRIVER_SHELL } from "./nav-config";
 import { BusinessGate, DriverGate } from "./session-gate";
@@ -60,7 +62,10 @@ export function BusinessLayout({ children }: { children: ReactNode }) {
 export function DriverLayout({ children }: { children: ReactNode }) {
   return (
     <DriverGate>
-      <DriverFrame>{children}</DriverFrame>
+      <DriverNavigationProvider>
+        <DriverFrame>{children}</DriverFrame>
+        <FloatingGpsBar />
+      </DriverNavigationProvider>
     </DriverGate>
   );
 }

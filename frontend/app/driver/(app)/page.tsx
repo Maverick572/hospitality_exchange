@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   CheckCircle2Icon,
   IndianRupeeIcon,
+  Navigation2Icon,
   PlusIcon,
   RouteIcon,
   SparklesIcon,
@@ -154,7 +155,14 @@ export default function DriverDashboard() {
                       {shortDate(booking.deliveryDate)} · {inr(booking.deliveryAmount)}
                     </p>
                   </div>
-                  <StatusBadge status={booking.status} />
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <StatusBadge status={booking.status} />
+                    <Button size="icon-xs" variant="ghost" asChild title="Open GPS Navigation" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+                      <Link href={`/driver/navigation?bookingId=${booking.bookingId}`}>
+                        <Navigation2Icon className="size-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>

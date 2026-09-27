@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowDownIcon, CameraIcon, ChevronRightIcon, TruckIcon } from "lucide-react";
+import { ArrowDownIcon, CameraIcon, ChevronRightIcon, Navigation2Icon, TruckIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { StatusTimeline } from "@/components/bookings/booking-timeline";
@@ -13,6 +14,7 @@ import { EmptyState, ErrorState, ListSkeleton } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDriverNavigation } from "@/contexts/driver-navigation-context";
 import { useApi } from "@/hooks/use-api";
 import { bookingsApi, deliveriesApi } from "@/lib/api";
 import { DELIVERY_STEPS } from "@/lib/constants";
@@ -35,6 +37,8 @@ const NEXT: Record<DeliveryStatus, { status: DeliveryStatus; label: string } | n
 };
 
 export default function DeliveriesPage() {
+  const router = useRouter();
+  const { startNavigation } = useDriverNavigation();
   const [filter, setFilter] = useState<"active" | "completed">("active");
   const deliveries = useApi(() => bookingsApi.getMine({ role: "driver" }));
   const [updating, setUpdating] = useState<string | null>(null);
@@ -129,6 +133,39 @@ export default function DeliveriesPage() {
                   <StatusTimeline steps={DELIVERY_STEPS} current={step} />
 
                   <div className="flex flex-wrap gap-1.5">
+                    {step !== "delivered" && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          void startNavigation({
+                            type: "booking",
+                            id: booking.bookingId,
+                            title: `Delivery #${booking.bookingId.replace("booking_", "").slice(0, 8)}`,
+                            currentStatus: step,
+                            earnings: booking.deliveryAmount,
+                            waypoints: [
+                              {
+                                address: booking.pickupLocation?.address ?? "Pickup Location",
+                                latitude: booking.pickupLocation?.latitude ?? 19.2183,
+                                longitude: booking.pickupLocation?.longitude ?? 72.9781,
+                                role: "pickup",
+                              },
+                              {
+                                address: booking.deliveryLocation?.address ?? "Drop-off Location",
+                                latitude: booking.deliveryLocation?.latitude ?? 19.0771,
+                                longitude: booking.deliveryLocation?.longitude ?? 72.9986,
+                                role: "delivery",
+                              },
+                            ],
+                          });
+                          router.push("/driver/navigation");
+                        }}
+                        className="gap-1 bg-emerald-600 font-semibold text-white shadow-xs hover:bg-emerald-700"
+                      >
+                        <Navigation2Icon className="size-3.5" />
+                        Start GPS Navigation
+                      </Button>
+                    )}
                     {next && (
                       <Button
                         size="sm"

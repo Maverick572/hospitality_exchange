@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PencilIcon, PlusIcon, PowerOffIcon, RouteIcon, SparklesIcon } from "lucide-react";
+import { Navigation2Icon, PencilIcon, PlusIcon, PowerOffIcon, RouteIcon, SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -13,6 +13,7 @@ import { Page, PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDriverNavigation } from "@/contexts/driver-navigation-context";
 import { useApi } from "@/hooks/use-api";
 import { routesApi } from "@/lib/api";
 import { isoDate } from "@/lib/format";
@@ -23,6 +24,7 @@ type Filter = "upcoming" | "past" | "inactive";
 
 function RoutesPageInner() {
   const router = useRouter();
+  const { startNavigation } = useDriverNavigation();
   const params = useSearchParams();
   const { profile } = useDriverSession();
   const routes = useApi(routesApi.getMine);
@@ -110,7 +112,42 @@ function RoutesPageInner() {
               </div>
               {route.status !== "inactive" && (
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <Button size="sm" onClick={() => setViewing(route)} className="font-semibold shadow-xs">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      void startNavigation({
+                        type: "route",
+                        id: route.routeId,
+                        title: `Route: ${route.startLocation.address} → ${route.destination?.address ?? "End"}`,
+                        waypoints: [
+                          {
+                            address: route.startLocation.address,
+                            latitude: route.startLocation.latitude ?? 19.2183,
+                            longitude: route.startLocation.longitude ?? 72.9781,
+                            role: "start",
+                          },
+                          ...(route.stops ?? []).map((s) => ({
+                            address: s.address,
+                            latitude: s.latitude ?? 19.08,
+                            longitude: s.longitude ?? 73.0,
+                            role: "stop" as const,
+                          })),
+                          {
+                            address: route.destination?.address ?? "Destination",
+                            latitude: route.destination?.latitude ?? 19.0771,
+                            longitude: route.destination?.longitude ?? 72.9986,
+                            role: "destination",
+                          },
+                        ],
+                      });
+                      router.push("/driver/navigation");
+                    }}
+                    className="gap-1 bg-emerald-600 font-semibold text-white shadow-xs hover:bg-emerald-700"
+                  >
+                    <Navigation2Icon className="size-3.5" />
+                    GPS Navigate
+                  </Button>
+                  <Button size="sm" onClick={() => setViewing(route)} variant="outline" className="font-semibold shadow-xs">
                     <SparklesIcon data-icon="inline-start" />
                     View Matches
                   </Button>

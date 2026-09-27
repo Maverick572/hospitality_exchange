@@ -7,6 +7,7 @@ import {
   HandshakeIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
+  NavigationIcon,
   RouteIcon,
   SearchIcon,
   SparklesIcon,
@@ -111,6 +112,7 @@ export const DRIVER_SHELL: ShellConfig = {
       label: "SHARED LOGISTICS",
       items: [
         { href: "/driver", icon: LayoutDashboardIcon, label: "Fleet Overview" },
+        { href: "/driver/navigation", icon: NavigationIcon, label: "Live GPS Navigation" },
         { href: "/driver/routes", icon: RouteIcon, label: "Published Routes" },
         { href: "/driver/deliveries", icon: TruckIcon, label: "Matched Deliveries" },
       ],
@@ -130,6 +132,7 @@ export const DRIVER_SHELL: ShellConfig = {
     },
   ],
   items: [
+    { href: "/driver/navigation", icon: NavigationIcon, label: "Live GPS Navigation" },
     { href: "/driver/routes", icon: RouteIcon, label: "Published Routes" },
     { href: "/driver/deliveries", icon: TruckIcon, label: "Matched Deliveries" },
   ],

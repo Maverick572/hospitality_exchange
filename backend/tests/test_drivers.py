@@ -53,6 +53,12 @@ class MockDocumentReference:
     def set(self, data: dict):
         self.storage[self.doc_id] = data
 
+    def update(self, data: dict):
+        if self.doc_id in self.storage:
+            self.storage[self.doc_id].update(data)
+        else:
+            self.storage[self.doc_id] = data
+
 class MockCollection:
     def __init__(self, storage: dict):
         self.storage = storage
@@ -204,4 +210,28 @@ def test_create_driver_profile_sets_firebase_custom_claim(mock_db):
         response = client.post("/drivers/profile", json=payload)
         assert response.status_code == 201
         mock_set_claims.assert_called_once_with("driver_test_123", {"role": "driver"})
+
+def test_update_driver_location(mock_db):
+    mock_db.collection("drivers").document("driver_test_123").set({
+        "name": "Rahul Sharma",
+        "status": "active"
+    })
+
+    payload = {
+        "latitude": 19.2183,
+        "longitude": 72.9781,
+        "heading": 125.5,
+        "speed": 42.0,
+        "bookingId": "booking_abc123"
+    }
+
+    response = client.post("/drivers/location", json=payload)
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert res_data["data"]["latitude"] == 19.2183
+    assert res_data["data"]["longitude"] == 72.9781
+    assert res_data["data"]["heading"] == 125.5
+    assert res_data["data"]["speed"] == 42.0
+
 
