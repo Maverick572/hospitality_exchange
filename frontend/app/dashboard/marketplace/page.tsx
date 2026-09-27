@@ -35,8 +35,12 @@ export default function MarketplacePage() {
       toast.error("Switch to Seeker View to match with demand or book resources.");
       return;
     }
-    // Navigate to smart matches as in HACK-CELESTIAL
-    router.push("/dashboard/smart-matches");
+    const partnerName = encodeURIComponent(resource.provider?.businessName || "Trade Provider");
+    const resName = encodeURIComponent(resource.name);
+    toast.success(`Opening encrypted booking chat for ${resource.name}...`, { icon: "💬" });
+    router.push(
+      `/dashboard/conversations?partnerName=${partnerName}&resource=${resName}&amount=${resource.price}&category=${resource.category}&partnerId=${resource.providerId}`
+    );
   };
 
   const filteredResources = (resources.data ?? []).filter((res) => {

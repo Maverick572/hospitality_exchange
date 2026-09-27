@@ -315,7 +315,7 @@ function LogisticsContent() {
       vehicles: String(pool?.vehicleCount ?? 3),
     });
     setTimeout(() => {
-      router.push(`/dashboard/negotiation?${params.toString()}`);
+      router.push(`/dashboard/conversations?${params.toString()}`);
     }, 900);
   };
 
@@ -767,7 +767,7 @@ function LogisticsContent() {
                 onClick={handleConfirm}
                 className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-8 shadow-md cursor-pointer"
               >
-                Confirm Pooled Fleet Booking (₹{pool.totalPrice.toLocaleString("en-IN")})
+                Proceed to Book & Open Encrypted Chat (₹{pool.totalPrice.toLocaleString("en-IN")})
               </Button>
             </div>
           </div>
@@ -909,7 +909,7 @@ function LogisticsContent() {
 
       {confirmed && (
         <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-foreground p-4 text-xs font-semibold text-background shadow-lg">
-          ✓ Booking request with co-loaded route dispatched! Redirecting to negotiations...
+          ✓ Booking request with co-loaded route dispatched! Opening encrypted conversations...
         </div>
       )}
     </div>

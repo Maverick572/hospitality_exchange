@@ -12,6 +12,7 @@ import {
   Loader2Icon,
   LockIcon,
   MapPinIcon,
+  MessageSquareIcon,
   PackageCheckIcon,
   PlusIcon,
   SearchIcon,
@@ -360,7 +361,32 @@ function SmartMatchesContent() {
     };
   }, [perspective, profile?.userId, profile?.businessName, profile?.email]);
 
-  // Seeker actions: Rent from provider
+  // Seeker actions: Proceed to Book directly into encrypted conversation
+  const handleProceedToBook = (match: MatchResult) => {
+    if (perspective !== "seeker") {
+      toast.error("Switch to Seeker View to book resources.");
+      return;
+    }
+    const partnerName = match.provider?.businessName ?? "Trade Provider";
+    const resourceName = match.name;
+    const amount = match.price;
+    const category = match.category;
+    const partnerId = match.provider?.providerId || "";
+
+    toast.success(`Opening encrypted booking chat with ${partnerName}...`, { icon: "💬" });
+
+    const params = new URLSearchParams({
+      partnerName,
+      partnerId: partnerId || "",
+      resource: resourceName,
+      amount: String(amount),
+      category: category || "banquet_seating",
+    });
+
+    router.push(`/dashboard/conversations?${params.toString()}`);
+  };
+
+  // Seeker actions: Inspect co-loaded shared logistics
   const handleBookDelivery = (match: MatchResult) => {
     if (perspective !== "seeker") {
       toast.error("Switch to Seeker View to book resources.");
@@ -679,8 +705,12 @@ function SmartMatchesContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Button onClick={() => handleBookDelivery(topSeekerMatch)} className="w-full font-bold shadow-xs cursor-pointer">
-                    Rent & Book Shared Delivery
+                  <Button
+                    onClick={() => handleProceedToBook(topSeekerMatch)}
+                    className="w-full font-bold shadow-xs cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-1.5"
+                  >
+                    <MessageSquareIcon className="size-4" />
+                    <span>Proceed to Book & Negotiate</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -725,8 +755,12 @@ function SmartMatchesContent() {
                     <span className="text-xs font-extrabold text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
                       {computeScore(alt)}%
                     </span>
-                    <Button size="xs" onClick={() => handleBookDelivery(alt)}>
-                      Rent
+                    <Button
+                      size="xs"
+                      onClick={() => handleProceedToBook(alt)}
+                      className="font-bold shadow-xs cursor-pointer"
+                    >
+                      Proceed to Book
                     </Button>
                   </div>
                 </div>

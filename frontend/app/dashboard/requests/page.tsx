@@ -101,9 +101,9 @@ export default function RequestsPage() {
             </p>
           </div>
         </div>
-        <Button size="sm" asChild className="shrink-0 font-semibold shadow-xs">
-          <Link href="/dashboard/negotiation">
-            Open Chat Interface
+        <Button size="sm" asChild className="shrink-0 font-semibold shadow-xs bg-primary text-primary-foreground">
+          <Link href="/dashboard/conversations">
+            Open Encrypted Conversations
             <ArrowRightIcon className="size-3.5 ml-1" />
           </Link>
         </Button>

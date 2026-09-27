@@ -7,8 +7,6 @@ import {
   BoxesIcon,
   ChevronRightIcon,
   MoonIcon,
-  SearchIcon,
-  SparklesIcon,
   SunIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -18,10 +16,6 @@ import { NotificationsMenu } from "@/components/shell/notifications-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePerspective } from "@/lib/perspective";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -51,8 +45,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
 
   const [isLive, setIsLive] = useState(!mockStore.forceDemo);
   const [forceDemo, setForceDemo] = useState(mockStore.forceDemo);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const handleStatus = (e: Event) => {
@@ -73,25 +65,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
       window.removeEventListener("hrex_demo_mode_changed", handleDemoChange);
     };
   }, []);
-
-  // Keyboard shortcut ⌘K or Ctrl+K to open search dialog
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    setSearchOpen(false);
-    router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`);
-  };
 
   return (
     <>
@@ -125,7 +98,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <SearchIcon className={cn("size-3.5", perspective === "seeker" ? "text-primary" : "text-muted-foreground")} />
                 <span>Seeker View</span>
               </button>
               <button
@@ -146,22 +118,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
               </button>
             </div>
           )}
-        </div>
-
-        {/* ── Center Quick Search Button ── */}
-        <div className="hidden md:flex items-center">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex h-8.5 w-72 items-center justify-between rounded-lg border border-border/80 bg-muted/40 px-2.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/70 hover:text-foreground focus-visible:outline-none"
-          >
-            <div className="flex items-center gap-2">
-              <SearchIcon className="size-3.5" />
-              <span>Search inventory or requests...</span>
-            </div>
-            <kbd className="pointer-events-none hidden select-none items-center gap-0.5 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-              ⌘K
-            </kbd>
-          </button>
         </div>
 
         {/* ── Right Actions ── */}
@@ -231,51 +187,6 @@ export function AppTopbar({ config, user: _user }: AppTopbarProps) {
           </Button>
         </div>
       </header>
-
-      {/* ── Global Quick Search Dialog ── */}
-      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
-          <form onSubmit={handleSearchSubmit} className="flex items-center border-b px-3.5">
-            <SearchIcon className="size-4 text-muted-foreground shrink-0 mr-2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="What equipment or resource do you need? (e.g. 100 banquet chairs)"
-              className="h-12 w-full border-none bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
-              autoFocus
-            />
-            {searchQuery && (
-              <Button type="submit" size="xs">
-                Search
-              </Button>
-            )}
-          </form>
-          <div className="p-3 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground mb-1.5">Quick Presets</p>
-            <div className="flex flex-col gap-1">
-              {[
-                "100 banquet chairs and 10 round tables in BKC tomorrow",
-                "2 laser projectors and line array PA sound system",
-                "Stainless steel chafing dishes and combi oven",
-              ].map((sample) => (
-                <button
-                  key={sample}
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen(false);
-                    router.push(`/dashboard/search?q=${encodeURIComponent(sample)}`);
-                  }}
-                  className="flex items-center gap-2 rounded-md p-1.5 text-left hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <SparklesIcon className="size-3 text-primary shrink-0" />
-                  <span className="truncate">{sample}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

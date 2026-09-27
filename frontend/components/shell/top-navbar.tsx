@@ -9,7 +9,6 @@ import {
   LogOutIcon,
   MoonIcon,
   PlusIcon,
-  SearchIcon,
   SparklesIcon,
   StarIcon,
   SunIcon,
@@ -55,21 +54,12 @@ export function TopNavbar({
   const router = useRouter();
   const { signOut, demoMode } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
-  const [query, setQuery] = useState("");
   const driver = kind === "driver";
   const profileHref = driver ? "/driver/profile" : "/dashboard/profile";
 
   async function handleSignOut() {
     await signOut();
     router.push(driver ? "/driver/login" : "/login");
-  }
-
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = query.trim();
-    if (!text) return;
-    router.push(`/dashboard/search?q=${encodeURIComponent(text)}`);
-    setQuery("");
   }
 
   return (
@@ -127,24 +117,8 @@ export function TopNavbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ── Center: search ── */}
-      <div className="flex flex-1 justify-center">
-        {driver ? null : (
-          <form onSubmit={handleSearch} className="relative hidden w-full max-w-md md:block">
-            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Need 100 chairs in Vashi tomorrow…"
-              aria-label="Search the marketplace"
-              className="h-8 rounded-lg border-transparent bg-muted/50 pl-8 text-sm placeholder:text-muted-foreground/60 focus-visible:border-border focus-visible:bg-background focus-visible:ring-0"
-            />
-            <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline-flex">
-              ↵
-            </kbd>
-          </form>
-        )}
-      </div>
+      {/* ── Center spacer ── */}
+      <div className="flex flex-1" />
 
       {/* ── Right: actions ── */}
       <div className="flex shrink-0 items-center gap-1">

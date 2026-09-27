@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightIcon, LockIcon, MapPinIcon, StarIcon, TruckIcon } from "lucide-react";
+import { ArrowRightIcon, LockIcon, MapPinIcon, MessageSquareIcon, StarIcon, TruckIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -97,11 +97,11 @@ export function MarketplaceCard({
         ) : (
           <Button
             size="sm"
-            className="font-bold shadow-xs text-xs cursor-pointer flex items-center gap-1"
+            className="font-bold shadow-xs text-xs cursor-pointer flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => onRequestBooking(resource)}
           >
-            <span>Match With Demand</span>
-            <ArrowRightIcon className="size-3.5" />
+            <MessageSquareIcon className="size-3.5" />
+            <span>Proceed to Book</span>
           </Button>
         )}
       </div>

@@ -129,18 +129,68 @@ function ConversationsContent() {
     scrollToBottom();
   }, [messages]);
 
+  // Query params from smart-matches, marketplace, or logistics
+  const partnerNameParam = searchParams.get("partnerName") || searchParams.get("providerName");
+  const resourceParam = searchParams.get("resource");
+  const amountParam = searchParams.get("amount");
+  const categoryParam = searchParams.get("category");
+  const partnerIdParam = searchParams.get("partnerId") || searchParams.get("provider");
+
   // Load conversations list
   const loadConversations = async (selectFirst = false) => {
     try {
       setLoadingList(true);
       const data = await conversationsApi.list();
-      setConversations(data || []);
+      let list = data || [];
 
-      if (data && data.length > 0) {
+      // If URL params are passed from "Proceed to Book", auto-select or auto-create thread
+      if (partnerNameParam || resourceParam) {
+        const queryPartner = (partnerNameParam || "").toLowerCase();
+        const queryRes = (resourceParam || "").toLowerCase();
+
+        const found = list.find(
+          (c) =>
+            (queryPartner && c.partnerName.toLowerCase().includes(queryPartner)) ||
+            (queryRes && c.resourceTitle.toLowerCase().includes(queryRes)),
+        );
+
+        if (found) {
+          setConversations(list);
+          setActiveConvId(found.conversationId);
+          setActiveConv(found);
+          toast.success(`Active encrypted thread: ${found.partnerName}`, { icon: "🔒" });
+          return;
+        } else {
+          // Initialize a new conversation thread for this booking
+          try {
+            const created = await conversationsApi.create({
+              partnerId: partnerIdParam || resolveBusinessUid(partnerNameParam || "Provider"),
+              partnerName: partnerNameParam || "Provider",
+              resourceTitle: resourceParam || "Requested Hospitality Resource",
+              amount: amountParam ? Number(amountParam) : 4100,
+              category: categoryParam || "banquet_seating",
+              tradeRole: perspective === "seeker" ? "seller" : "buyer",
+              initialMessage: `Booking inquiry initiated for ${resourceParam || "hospitality inventory"}. Terms encrypted with AES-128.`,
+            });
+            list = [created, ...list];
+            setConversations(list);
+            setActiveConvId(created.conversationId);
+            setActiveConv(created);
+            toast.success(`New encrypted booking conversation initiated with ${partnerNameParam}`, { icon: "🔒" });
+            return;
+          } catch (createErr) {
+            console.error("Could not auto-create conversation thread:", createErr);
+          }
+        }
+      }
+
+      setConversations(list);
+
+      if (list && list.length > 0) {
         if (selectFirst && !activeConvId) {
-          setActiveConvId(data[0].conversationId);
+          setActiveConvId(list[0].conversationId);
         } else if (activeConvId) {
-          const match = data.find((c) => c.conversationId === activeConvId);
+          const match = list.find((c) => c.conversationId === activeConvId);
           if (match) setActiveConv(match);
         }
       }
@@ -154,7 +204,7 @@ function ConversationsContent() {
 
   useEffect(() => {
     loadConversations(true);
-  }, []);
+  }, [partnerNameParam, resourceParam]);
 
   // Fetch active conversation details and decrypted messages
   useEffect(() => {
