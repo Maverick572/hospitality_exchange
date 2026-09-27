@@ -4,10 +4,12 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  AlertTriangleIcon,
   ArrowRightIcon,
   BoxesIcon,
   CheckCircle2Icon,
   ClockIcon,
+  CloudRainIcon,
   LayersIcon,
   LeafIcon,
   Loader2Icon,
@@ -16,8 +18,10 @@ import {
   ShieldAlertIcon,
   SparklesIcon,
   StoreIcon,
+  ThermometerIcon,
   TrendingDownIcon,
   TruckIcon,
+  WindIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,6 +51,24 @@ type PooledDriver = {
   directionallyValid?: boolean;
 };
 
+type WeatherDelay = {
+  has_delay: boolean;
+  delay_minutes: number;
+  original_arrival_time?: string;
+  adjusted_arrival_time?: string;
+  weather_condition: string;
+  condition_raw?: string;
+  temperature?: string;
+  precipitation_mm?: number;
+  wind_kmph?: number;
+  severity_level: string;
+  disruption_detected?: boolean;
+  detected_events?: string[];
+  advisory?: string;
+  delay_factor?: number;
+  data_sources?: string[];
+};
+
 type PooledSolution = {
   poolId: string;
   totalDemand: number;
@@ -64,6 +86,7 @@ type PooledSolution = {
   osmDurationMinutes: number;
   routingSource: string;
   drivers: PooledDriver[];
+  weatherDelay?: WeatherDelay;
 };
 
 type RouteMatch = {
@@ -97,6 +120,7 @@ type RouteMatch = {
   routeOverlap?: number;
   directionallyValid?: boolean;
   pooledSolution?: PooledSolution;
+  weatherDelay?: WeatherDelay;
 };
 
 function shortAddr(addr?: string): string {
@@ -167,6 +191,7 @@ function LogisticsContent() {
   const [routes, setRoutes] = useState<RouteMatch[]>([]);
   const [pool, setPool] = useState<PooledSolution | null>(null);
   const [activeTab, setActiveTab] = useState<"pooled" | "individual">("pooled");
+  const [weatherDelay, setWeatherDelay] = useState<WeatherDelay | null>(null);
   const [loading, setLoading] = useState(hasExplicitParams);
 
   // Check if current user has any active/pending bookings or requests
@@ -247,6 +272,10 @@ function LogisticsContent() {
             (Array.isArray(data)
               ? (data[0] as unknown as { pooledSolution?: PooledSolution })?.pooledSolution
               : (data as unknown as { pooledSolution?: PooledSolution })?.pooledSolution) ?? null;
+
+          // Extract weather delay from first route or pooled solution
+          const routeWeather = rawList[0]?.weatherDelay ?? poolData?.weatherDelay ?? null;
+          setWeatherDelay(routeWeather ?? null);
 
           setRoutes(rawList);
           setPool(poolData);
@@ -526,6 +555,107 @@ function LogisticsContent() {
         </div>
       )}
 
+      {/* ── WEATHER DELAY ALERT BANNER ── */}
+      {!loading && weatherDelay && weatherDelay.has_delay && (
+        <div className={`rounded-2xl border p-5 shadow-xs space-y-3 ${
+          weatherDelay.severity_level === "Critical"
+            ? "border-red-500/40 bg-red-500/5"
+            : weatherDelay.severity_level === "Severe"
+              ? "border-orange-500/40 bg-orange-500/5"
+              : weatherDelay.severity_level === "Moderate"
+                ? "border-amber-500/40 bg-amber-500/5"
+                : "border-blue-500/30 bg-blue-500/5"
+        }`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className={`rounded-xl p-2 ${
+                weatherDelay.severity_level === "Critical" ? "bg-red-500/15 text-red-600" :
+                weatherDelay.severity_level === "Severe" ? "bg-orange-500/15 text-orange-600" :
+                weatherDelay.severity_level === "Moderate" ? "bg-amber-500/15 text-amber-600" :
+                "bg-blue-500/15 text-blue-600"
+              }`}>
+                <CloudRainIcon className="size-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                  Weather Delay Alert: {weatherDelay.weather_condition}
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    weatherDelay.severity_level === "Critical" ? "bg-red-500/15 text-red-600" :
+                    weatherDelay.severity_level === "Severe" ? "bg-orange-500/15 text-orange-600" :
+                    weatherDelay.severity_level === "Moderate" ? "bg-amber-500/15 text-amber-600" :
+                    "bg-blue-500/15 text-blue-600"
+                  }`}>
+                    {weatherDelay.severity_level}
+                  </span>
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {weatherDelay.advisory}
+                </p>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-2xl font-black text-foreground">+{weatherDelay.delay_minutes} min</p>
+              <p className="text-[10px] text-muted-foreground font-semibold">ETA Delay</p>
+            </div>
+          </div>
+
+          {/* Weather Details Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border/40">
+            <div className="flex items-center gap-2 text-xs">
+              <CloudRainIcon className="size-3.5 text-blue-500" />
+              <span className="text-muted-foreground">Condition:</span>
+              <strong className="text-foreground">{weatherDelay.condition_raw ?? weatherDelay.weather_condition}</strong>
+            </div>
+            {weatherDelay.temperature && weatherDelay.temperature !== "N/A" && (
+              <div className="flex items-center gap-2 text-xs">
+                <ThermometerIcon className="size-3.5 text-red-400" />
+                <span className="text-muted-foreground">Temp:</span>
+                <strong className="text-foreground">{weatherDelay.temperature}</strong>
+              </div>
+            )}
+            {(weatherDelay.precipitation_mm ?? 0) > 0 && (
+              <div className="flex items-center gap-2 text-xs">
+                <CloudRainIcon className="size-3.5 text-blue-500" />
+                <span className="text-muted-foreground">Rain:</span>
+                <strong className="text-foreground">{weatherDelay.precipitation_mm} mm</strong>
+              </div>
+            )}
+            {(weatherDelay.wind_kmph ?? 0) > 0 && (
+              <div className="flex items-center gap-2 text-xs">
+                <WindIcon className="size-3.5 text-teal-500" />
+                <span className="text-muted-foreground">Wind:</span>
+                <strong className="text-foreground">{weatherDelay.wind_kmph} km/h</strong>
+              </div>
+            )}
+          </div>
+
+          {/* Data Sources */}
+          {weatherDelay.data_sources && weatherDelay.data_sources.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-2">
+              <span className="text-[10px] text-muted-foreground font-semibold">Sources:</span>
+              {weatherDelay.data_sources.map((src, i) => (
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
+                  {src}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Detected Events */}
+          {weatherDelay.detected_events && weatherDelay.detected_events.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <AlertTriangleIcon className="size-3 text-amber-500" />
+              <span className="text-[10px] text-muted-foreground font-semibold">Detected:</span>
+              {weatherDelay.detected_events.map((evt, i) => (
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-semibold">
+                  {evt}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── TAB 1: POOLED MULTI-DRIVER FLEET SOLUTION ── */}
       {!loading && pool && activeTab === "pooled" && (
         <div className="space-y-6">
@@ -585,6 +715,9 @@ function LogisticsContent() {
                 </div>
                 <p className="text-lg font-extrabold text-foreground">{pool.osmDistanceKm} km • ~{pool.osmDurationMinutes}m</p>
                 <p className="text-[11px] text-muted-foreground">OpenStreetMap dynamic route</p>
+                {weatherDelay && weatherDelay.has_delay && (
+                  <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">+{weatherDelay.delay_minutes}m weather delay</p>
+                )}
               </div>
 
               <div className="p-3.5 rounded-2xl bg-muted/50 border border-border/60">
@@ -676,8 +809,14 @@ function LogisticsContent() {
                   <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedDelivery ?? pool.drivers[0]?.destinationAddress)}</h4>
                   <p className="text-[11px] text-muted-foreground font-medium">Destination ({isSeeker ? "Your Event Venue" : `${counterpartName} Venue`})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted/60 px-2.5 py-1 text-xs font-semibold text-foreground">
-                    Arrival: {pool.drivers[0]?.arrivalTime ?? "09:30"}
+                    Arrival: {(pool.drivers[0] as PooledDriver & { adjustedArrivalTime?: string })?.adjustedArrivalTime ?? pool.drivers[0]?.arrivalTime ?? "09:30"}
                   </div>
+                  {weatherDelay && weatherDelay.has_delay && (
+                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      <CloudRainIcon className="size-3" />
+                      <span>+{weatherDelay.delay_minutes}m delay ({weatherDelay.weather_condition})</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -750,7 +889,12 @@ function LogisticsContent() {
 
                     <div className="mt-3 flex items-center justify-between pt-2 text-[10px] text-muted-foreground">
                       <span>Departure: <strong className="text-foreground">{drv.departureTime}</strong></span>
-                      <span>Arrival: <strong className="text-foreground">{drv.arrivalTime}</strong></span>
+                      <span className="flex items-center gap-1">
+                        Arrival: <strong className="text-foreground">{(drv as PooledDriver & { adjustedArrivalTime?: string }).adjustedArrivalTime ?? drv.arrivalTime}</strong>
+                        {weatherDelay && weatherDelay.has_delay && (
+                          <span className="text-amber-600 dark:text-amber-400 font-bold">(+{weatherDelay.delay_minutes}m ☁️)</span>
+                        )}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -844,8 +988,14 @@ function LogisticsContent() {
                   <h4 className="text-xs font-bold text-foreground">{shortAddr(resolvedDelivery ?? topRoute.destination?.address)}</h4>
                   <p className="text-[11px] text-muted-foreground">Destination ({isSeeker ? "Your Event Venue" : `${counterpartName} Venue`})</p>
                   <div className="mt-2 rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-                    Arrival: {topRoute.arrivalTime ?? "09:30"}
+                    Arrival: {topRoute.weatherDelay?.adjusted_arrival_time ?? topRoute.arrivalTime ?? "09:30"}
                   </div>
+                  {topRoute.weatherDelay && topRoute.weatherDelay.has_delay && (
+                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      <CloudRainIcon className="size-3" />
+                      <span>+{topRoute.weatherDelay.delay_minutes}m delay ({topRoute.weatherDelay.weather_condition})</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

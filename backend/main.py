@@ -17,6 +17,7 @@ try:
     from seeker import router as seeker_router
     from logistics import routes_router as logistics_router
     from logistics.matcher import find_best_routes
+    from logistics.weather_delay.eta_adjuster import apply_weather_delay_to_routes
     from web_scraping import router as weather_router
     from services.llm_parser import parse_requirement, ParserServiceError
     from services.category_registry import CATEGORIES
@@ -29,6 +30,7 @@ except ImportError:
     from backend.seeker import router as seeker_router
     from backend.logistics import routes_router as logistics_router
     from backend.logistics.matcher import find_best_routes
+    from backend.logistics.weather_delay.eta_adjuster import apply_weather_delay_to_routes
     from backend.web_scraping import router as weather_router
     from backend.services.llm_parser import parse_requirement, ParserServiceError
     from backend.services.category_registry import CATEGORIES
@@ -174,6 +176,54 @@ def match_routes_endpoint(payload: MatchRoutesRequest):
         travel_date=payload.travelDate,
         return_pooling=True,
     )
+
+    # Apply weather delay to routes using live weather API + web scraping
+    weather_delay_info = None
+    try:
+        pickup_addr = payload.pickupLocation.address or ""
+        delivery_addr = payload.deliveryLocation.address or ""
+        routes, weather_delay_info = apply_weather_delay_to_routes(
+            routes=routes,
+            pickup_location=pickup_addr,
+            delivery_location=delivery_addr,
+            timeout=6,
+        )
+        # Also apply weather delay to the standalone pooled_solution
+        if pooled_solution and weather_delay_info:
+            delay_mins = weather_delay_info.get("delay_minutes", 0)
+            pooled_solution["weatherDelay"] = {
+                "has_delay": delay_mins > 0,
+                "delay_minutes": delay_mins,
+                "weather_condition": weather_delay_info.get("weather_condition", "Clear"),
+                "condition_raw": weather_delay_info.get("condition_raw", "Clear"),
+                "temperature": weather_delay_info.get("temperature", "N/A"),
+                "precipitation_mm": weather_delay_info.get("precipitation_mm", 0),
+                "wind_kmph": weather_delay_info.get("wind_kmph", 0),
+                "severity_level": weather_delay_info.get("severity_level", "Normal"),
+                "disruption_detected": weather_delay_info.get("disruption_detected", False),
+                "detected_events": weather_delay_info.get("detected_events", []),
+                "advisory": weather_delay_info.get("advisory", ""),
+                "delay_factor": weather_delay_info.get("delay_factor", 0),
+                "data_sources": weather_delay_info.get("data_sources", []),
+            }
+            # Adjust pooled driver arrival times
+            if isinstance(pooled_solution.get("drivers"), list):
+                for drv in pooled_solution["drivers"]:
+                    drv_arr = drv.get("arrivalTime", "09:30")
+                    drv["originalArrivalTime"] = drv_arr
+                    # Shift arrival time forward
+                    try:
+                        parts = drv_arr.strip().split(":")
+                        h, m = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+                        total = h * 60 + m + delay_mins
+                        drv["adjustedArrivalTime"] = f"{(total // 60) % 24:02d}:{total % 60:02d}"
+                    except Exception:
+                        drv["adjustedArrivalTime"] = drv_arr
+                    drv["weatherDelayMinutes"] = delay_mins
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning(f"Weather delay computation failed: {exc}")
+
     # Serialize datetime objects
     from datetime import datetime, timezone
     def _ser(obj):
