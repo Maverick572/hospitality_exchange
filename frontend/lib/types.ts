@@ -509,6 +509,7 @@ export type RouteMatch = {
   estimatedCost?: number;
   matchScore?: number;
   pooledSolution?: {
+
     poolId: string;
     totalDemand: number;
     totalAllocated: number;

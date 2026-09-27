@@ -224,8 +224,8 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                     label: "SEEKER SOURCING",
                     items: [
                       { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
-                      { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
                       { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "My Requirements" },
+                      { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
                     ],
                   },
                   {
@@ -237,8 +237,7 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   {
                     label: "TRANSACTIONS",
                     items: [
-                      { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
-                      { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
+                      { href: "/dashboard/requests", icon: HandshakeIcon, label: "Requests & Negotiation" },
                       { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
                     ],
                   },
@@ -254,7 +253,6 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                     label: "PROVIDER INVENTORY",
                     items: [
                       { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
-                      { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Demand Matches", isAi: true, badge: "DEMAND" },
                       { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace Feed" },
                     ],
                   },
@@ -267,7 +265,6 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
                   {
                     label: "TRANSACTIONS",
                     items: [
-                      { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
                       { href: "/dashboard/requests", icon: HandshakeIcon, label: "Incoming Requests" },
                       { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Payouts" },
                     ],
@@ -392,11 +389,6 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
             <DropdownMenuItem asChild>
               <Link href={isDriver ? "/driver/profile" : "/dashboard/profile"}>Account Settings</Link>
             </DropdownMenuItem>
-            {isDriver && (
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard">Switch to Marketplace</Link>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={onSignOut}>
               <LogOutIcon className="size-3.5" />
@@ -408,3 +400,4 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
     </aside>
   );
 }
+

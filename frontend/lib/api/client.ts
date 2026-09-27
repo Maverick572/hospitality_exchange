@@ -1,5 +1,4 @@
 import { getIdToken } from "@/lib/auth";
-import { mockStore } from "@/lib/mock-store";
 
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1"
@@ -8,14 +7,12 @@ export const API_BASE_URL = (
 export class ApiError extends Error {
   status: number;
   code?: string;
-  notImplemented: boolean;
 
-  constructor(message: string, status: number, opts?: { code?: string; notImplemented?: boolean }) {
+  constructor(message: string, status: number, opts?: { code?: string }) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = opts?.code;
-    this.notImplemented = Boolean(opts?.notImplemented);
   }
 }
 
@@ -23,20 +20,21 @@ type Json = Record<string, unknown> | unknown[] | null;
 
 function errorMessage(body: Json, fallback: string): { message: string; code?: string } {
   if (!body || Array.isArray(body)) return { message: fallback };
-  const error = body.error;
+  const error = (body as Record<string, unknown>).error;
   if (error && typeof error === "object" && "message" in error) {
     const e = error as { message?: string; code?: string };
     return { message: e.message ?? fallback, code: e.code };
   }
   if (typeof error === "string") return { message: error };
-  const detail = body.detail;
+  const detail = (body as Record<string, unknown>).detail;
   if (typeof detail === "string") return { message: detail };
   if (Array.isArray(detail) && detail.length > 0) {
     const first = detail[0] as { loc?: unknown[]; msg?: string };
     const field = first.loc?.filter((part) => part !== "body").join(".");
     return { message: field ? `${field}: ${first.msg}` : first.msg ?? fallback };
   }
-  if (typeof body.message === "string") return { message: body.message };
+  const message = (body as Record<string, unknown>).message;
+  if (typeof message === "string") return { message };
   return { message: fallback };
 }
 
@@ -47,120 +45,8 @@ type RequestOptions = {
   auth?: boolean;
 };
 
-function resolveMockFallback<T>(path: string, options: RequestOptions): T {
-  const method = options.method ?? "GET";
-  const b = (options.body ?? {}) as Record<string, unknown>;
-
-  // Users
-  if (path === "/users/me") return mockStore.getUser() as unknown as T;
-  if (path === "/users/profile") return mockStore.updateUser(b as unknown as Parameters<typeof mockStore.updateUser>[0]) as unknown as T;
-
-  // Categories
-  if (path === "/categories") return { categories: mockStore.getCategories() } as unknown as T;
-
-  // Resources
-  if (path === "/resources/my") return mockStore.getMyResources() as unknown as T;
-  if (path === "/resources/all") return mockStore.getResources() as unknown as T;
-  if (path === "/resources" && method === "POST") return mockStore.createResource(b as unknown as Parameters<typeof mockStore.createResource>[0]) as unknown as T;
-  if (path.startsWith("/resources/")) {
-    const id = path.replace("/resources/", "");
-    if (method === "GET") return mockStore.getResourceById(id) as unknown as T;
-    if (method === "PATCH") return mockStore.updateResource(id, b as unknown as Parameters<typeof mockStore.updateResource>[1]) as unknown as T;
-    if (method === "DELETE") return mockStore.deleteResource(id) as unknown as T;
-  }
-
-  // Requirements & Search
-  if (path === "/seeker/search") return mockStore.search(b as unknown as Parameters<typeof mockStore.search>[0]) as unknown as T;
-  if (path === "/requirements/my") return [] as unknown as T;
-  if (path === "/requirements/all") return mockStore.getRequirements() as unknown as T;
-  if (path === "/requirements" && method === "POST") return { ...b, requirementId: `req_${Date.now()}` } as unknown as T;
-  if (path === "/requirements/parse") {
-    return {
-      description: typeof b?.description === "string" ? b.description : "",
-      items: [
-        { name: "Banquet Chairs", category: "furniture", quantity: 100, metric: "units" },
-        { name: "Round Tables", category: "furniture", quantity: 10, metric: "units" },
-      ],
-    } as unknown as T;
-  }
-
-  // Requests
-  if (path === "/requests/provider") return mockStore.getRequests() as unknown as T;
-  if (path === "/requests" && method === "POST") return mockStore.createRequest(b as unknown as Parameters<typeof mockStore.createRequest>[0]) as unknown as T;
-  if (path.includes("/counter")) {
-    const id = path.split("/")[2];
-    mockStore.counterRequest(id, b as unknown as Parameters<typeof mockStore.counterRequest>[1]);
-    return { success: true } as unknown as T;
-  }
-  if (path.includes("/accept")) {
-    const id = path.split("/")[2];
-    return mockStore.acceptRequest(id) as unknown as T;
-  }
-  if (path.includes("/reject")) {
-    const id = path.split("/")[2];
-    mockStore.rejectRequest(id, typeof b?.reason === "string" ? b.reason : undefined);
-    return { success: true } as unknown as T;
-  }
-
-  // Bookings
-  if (path === "/bookings/my") return mockStore.getBookings() as unknown as T;
-  if (path.startsWith("/bookings/") && !path.includes("confirm-receipt")) {
-    const id = path.replace("/bookings/", "");
-    return mockStore.getBookingById(id) as unknown as T;
-  }
-  if (path.includes("/confirm-receipt")) {
-    const id = path.split("/")[2];
-    mockStore.confirmReceipt(id);
-    return { success: true } as unknown as T;
-  }
-
-  // Escrow
-  if (path.startsWith("/escrow/")) {
-    const parts = path.split("/");
-    const id = parts[2];
-    if (parts[3] === "fund") return mockStore.fundEscrow(id, typeof b?.paymentReference === "string" ? b.paymentReference : "PAY_DEMO") as unknown as T;
-    if (parts[3] === "release") return mockStore.releaseEscrow(id) as unknown as T;
-    return mockStore.getEscrow(id) as unknown as T;
-  }
-  if (path === "/escrow" && method === "POST") {
-    return mockStore.getEscrow(typeof b?.bookingId === "string" ? b.bookingId : "default") as unknown as T;
-  }
-
-  // Notifications
-  if (path === "/notifications" && method === "GET") return mockStore.getNotifications() as unknown as T;
-  if (path.startsWith("/notifications") && method === "POST") return mockStore.emitNotification(b as Parameters<typeof mockStore.emitNotification>[0]) as unknown as T;
-  if (path.includes("/read")) {
-    const id = path.split("/")[2];
-    mockStore.markNotificationRead(id);
-    return { success: true } as unknown as T;
-  }
-
-  // Dashboards
-  if (path === "/dashboard/user") return mockStore.getUserDashboard() as unknown as T;
-  if (path === "/dashboard/driver") return mockStore.getDriverDashboard() as unknown as T;
-
-  // Drivers
-  if (path === "/drivers/auth/status") {
-    return { uid: mockStore.driver.driverId, hasDriverProfile: true, verificationStatus: "verified" } as unknown as T;
-  }
-  if (path === "/drivers/me") return mockStore.getDriver() as unknown as T;
-  if (path === "/drivers/profile") return mockStore.getDriver() as unknown as T;
-  if (path === "/driver-routes/my") return mockStore.getDriverRoutes() as unknown as T;
-  if (path === "/driver-routes" && method === "POST") return mockStore.createDriverRoute(b as unknown as Parameters<typeof mockStore.createDriverRoute>[0]) as unknown as T;
-  if (path.includes("/matches")) return mockStore.getDriverMatches() as unknown as T;
-  if (path === "/logistics/match-routes") return mockStore.matchRoutes() as unknown as T;
-
-  return [] as unknown as T;
-}
-
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, query, auth = true } = options;
-
-  // If force demo is on, skip network call completely
-  if (mockStore.forceDemo) {
-    mockStore.isDemoMode = true;
-    return resolveMockFallback<T>(path, options);
-  }
 
   const url = new URL(`${API_BASE_URL}${path}`);
   if (query) {
@@ -185,13 +71,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
-  } catch {
-    // Graceful fallback on connection/CORS error
-    mockStore.isDemoMode = true;
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("hrex_backend_status", { detail: { live: false } }));
-    }
-    return resolveMockFallback<T>(path, options);
+  } catch (networkErr) {
+    throw new ApiError(
+      `Unable to connect to backend server at ${API_BASE_URL}. Make sure FastAPI is running.`,
+      0
+    );
   }
 
   let json: Json = null;
@@ -204,28 +88,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     }
   }
 
-  const envelope = json && !Array.isArray(json) ? json : null;
+  const envelope = json && !Array.isArray(json) ? (json as Record<string, unknown>) : null;
   if (!response.ok || envelope?.success === false) {
-    // If backend doesn't implement this endpoint yet (404/405/500), fall back gracefully.
-    // However, for profile endpoints (/users/me, /drivers/me), a 404 is an expected application state
-    // meaning the authenticated user has not created a profile yet and must be routed to onboarding.
-    const isProfileEndpoint = path === "/users/me" || path === "/drivers/me";
-    if (!isProfileEndpoint && (response.status === 404 || response.status === 405 || response.status >= 500)) {
-      mockStore.isDemoMode = true;
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("hrex_backend_status", { detail: { live: false } }));
-      }
-      return resolveMockFallback<T>(path, options);
-    }
-
     const { message, code } = errorMessage(json, `Request failed (${response.status}).`);
-    throw new ApiError(message, response.status, { code, notImplemented: false });
-  }
-
-  // Live success
-  mockStore.isDemoMode = false;
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("hrex_backend_status", { detail: { live: true } }));
+    throw new ApiError(message, response.status, { code });
   }
 
   if (envelope && "data" in envelope) return envelope.data as T;

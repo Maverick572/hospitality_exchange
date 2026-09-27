@@ -85,29 +85,7 @@ export default function RequestsPage() {
         </p>
       </div>
 
-      {/* ── Direct Link to Live Negotiation Chat Room ── */}
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
-            <MessageSquareIcon className="size-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-foreground">Live Negotiation & Handover Chat</h2>
-              <Badge variant="default" className="text-[10px] uppercase font-extrabold px-1.5 py-0">Active</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Direct real-time negotiation between Buyer and Seller. Propose counter-offers, coordinate departure/arrival, and verify visual condition.
-            </p>
-          </div>
-        </div>
-        <Button size="sm" asChild className="shrink-0 font-semibold shadow-xs bg-primary text-primary-foreground">
-          <Link href="/dashboard/conversations">
-            Open Encrypted Conversations
-            <ArrowRightIcon className="size-3.5 ml-1" />
-          </Link>
-        </Button>
-      </div>
+
 
       {/* ── Tabs Filter ── */}
       <div className="flex items-center justify-between border-b pb-2">

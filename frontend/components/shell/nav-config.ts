@@ -6,7 +6,6 @@ import {
   ClipboardListIcon,
   HandshakeIcon,
   LayoutDashboardIcon,
-  MessageSquareIcon,
   NavigationIcon,
   RouteIcon,
   SearchIcon,
@@ -52,8 +51,8 @@ export const BUSINESS_SHELL: ShellConfig = {
       label: "SEEKER SOURCING",
       items: [
         { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
-        { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
         { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },
+        { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
       ],
     },
     {
@@ -71,8 +70,7 @@ export const BUSINESS_SHELL: ShellConfig = {
     {
       label: "TRANSACTIONS",
       items: [
-        { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations", badge: "SECURE" },
-        { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
+        { href: "/dashboard/requests", icon: HandshakeIcon, label: "Requests & Negotiation" },
         { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
       ],
     },
@@ -80,12 +78,11 @@ export const BUSINESS_SHELL: ShellConfig = {
   items: [
     { href: "/dashboard", icon: LayoutDashboardIcon, label: "Dashboard" },
     { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
-    { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
     { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "Requirements" },
+    { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
     { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
     { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
-    { href: "/dashboard/conversations", icon: MessageSquareIcon, label: "Conversations" },
-    { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
+    { href: "/dashboard/requests", icon: HandshakeIcon, label: "Requests & Negotiation" },
     { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
   ],
   bottom: [
@@ -98,7 +95,6 @@ export const BUSINESS_SHELL: ShellConfig = {
     "/dashboard/smart-matches": { title: "Smart Matches", icon: SparklesIcon },
     "/dashboard/search": { title: "Natural Language Search", icon: SearchIcon },
     "/dashboard/providers": { title: "Provider Profile", icon: UserRoundIcon },
-    "/dashboard/conversations": { title: "Encrypted B2B Conversations", icon: MessageSquareIcon },
     "/dashboard/negotiation": { title: "Offer Negotiation & Handover", icon: HandshakeIcon },
     "/dashboard/bookings/": { title: "Booking Details & Escrow", icon: CalendarCheckIcon },
   },
@@ -122,12 +118,6 @@ export const DRIVER_SHELL: ShellConfig = {
       items: [
         { href: "/driver/profile", icon: UserRoundIcon, label: "Vehicle & Verification" },
         { href: "/driver/notifications", icon: BellIcon, label: "Dispatch Alerts" },
-      ],
-    },
-    {
-      label: "MARKETPLACE",
-      items: [
-        { href: "/dashboard", icon: BoxesIcon, label: "Back to Marketplace" },
       ],
     },
   ],
@@ -163,3 +153,4 @@ export function pageMeta(config: ShellConfig, pathname: string) {
   if (extra) return extra[1];
   return { title: config.home.label, icon: config.home.icon };
 }
+

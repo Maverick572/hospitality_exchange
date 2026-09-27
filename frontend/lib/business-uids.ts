@@ -36,11 +36,8 @@ export const BUSINESS_UID_MAP: Record<string, string> = {
   "blue sea": "usr_blue_sea_worli",
 };
 
-/**
- * Resolves a venue name, email, or identifier to its canonical userId.
- */
 export function resolveBusinessUid(nameOrId?: string | null): string {
-  if (!nameOrId) return "usr_taj_lands_end";
+  if (!nameOrId) return "";
   if (nameOrId.startsWith("usr_") || nameOrId.startsWith("drv_")) return nameOrId;
   const lower = nameOrId.toLowerCase().trim();
   for (const [key, uid] of Object.entries(BUSINESS_UID_MAP)) {
@@ -48,5 +45,6 @@ export function resolveBusinessUid(nameOrId?: string | null): string {
       return uid;
     }
   }
-  return "usr_taj_lands_end";
+  return nameOrId;
 }
+

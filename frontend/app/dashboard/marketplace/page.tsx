@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { LockIcon, PlusIcon, ShieldAlertIcon, SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { MarketplaceCard } from "@/components/marketplace/marketplace-card";
+import { RequestDialog, type RequestTarget } from "@/components/search/request-dialog";
 import { Button } from "@/components/ui/button";
 import { resourcesApi } from "@/lib/api";
 import { useApi } from "@/hooks/use-api";
@@ -16,13 +16,13 @@ import { useBusinessSession } from "@/lib/session";
 import type { Resource } from "@/lib/types";
 
 export default function MarketplacePage() {
-  const router = useRouter();
   const { profile } = useBusinessSession();
   const { perspective, setPerspective } = usePerspective();
   const resources = useApi(() => resourcesApi.getAll());
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [requestTarget, setRequestTarget] = useState<RequestTarget | null>(null);
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -32,19 +32,22 @@ export default function MarketplacePage() {
 
   const handleRequestBooking = (resource: Resource) => {
     if (perspective === "provider") {
-      toast.error("Switch to Seeker View to match with demand or book resources.");
+      toast.error("Switch to Seeker View to request resources.");
       return;
     }
-    const partnerName = encodeURIComponent(resource.provider?.businessName || "Trade Provider");
-    const resName = encodeURIComponent(resource.name);
-    toast.success(`Opening encrypted booking chat for ${resource.name}...`, { icon: "💬" });
-    router.push(
-      `/dashboard/conversations?partnerName=${partnerName}&resource=${resName}&amount=${resource.price}&category=${resource.category}&partnerId=${resource.providerId}`
-    );
+    setRequestTarget({
+      resourceId: resource.resourceId,
+      providerId: resource.providerId ?? resource.userId ?? "",
+      providerName: resource.provider?.businessName ?? "Hospitality Provider",
+      name: resource.name,
+      price: resource.price,
+      pricingUnit: resource.pricingUnit ?? "per_item_per_day",
+      availableQuantity: resource.availableQuantity ?? resource.quantity ?? 1,
+    });
+
   };
 
   const filteredResources = (resources.data ?? []).filter((res) => {
-    // Filter out current user's own resources from the marketplace (as in HACK-CELESTIAL)
     if (profile?.userId && (res.providerId === profile.userId || res.userId === profile.userId)) {
       return false;
     }
@@ -158,6 +161,13 @@ export default function MarketplacePage() {
           ))}
         </div>
       )}
+
+      <RequestDialog
+        target={requestTarget}
+        window={{ from: null, to: null }}
+        onOpenChange={(open) => !open && setRequestTarget(null)}
+      />
     </div>
   );
 }
+
