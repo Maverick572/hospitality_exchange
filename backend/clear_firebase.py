@@ -44,14 +44,13 @@ def delete_collection(collection_name: str, batch_size: int = 100):
     return total_deleted
 
 
-def main():
-    print("=" * 70)
-    print("FIRESTORE CLEAR")
-    print("=" * 70)
-
+def clear_all_collections(skip_prompt: bool = False):
+    """
+    Clears all application collections in Firestore.
+    """
     if db is None:
         print("\n[ERROR] Could not connect to Firestore. Check your service account credentials.")
-        sys.exit(1)
+        return False
 
     project_id = getattr(db, "project", "unknown")
     print(f"\nFirebase Project: {project_id}")
@@ -77,13 +76,13 @@ def main():
 
     if total_all == 0:
         print("\nAll collections are already empty. Nothing to clear.")
-        return
+        return True
 
-    confirmation = input("\nType CLEAR to permanently delete all data above: ").strip()
-
-    if confirmation != "CLEAR":
-        print("Operation cancelled. No documents were deleted.")
-        return
+    if not skip_prompt:
+        confirmation = input("\nType CLEAR to permanently delete all data above: ").strip()
+        if confirmation != "CLEAR":
+            print("Operation cancelled. No documents were deleted.")
+            return False
 
     print("\nDeleting documents from Firestore...\n")
 
@@ -100,6 +99,14 @@ def main():
     print("\n" + "=" * 70)
     print("FIRESTORE CLEAR COMPLETED")
     print("=" * 70)
+    return True
+
+
+def main():
+    print("=" * 70)
+    print("FIRESTORE CLEAR")
+    print("=" * 70)
+    clear_all_collections(skip_prompt=False)
 
 
 if __name__ == "__main__":
