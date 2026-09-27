@@ -234,6 +234,8 @@ export function authErrorMessage(error: unknown): string {
       return "Google sign-in was closed before it finished.";
     case "auth/too-many-requests":
       return "Too many attempts. Wait a moment and try again.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized in Firebase. Add your deployed domain in Firebase Console > Authentication > Settings > Authorized domains.";
     default:
       return error instanceof Error ? error.message : "Something went wrong.";
   }
