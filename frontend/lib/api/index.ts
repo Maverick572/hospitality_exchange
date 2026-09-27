@@ -49,6 +49,7 @@ export const categoriesApi = {
 export const resourcesApi = {
   create: (data: ResourceInput) => api.post<Resource>("/resources", data),
   getMine: (status?: string) => api.get<Resource[]>("/resources/my", { status }),
+  getAll: () => api.get<Resource[]>("/resources/all"),
   getById: (id: string) => api.get<Resource>(`/resources/${id}`),
   update: (id: string, data: Partial<ResourceInput>) => api.patch<Resource>(`/resources/${id}`, data),
   remove: (id: string) => api.delete<unknown>(`/resources/${id}`),
@@ -57,6 +58,7 @@ export const resourcesApi = {
 export const requirementsApi = {
   create: (data: RequirementInput) => api.post<Requirement>("/requirements", data),
   getMine: () => api.get<Requirement[]>("/requirements/my"),
+  getAll: (query?: { exclude_user_id?: string }) => api.get<Requirement[]>("/requirements/all", query),
   getById: (id: string) => api.get<Requirement>(`/requirements/${id}`),
   update: (id: string, data: Partial<RequirementInput>) =>
     api.patch<Requirement>(`/requirements/${id}`, data),

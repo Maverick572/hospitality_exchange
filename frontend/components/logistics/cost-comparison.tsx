@@ -7,9 +7,26 @@ import { Button } from "@/components/ui/button";
 type CostComparisonProps = {
   perspective?: "seeker" | "provider";
   onConfirm?: () => void;
+  dedicatedCost?: number;
+  sharedCost?: number;
+  resourceName?: string;
+  routeDescription?: string;
 };
 
-export function CostComparison({ perspective, onConfirm }: CostComparisonProps) {
+export function CostComparison({
+  perspective,
+  onConfirm,
+  dedicatedCost = 8000,
+  sharedCost = 1500,
+  resourceName = "Delivery Vehicle",
+  routeDescription = "Shared Route",
+}: CostComparisonProps) {
+  const savings = dedicatedCost - sharedCost;
+  const savingsPercent = Math.round((savings / Math.max(1, dedicatedCost)) * 100);
+  // Resource rental is a sample value (chairs example)
+  const resourceRental = 7200;
+  const total = resourceRental + sharedCost;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       {/* 2-Column Comparison */}
@@ -23,7 +40,7 @@ export function CostComparison({ perspective, onConfirm }: CostComparisonProps) 
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dedicated Transport</p>
                 <p className="mt-1 text-2xl font-bold text-muted-foreground line-through decoration-rose-500/70">
-                  ₹8,000
+                  ₹{dedicatedCost.toLocaleString("en-IN")}
                 </p>
               </div>
               <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -59,7 +76,7 @@ export function CostComparison({ perspective, onConfirm }: CostComparisonProps) 
                   Shared Transport
                 </p>
                 <p className="mt-1 text-2xl font-extrabold text-foreground">
-                  ₹1,500
+                  ₹{sharedCost.toLocaleString("en-IN")}
                 </p>
               </div>
               <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -70,15 +87,15 @@ export function CostComparison({ perspective, onConfirm }: CostComparisonProps) 
             <ul className="mt-6 space-y-2 text-xs text-foreground font-medium">
               <li className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2Icon className="size-4 text-emerald-500 shrink-0" />
-                Existing route: Bandra West → BKC Hub
+                Existing route: {routeDescription}
               </li>
               <li className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2Icon className="size-4 text-emerald-500 shrink-0" />
-                Co-loaded on Marriott Sprinter Van
+                Co-loaded on {resourceName}
               </li>
               <li className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2Icon className="size-4 text-emerald-500 shrink-0" />
-                Pay only marginal capacity cost (-81% discount)
+                Pay only marginal capacity cost (-{savingsPercent}% discount)
               </li>
             </ul>
           </div>
@@ -91,12 +108,12 @@ export function CostComparison({ perspective, onConfirm }: CostComparisonProps) 
           <h4 className="text-sm font-bold text-foreground border-b border-border pb-3">Cost Breakdown</h4>
           <div className="mt-4 space-y-2.5 text-xs">
             <div className="flex justify-between text-muted-foreground">
-              <span>Resource Rental (300 Chairs)</span>
-              <span className="font-semibold text-foreground">₹7,200</span>
+              <span>Resource Rental</span>
+              <span className="font-semibold text-foreground">₹{resourceRental.toLocaleString("en-IN")}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Shared Logistics (Co-loaded)</span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹1,500</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹{sharedCost.toLocaleString("en-IN")}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Platform & Escrow Protection</span>
@@ -104,7 +121,7 @@ export function CostComparison({ perspective, onConfirm }: CostComparisonProps) 
             </div>
             <div className="border-t border-border pt-3 mt-3 flex justify-between items-baseline text-sm font-bold text-foreground">
               <span>Total Payable</span>
-              <span className="text-lg text-primary font-extrabold">₹8,700</span>
+              <span className="text-lg text-primary font-extrabold">₹{total.toLocaleString("en-IN")}</span>
             </div>
           </div>
         </div>

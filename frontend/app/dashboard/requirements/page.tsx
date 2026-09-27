@@ -73,6 +73,37 @@ function RequirementsPageInner() {
     })
     .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 
+  if (perspective === "provider") {
+    return (
+      <Page>
+        <PageHeader
+          title="Requirements"
+          description="Saved needs with dates, budget and delivery details."
+        />
+        <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center max-w-xl mx-auto my-8 space-y-4 shadow-xs">
+          <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto">
+            <LockIcon className="size-8" />
+          </div>
+          <h2 className="text-xl font-extrabold text-foreground">Seeker View Required</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            You are currently in <strong>Provider View</strong> (managing venue inventory). Sourcing equipment, creating event requirements, and finding supplier matches is strictly a <strong>Seeker</strong> function.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={() => {
+                setPerspective("seeker");
+                toast.success("Switched to Seeker View: You can now post event requirements");
+              }}
+              className="font-bold cursor-pointer"
+            >
+              Switch to Seeker View
+            </Button>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <PageHeader
@@ -103,28 +134,6 @@ function RequirementsPageInner() {
           )
         }
       />
-
-      {/* ── Provider Mode Alert Banner ── */}
-      {perspective === "provider" && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 font-medium">
-            <ShieldAlertIcon className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>
-              <strong>Provider View Active:</strong> Provider view manages and monetizes existing venue assets. Sourcing requirements can only be posted in <strong>Seeker View</strong>.
-            </span>
-          </div>
-          <Button
-            size="xs"
-            onClick={() => {
-              setPerspective("seeker");
-              toast.success("Switched to Seeker View");
-            }}
-            className="shrink-0 text-xs font-semibold"
-          >
-            Switch to Seeker View
-          </Button>
-        </div>
-      )}
 
       {/* ── Status Filter Tabs ── */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">

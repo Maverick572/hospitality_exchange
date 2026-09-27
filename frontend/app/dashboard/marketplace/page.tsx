@@ -19,7 +19,7 @@ export default function MarketplacePage() {
   const router = useRouter();
   const { profile } = useBusinessSession();
   const { perspective, setPerspective } = usePerspective();
-  const resources = useApi(() => resourcesApi.getMine());
+  const resources = useApi(() => resourcesApi.getAll());
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");

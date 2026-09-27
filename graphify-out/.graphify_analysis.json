@@ -1485,22 +1485,22 @@
       "degree": 19
     },
     {
-      "id": "frontend_lib_session_usebusinesssession",
-      "label": "useBusinessSession()",
+      "id": "frontend_lib_format_humanize",
+      "label": "humanize()",
       "degree": 18
     }
   ],
   "surprises": [
     {
-      "source": "RoleCard()",
+      "source": "SheetOverlay()",
       "target": "cn()",
       "source_files": [
-        "frontend/components/landing/closing.tsx",
+        "frontend/components/ui/sheet.tsx",
         "frontend/lib/utils.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
-      "why": "bridges separate communities; peripheral node `RoleCard()` unexpectedly reaches hub `cn()`"
+      "why": "bridges separate communities; peripheral node `SheetOverlay()` unexpectedly reaches hub `cn()`"
     },
     {
       "source": "DropdownMenuCheckboxItem()",
@@ -1547,8 +1547,41 @@
       "why": "bridges separate communities; peripheral node `DropdownMenuSubContent()` unexpectedly reaches hub `cn()`"
     }
   ],
-  "tokens": {
-    "input": 0,
-    "output": 0
-  }
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `cn()` connect `cn` to `resource-form-sheet.tsx`, `auth.tsx`, `app-topbar.tsx`, `closing.tsx`, `NotificationsPage`, `deliveries/page.tsx`, `format.ts`, `navbar.tsx`, `top-navbar.tsx`, `search/page.tsx`, `states.tsx`, `resources/page.tsx`, `bookings/[id]/page.tsx`, `(app)/page.tsx`, `utils.ts`, `confirm-dialog.tsx`?",
+      "why": "High betweenness centrality (0.095) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Button()` connect `resource-form-sheet.tsx` to `app-topbar.tsx`, `logistics/page.tsx`, `auth.tsx`, `closing.tsx`, `marketplace/page.tsx`, `cn`, `deliveries/page.tsx`, `format.ts`, `navbar.tsx`, `resources/page.tsx`, `search/page.tsx`, `states.tsx`, `top-navbar.tsx`, `smart-matches/page.tsx`, `bookings/[id]/page.tsx`, `(app)/page.tsx`, `utils.ts`, `confirm-dialog.tsx`?",
+      "why": "High betweenness centrality (0.029) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `MockStore` connect `MockStore` to `app-topbar.tsx`, `mock-store.ts`, `types.ts`, `DriverRoute`, `Escrow`, `index.ts`?",
+      "why": "High betweenness centrality (0.019) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Audience`, `Mode`, `Props` to the rest of the system?",
+      "why": "156 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `resource-form-sheet.tsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0735779460298971 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `auth.tsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.05649350649350649 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `test_drivers.py` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.05117845117845118 - nodes in this community are weakly interconnected."
+    }
+  ]
 }

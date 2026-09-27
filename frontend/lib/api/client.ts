@@ -60,6 +60,7 @@ function resolveMockFallback<T>(path: string, options: RequestOptions): T {
 
   // Resources
   if (path === "/resources/my") return mockStore.getResources() as unknown as T;
+  if (path === "/resources/all") return mockStore.getResources() as unknown as T;
   if (path === "/resources" && method === "POST") return mockStore.createResource(b as unknown as Parameters<typeof mockStore.createResource>[0]) as unknown as T;
   if (path.startsWith("/resources/")) {
     const id = path.replace("/resources/", "");
@@ -71,6 +72,7 @@ function resolveMockFallback<T>(path: string, options: RequestOptions): T {
   // Requirements & Search
   if (path === "/seeker/search") return mockStore.search(b as unknown as Parameters<typeof mockStore.search>[0]) as unknown as T;
   if (path === "/requirements/my") return [] as unknown as T;
+  if (path === "/requirements/all") return mockStore.getRequirements() as unknown as T;
   if (path === "/requirements" && method === "POST") return { ...b, requirementId: `req_${Date.now()}` } as unknown as T;
   if (path === "/requirements/parse") {
     return {

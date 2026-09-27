@@ -157,4 +157,27 @@ Append-only decision log for this project. See R14 for format.
 - **Status:** implemented
 - **Supersedes:** —
 
+## D016 — Real-World Mumbai Ecosystem Seeding, Strict Operational Roles, and OSM Transit Engine
+- **Date:** 2026-09-27
+- **Decision:** Re-seeded Firestore with genuine Mumbai business profiles (5 vendors, 5 buyers) and 8 verified commercial carriers with real physical coordinates and active corridors across BKC, Bandra, Colaba, Lower Parel, Dadar, Thane, Vashi, and Borivali via OpenStreetMap Nominatim and OSRM. Replaced unrealistic mock payload capacities with physically verified Mumbai vehicle capabilities (Tata Ace 50 max, Bolero Maxi 80 max, Bada Dost 100 max, Tata 407 150 max, Eicher Pro 220 max, Piaggio Ape 25 max). Enforced strict operational role segregation in frontend UI: seeker mode strictly restricts actions to seeker queries and booking, and demand matching filters out the user's own business listings. Added dynamic OSRM transit calculation (`backend/services/osrm.py`) replacing hardcoded trip times.
+- **Alternatives considered:** Keeping random dummy numbers for vehicles and hardcoded departure times.
+- **Rejected because:** Unrealistic payloads (e.g. 500 chairs in a Bolero or 131 in a 3-wheeler) undermine demo credibility and break physical logistics modeling.
+- **Accepted because:** Grounds the platform in actual Mumbai geography, real vehicle specifications, and accurate OSRM transit timelines.
+- **Status:** implemented
+- **Supersedes:** —
+
+## D017 — OR-Tools CP-SAT Multi-Driver Fleet Pooling
+- **Date:** 2026-09-27
+- **Decision:** Implemented Multi-Driver Fleet Pooling in `backend/logistics/matcher.py`. When a demand request exceeds any single available vehicle's payload (e.g. 300 chairs), instead of failing or suggesting an impossibly large single vehicle, Google OR-Tools CP-SAT solver pools multiple coordinated carriers along the transport corridor. Solves a bounded knapsack / fleet assignment model:
+  - Minimizes vehicle count (penalty weight 150) + total delivery price + total detour distance + directional invalidity penalty.
+  - Binds integer cargo units $u_i \in [1, C_i]$ per selected vehicle such that $\sum u_i = \text{targetDemand}$.
+  - Computes coordinated convoy schedules, per-driver cargo and price allocations, dedicated vs pooled cost savings (e.g. saving ₹5,250 on a 300-chair transport), and CO2 emission reduction metrics.
+  - Integrated into `frontend/app/dashboard/logistics/page.tsx` with a Coordinated Multi-Driver Fleet Dispatch UI card and convoy visualizer.
+- **Alternatives considered:** Rejecting large delivery orders that exceed single vehicle capacity or requiring seekers to manually book 3 separate drivers.
+- **Rejected because:** Manual multi-booking is tedious and seekers lack routing knowledge to coordinate multiple drivers along shared corridors.
+- **Accepted because:** Completely automates multi-carrier consolidation with mathematical optimality and transparent cost savings.
+- **Status:** implemented
+- **Supersedes:** —
+
+
 

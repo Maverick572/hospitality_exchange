@@ -5,15 +5,15 @@ import categoriesData from "@/lib/categories.json";
 
 export const MUMBAI_HUBS = [
   "Bandra West",
-  "Bandra East (BKC)",
-  "Andheri West",
+  "Bandra Kurla Complex",
   "Andheri East",
-  "Lower Parel",
+  "Vile Parle East",
   "Powai",
-  "Juhu",
-  "Goregaon",
-  "Thane",
-  "Nariman Point",
+  "Goregaon East",
+  "Worli",
+  "Lower Parel",
+  "Fort",
+  "Colaba",
 ];
 
 type FilterBarProps = {

@@ -77,6 +77,42 @@ function ResourcesPageInner() {
     return cat.includes(categoryFilter.toLowerCase());
   });
 
+  if (perspective === "seeker") {
+    return (
+      <div className="flex flex-col gap-6 pb-12">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            My Listed Resources
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Venue surplus asset monetization & capacity listings.
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center max-w-xl mx-auto my-8 space-y-4 shadow-xs">
+          <div className="size-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+            <LockIcon className="size-8" />
+          </div>
+          <h2 className="text-xl font-extrabold text-foreground">Provider View Required</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            You are currently in <strong>Seeker View</strong> (event equipment sourcing). Managing inventory, listing surplus assets, and renting out capacity to others is strictly a <strong>Provider</strong> function.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={() => {
+                setPerspective("provider");
+                toast.success("Switched to Provider View: You can now manage your surplus inventory");
+              }}
+              className="font-bold cursor-pointer"
+            >
+              Switch to Provider View
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* ── Page Header ── */}
@@ -90,51 +126,17 @@ function ResourcesPageInner() {
           </p>
         </div>
 
-        {perspective === "provider" ? (
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-            className="font-bold shadow-xs cursor-pointer"
-          >
-            <PlusIcon className="size-4" />
-            Add New Resource
-          </Button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => toast.error("Switch to Provider View to list new inventory.")}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-2xs cursor-not-allowed hover:bg-muted"
-            title="Switch to Provider View to add inventory lots"
-          >
-            <LockIcon className="size-3.5 text-muted-foreground" />
-            <span>Add Resource (Provider Only)</span>
-          </button>
-        )}
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setFormOpen(true);
+          }}
+          className="font-bold shadow-xs cursor-pointer"
+        >
+          <PlusIcon className="size-4" />
+          Add New Resource
+        </Button>
       </div>
-
-      {/* ── Seeker Mode Alert Banner ── */}
-      {perspective === "seeker" && (
-        <div className="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex items-center gap-3 text-xs text-sky-900 dark:text-sky-200 font-medium">
-            <ShieldAlertIcon className="size-5 text-sky-600 dark:text-sky-400 shrink-0" />
-            <span>
-              <strong>Seeker View Active:</strong> You are browsing in Seeker view (event sourcing). Listing and managing surplus inventory lots is restricted to <strong>Provider View</strong>.
-            </span>
-          </div>
-          <Button
-            size="xs"
-            onClick={() => {
-              setPerspective("provider");
-              toast.success("Switched to Provider View");
-            }}
-            className="shrink-0 text-xs font-semibold"
-          >
-            Switch to Provider View
-          </Button>
-        </div>
-      )}
 
       {/* ── Category Filter Tabs ── */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">

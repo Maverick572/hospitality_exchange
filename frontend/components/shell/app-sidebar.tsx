@@ -5,14 +5,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BadgeCheckIcon,
+  BoxesIcon,
+  CalendarCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsUpDownIcon,
+  ClipboardListIcon,
+  HandshakeIcon,
   HotelIcon,
   LogOutIcon,
   PackageIcon,
   SearchIcon,
   SparklesIcon,
+  StoreIcon,
   TruckIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -200,10 +205,59 @@ export function AppSidebar({ config, user, onSignOut }: AppSidebarProps) {
         </div>
       )}
 
-      {/* ── Nav Groups ── */}
+      {/* ── Nav Groups (Strictly scoped by Perspective) ── */}
       <div className="flex-1 overflow-y-auto px-2 py-1 scrollbar-none">
         <nav className="flex flex-col gap-4">
-          {config.groups.map((group) => (
+          {(isDriver
+            ? config.groups
+            : perspective === "seeker"
+              ? [
+                  {
+                    label: "SEEKER SOURCING",
+                    items: [
+                      { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace" },
+                      { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Smart Matches", isAi: true, badge: "AI" },
+                      { href: "/dashboard/requirements", icon: ClipboardListIcon, label: "My Requirements" },
+                    ],
+                  },
+                  {
+                    label: "SHARED LOGISTICS",
+                    items: [
+                      { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match", badge: "81% OFF" },
+                    ],
+                  },
+                  {
+                    label: "TRANSACTIONS",
+                    items: [
+                      { href: "/dashboard/requests", icon: HandshakeIcon, label: "Offers & Negotiation" },
+                      { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Escrow" },
+                    ],
+                  },
+                ]
+              : [
+                  {
+                    label: "PROVIDER INVENTORY",
+                    items: [
+                      { href: "/dashboard/resources", icon: BoxesIcon, label: "My Resources" },
+                      { href: "/dashboard/smart-matches", icon: SparklesIcon, label: "Demand Matches", isAi: true, badge: "DEMAND" },
+                      { href: "/dashboard/marketplace", icon: StoreIcon, label: "Marketplace Feed" },
+                    ],
+                  },
+                  {
+                    label: "SHARED LOGISTICS",
+                    items: [
+                      { href: "/dashboard/logistics", icon: TruckIcon, label: "Logistics Match" },
+                    ],
+                  },
+                  {
+                    label: "TRANSACTIONS",
+                    items: [
+                      { href: "/dashboard/requests", icon: HandshakeIcon, label: "Incoming Requests" },
+                      { href: "/dashboard/bookings", icon: CalendarCheckIcon, label: "Bookings & Payouts" },
+                    ],
+                  },
+                ]
+          ).map((group) => (
             <div key={group.label} className="flex flex-col gap-1">
               {!collapsed && (
                 <div className="flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold text-muted-foreground/70 tracking-wider">

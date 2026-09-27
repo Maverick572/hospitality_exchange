@@ -128,6 +128,17 @@ export type Requirement = {
   deliveryRequired?: boolean;
   status: string;
   createdAt?: string;
+  updatedAt?: string;
+  seeker?: {
+    userId?: string;
+    businessName?: string;
+    contactName?: string;
+    email?: string;
+    phone?: string;
+    location?: GeoLocation;
+    rating?: number;
+    totalRatings?: number;
+  };
 };
 
 export type RequirementInput = {
@@ -433,15 +444,58 @@ export type RouteMatch = {
   departureTime?: string;
   arrivalTime?: string;
   availableCapacity?: number;
+  requiredCapacity?: number;
+  unitsFitted?: number;
+  remainingUnits?: number;
+  capacityFulfillment?: "full" | "partial" | string;
+  osmDistanceKm?: number;
+  osmDurationMinutes?: number;
+  routingSource?: string;
   price?: number;
   pickup_detour_km?: number;
   delivery_detour_km?: number;
   total_detour_km?: number;
+  routeOverlap?: number;
   excess_capacity?: number;
   directionallyValid?: boolean;
   detourDistanceKm?: number;
   estimatedCost?: number;
   matchScore?: number;
+  pooledSolution?: {
+    poolId: string;
+    totalDemand: number;
+    totalAllocated: number;
+    remainingUnfulfilled: number;
+    fulfillmentPercentage: number;
+    isFullyFulfilled: boolean;
+    vehicleCount: number;
+    totalPrice: number;
+    dedicatedTripCost: number;
+    totalSavings: number;
+    savingsPercentage: number;
+    co2ReductionKg: number;
+    osmDistanceKm: number;
+    osmDurationMinutes: number;
+    routingSource: string;
+    drivers: Array<{
+      routeId?: string;
+      driverId?: string;
+      driverName: string;
+      vehicleType: string;
+      vehicleNumber: string;
+      rating?: number;
+      vehicleCapacity?: number;
+      availableCapacity: number;
+      allocatedUnits: number;
+      allocatedPrice: number;
+      departureTime: string;
+      arrivalTime: string;
+      startAddress?: string;
+      destinationAddress?: string;
+      detourKm?: number;
+      directionallyValid?: boolean;
+    }>;
+  };
 };
 
 export type DeliveryStatus = "pickup_pending" | "picked_up" | "in_transit" | "delivered";
